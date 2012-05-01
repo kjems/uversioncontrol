@@ -1,0 +1,106 @@
+// Copyright (c) <2012> <Playdead>
+// This file is subject to the MIT License as seen in the trunk of this repository
+// Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
+using System;
+
+namespace VersionControl
+{
+    #region Enums
+    public enum VCFileStatus
+    {
+        Normal,
+        Added,
+        Conflicted,
+        Deleted,
+        Ignored,
+        Modified,
+        Replaced,
+        Unversioned,
+        Missing,
+        External,
+        Incomplete,
+        Merged,
+        Obstructed,
+        None,
+    }
+    
+    public enum VCDirectoryStatus
+    {
+        NoModification,
+        Conflicted,
+        Modified
+    }
+    
+    public enum VCRepositoryStatus
+    {
+        NotLocked,
+        Locked
+    }
+    
+    public enum VCRemoteFileStatus
+    {
+        Modified,
+        None
+    }
+    
+    public enum VCScheduleStatus
+    {
+        None,
+        Commit
+    }
+    
+    public enum VCLockStatus
+    {
+        NoLock,
+        LockedHere,
+        LockedOther,
+        LockedButStolen,
+        NoLockButHasToken
+    }
+
+    public enum VCTreeConflictStatus
+    {
+        Normal,
+        TreeConflict
+    }
+
+    public enum VCProperty
+    {
+        None,
+        Normal,
+        Conflicted,
+        Modified,
+    }
+
+    public enum VCReflectionLevel
+    {
+        None,
+        Pending,
+        Local,
+        Repository,
+    }
+    #endregion
+    
+    [Serializable]
+    public class VersionControlStatus
+    {
+        public VCReflectionLevel reflectionLevel = VCReflectionLevel.None;
+        public VCFileStatus fileStatus = VCFileStatus.Normal;
+        public VCDirectoryStatus directoryStatus = VCDirectoryStatus.NoModification;
+        public VCRepositoryStatus repositoryStatus = VCRepositoryStatus.NotLocked;
+        public VCRemoteFileStatus remoteStatus = VCRemoteFileStatus.None;
+        public VCScheduleStatus scheduleStatus = VCScheduleStatus.None;
+        public VCLockStatus lockStatus = VCLockStatus.NoLock;
+        public VCProperty property = VCProperty.Normal;
+        public VCTreeConflictStatus treeConflictStatus = VCTreeConflictStatus.Normal;
+        public string assetPath;
+        public string user;
+        public string owner;
+        public string lockToken;
+        public string changelist;
+        public int revision;
+        public int lastModifiedRevision;
+        public bool bypassRevisionControl;
+        public bool Reflected { get { return reflectionLevel != VCReflectionLevel.None && reflectionLevel != VCReflectionLevel.Pending; } }
+    }
+}

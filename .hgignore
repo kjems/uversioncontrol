@@ -3,8 +3,8 @@ bin
 obj
 
 # Auto generated files
-*.suo
-_ReSharper*
+.suo
+_ReSharper
 
 # Compiled assemblies
 Assemblies/debug

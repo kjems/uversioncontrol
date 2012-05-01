@@ -1,7 +1,7 @@
 UVersionControl Changelog
 =========================
 
-= Release 1.0.0.3 =
+= Release 1.0.0.5 =
 == Features==
  * A Version Control(VC) integration into Unity using SVN as backend
  * GUI locks to avoid accidently modifing a resources without VC lock

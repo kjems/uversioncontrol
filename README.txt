@@ -19,7 +19,7 @@ UVersionControl README
  * See the Documentation folder for a structural overview of the code
  * See the MIT open source license in the TermsOfUse.txt
  * Download a set of pre-compiled assemblies from:
-   https://github.com/kjems/UVersionControl/downloads
+   https://bitbucket.org/Kjems/uversioncontrol/downloads
 
 = How to compile and use =
  * Open the solution in ./VersionControlVS in MonoDevelop or Visual Studio

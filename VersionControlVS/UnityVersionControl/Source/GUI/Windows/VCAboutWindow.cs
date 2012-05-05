@@ -1,6 +1,6 @@
 ﻿// Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
-// Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
+// Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using UnityEngine;
 using UnityEditor;
@@ -15,7 +15,7 @@ namespace VersionControl.UserInterface
             "Unity Version Control is maintained at Bitbucket.\n" +
             "All code is subject to the MIT open source license.\n" +
             "Bug reports can be submitted via the Report Bug menu item.\n" +
-            "Feedback can be given to 'kristian.kjems+UnitySVN@gmail.com'";
+            "Feedback can be given to 'kristian.kjems+UnityVC@gmail.com'";
         
         
         [MenuItem("UVC/About", false, 3)]

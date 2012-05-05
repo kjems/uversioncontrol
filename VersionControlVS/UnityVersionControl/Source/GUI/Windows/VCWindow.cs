@@ -1,6 +1,6 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
-// Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
+// Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
 // This script is a window to display local changes and to perform commands on 
 // the repository like updating and committing files.

@@ -28,8 +28,8 @@ namespace VersionControl
         [MenuItem("CONTEXT/GameObject/" + Terminology.unlock, true)]
         [MenuItem("CONTEXT/GameObject/Force " + Terminology.getlock, true)]
         [MenuItem("CONTEXT/GameObject/" + Terminology.getlock, true)]
-        [MenuItem("UVC/Refresh", true)]
-        [MenuItem("UVC/Update", true)]
+        [MenuItem("UVC/Update", true, -12)]
+        [MenuItem("UVC/Refresh", true, -11)]
         public static bool VCActive()
         {
             return VCCommands.Instance.IsReady();
@@ -100,8 +100,8 @@ namespace VersionControl
         {
             VCCommands.Instance.Add(GetAssetPathsOfSelected().ToArray());
         }
-        
-        [MenuItem("UVC/Refresh")]
+
+        [MenuItem("UVC/Refresh", false, -12)]
         public static void VCRefresh()
         {
             VCCommands.Instance.RequestStatus();
@@ -113,7 +113,7 @@ namespace VersionControl
             VCCommands.Instance.Update(GetAssetPathsOfSelected().ToArray());
         }
 
-        [MenuItem("UVC/Update")]
+        [MenuItem("UVC/Update", false, -11)]
         public static void VCUpdate()
         {
             bool result = VCCommands.Instance.Update(null);

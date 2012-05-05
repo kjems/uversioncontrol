@@ -3,7 +3,6 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
 using System;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 
@@ -91,17 +90,12 @@ namespace VersionControl
             }
             if (exceptionStackSize == 1) VCCommands.Instance.RequestStatus();
         }
-
-        private static string GetCurrentVersion()
-        {
-            return System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
-        }
-
+        
         private static void ReportError(VCException e)
         {
             if (VCSettings.BugReport)
             {
-                string title = Environment.UserName + "@" + Environment.MachineName + " : (" + GetCurrentVersion() + "):\n" + e.ErrorMessage;
+                string title = Environment.UserName + "@" + Environment.MachineName + " : (" + VCUtility.GetCurrentVersion() + "):\n" + e.ErrorMessage;
                 string description = "\n" + e.ErrorDetails;
 
                 if (!string.IsNullOrEmpty(Application.loadedLevelName)) description += "\n\nScene Name: " + Application.loadedLevelName;

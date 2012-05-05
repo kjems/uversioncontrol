@@ -3,6 +3,8 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
 
 // This script includes common SVN related operations
+
+using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -12,7 +14,11 @@ namespace VersionControl
 {
     public static class VCUtility
     {
-        
+        public static string GetCurrentVersion()
+        {
+            return System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+        }
+
         public static Object Revert(Object obj)
         {
             var gameObject = obj as GameObject;

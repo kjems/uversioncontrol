@@ -2,6 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
+using UnityEditor;
 using UnityEngine;
 using VersionControl;
 
@@ -33,8 +34,10 @@ internal static class FogbugzUtilities
         var www = new WWW(bugUrl);
         ContinuationManager.Add(() => www.isDone, () =>
         {
-            if (!string.IsNullOrEmpty(www.error)) D.Log("Bug report failed: " + www.error);
-            D.Log("Bug reported : " + www.text);
+            bool success = string.IsNullOrEmpty(www.error) && www.text.Contains("<Success>");
+            string message = success ? "Bug successfully reported to the 'Unity Version Control' FogBugz database." : "Bug report failed:\n" + www.error + www.text;
+            D.Log(message + "\n" + www.text);
+            EditorUtility.DisplayDialog("Bug Report " + (success?"Success":"Failed"), message, "Close");
         });
     }
 }

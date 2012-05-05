@@ -138,7 +138,7 @@ namespace VersionControl.Backend.SVN
                 }
                 catch (Exception e)
                 {
-                    throw new VCCriticalException("Critical Exception: \n" + e.Message, commandLine.ToString(), e);
+                    throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
                 }
                 finally
                 {

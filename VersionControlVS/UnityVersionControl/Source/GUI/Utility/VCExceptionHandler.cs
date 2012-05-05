@@ -74,7 +74,6 @@ namespace VersionControl
             {
                 VCSettings.VCEnabled = false;
             }
-            ReportError(e);
             if (exceptionStackSize == 1) VCCommands.Instance.RequestStatus();
         }
 

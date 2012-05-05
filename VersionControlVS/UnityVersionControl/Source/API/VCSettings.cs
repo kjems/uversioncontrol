@@ -22,6 +22,9 @@ namespace VersionControl
             bugReport = EditorPrefs.GetBool("VCSSettings/bugReport", true);
             bugReportMode = (EBugReportMode)EditorPrefs.GetInt("VCSSettings/bugReportMode", (int)EBugReportMode.Manual);
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
+            lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
+            lockPrefabsFilter = EditorPrefs.GetString("VCSSettings/lockPrefabsFilter");
+            lockMaterialsFilter = EditorPrefs.GetString("VCSSettings/lockMaterialsFilter");
             OnSettingsChanged();
             
             AppDomain.CurrentDomain.DomainUnload += (o, d) =>
@@ -36,6 +39,10 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/bugReport", bugReport);
                 EditorPrefs.SetInt("VCSSettings/bugReportMode", (int)bugReportMode);
                 EditorPrefs.SetBool("VCSSettings/logging", logging);
+                EditorPrefs.SetString("VCSSettings/lockScenesFilter", lockScenesFilter);
+                EditorPrefs.SetString("VCSSettings/lockPrefabsFilter", lockPrefabsFilter);
+                EditorPrefs.SetString("VCSSettings/lockMaterialsFilter", lockMaterialsFilter);
+
             };
         }
 
@@ -72,20 +79,36 @@ namespace VersionControl
 
         [SerializeField] private static bool lockPrefabs;
         public static bool LockPrefabs { get { return lockPrefabs; } set { if (lockPrefabs != value) {lockPrefabs = value; OnSettingsChanged();} } }
+        
         [SerializeField] private static bool lockScenes;
         public static bool LockScenes { get { return lockScenes; } set { if (lockScenes != value) { lockScenes = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static bool lockMaterials;
         public static bool LockMaterials { get { return lockMaterials; } set { if (lockMaterials != value) { lockMaterials = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static bool sceneviewGUI;
         public static bool SceneviewGUI { get { return sceneviewGUI; } set { if (sceneviewGUI != value) { sceneviewGUI = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static bool hierarchyIcons;
         public static bool HierarchyIcons { get { return hierarchyIcons; } set { if (hierarchyIcons != value) { hierarchyIcons = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static bool projectIcons;
         public static bool ProjectIcons { get { return projectIcons; } set { if (projectIcons != value) { projectIcons = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static bool bugReport;
         public static bool BugReport { get { return bugReport; } set { if (bugReport != value) { bugReport = value; OnSettingsChanged(); } } }
+        
         [SerializeField] private static EBugReportMode bugReportMode;
-        public static EBugReportMode BugReportMode { get { return bugReportMode; } set { if (bugReportMode != value) { bugReportMode = value; OnSettingsChanged(); } } }
+        public static EBugReportMode BugReportMode { get { return bugReportMode; } set { if (bugReportMode != value) { bugReportMode = value; } } }
+        
+        [SerializeField]private static string lockScenesFilter;
+        public static string LockScenesFilter { get { return lockScenesFilter; } set { if (lockScenesFilter != value) { lockScenesFilter = value.TrimStart(new[] { ' ', '/' }); } } }
+        
+        [SerializeField]private static string lockPrefabsFilter;
+        public static string LockPrefabsFilter { get { return lockPrefabsFilter; } set { if (lockPrefabsFilter != value) { lockPrefabsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
+        
+        [SerializeField]private static string lockMaterialsFilter;
+        public static string LockMaterialsFilter { get { return lockMaterialsFilter; } set { if (lockMaterialsFilter != value) { lockMaterialsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
 
         public static bool Logging
         {

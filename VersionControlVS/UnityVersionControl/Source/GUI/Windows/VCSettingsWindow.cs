@@ -41,29 +41,47 @@ namespace VersionControl.UserInterface
 
         public void DrawGUI()
         {
-            GUILayout.Label("Lock Settings", EditorStyles.boldLabel);
+            using (GUILayoutHelper.Horizontal())
+            {
+                GUILayout.Label("Lock Settings", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(new GUIContent("Path Filter(?)", "The GUI locks will only be active on asset paths that contains the filter below.\neg. assets/scenes/"), EditorStyles.boldLabel);
+                GUILayout.Space(100);
+            }
             using (GUILayoutHelper.VerticalIdented(14))
             {
-                VCSettings.LockScenes = GUILayout.Toggle(VCSettings.LockScenes, new GUIContent("Scene Lock", "Version Control allowed to lock GUI for scenes which are not " + Terminology.getlock + "\nDefault: On"));
-                VCSettings.LockPrefabs = GUILayout.Toggle(VCSettings.LockPrefabs, new GUIContent("Prefab Lock", "Version Control allowed to lock GUI for prefabs which are not " + Terminology.getlock + "\nDefault: Off"));
-                VCSettings.LockMaterials = GUILayout.Toggle(VCSettings.LockMaterials, new GUIContent("Material Lock", "Version Control allowed to lock GUI for materials which are not " + Terminology.getlock + "\nDefault: On"));
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.LockScenes = GUILayout.Toggle(VCSettings.LockScenes, new GUIContent("Scene Lock(?)", "Version Control allowed to lock GUI for scenes which are not " + Terminology.getlock + "\nDefault: On"));
+                    VCSettings.LockScenesFilter = EditorGUILayout.TextField(VCSettings.LockScenesFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.LockPrefabs = GUILayout.Toggle(VCSettings.LockPrefabs, new GUIContent("Prefab Lock(?)", "Version Control allowed to lock GUI for prefabs which are not " + Terminology.getlock + "\nDefault: Off"));
+                    VCSettings.LockPrefabsFilter = EditorGUILayout.TextField(VCSettings.LockPrefabsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.LockMaterials = GUILayout.Toggle(VCSettings.LockMaterials, new GUIContent("Material Lock(?)", "Version Control allowed to lock GUI for materials which are not " + Terminology.getlock + "\nDefault: On"));
+                    VCSettings.LockMaterialsFilter = EditorGUILayout.TextField(VCSettings.LockMaterialsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
             }
             GUILayout.Label("GUI Settings", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))
             {
-                VCSettings.SceneviewGUI = GUILayout.Toggle(VCSettings.SceneviewGUI, new GUIContent("Scene GUI", "Should Version Control GUI in Scene be active\nDefault: On"));
-                VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons", "Show Version Control controls in hierachy view\nDefault: On"));
-                VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons", "Show Version Control controls in project view\nDefault: On"));
+                VCSettings.SceneviewGUI = GUILayout.Toggle(VCSettings.SceneviewGUI, new GUIContent("Scene GUI(?)", "Show Version Control GUI in Scene view\nDefault: On"));
+                VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons(?)", "Show Version Control controls in hierachy view\nDefault: On"));
+                VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
             }
             GUILayout.Label("Debug", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))
             {
                 using (GUILayoutHelper.Horizontal())
                 {
-                    VCSettings.BugReport = GUILayout.Toggle(VCSettings.BugReport, new GUIContent("Bug Reports", "Send a bug report to Fogbugz when an error occurs\nDefault: On"));
+                    VCSettings.BugReport = GUILayout.Toggle(VCSettings.BugReport, new GUIContent("Bug Reports(?)", "Send a bug report to Fogbugz when an error occurs\nDefault: On"));
                     VCSettings.BugReportMode = (VCSettings.EBugReportMode) EditorGUILayout.EnumPopup(VCSettings.BugReportMode);
                 }
-                VCSettings.Logging = GUILayout.Toggle(VCSettings.Logging, new GUIContent("Logging", "Output logs from Version Control to Unity console\nDefault: Off"));
+                VCSettings.Logging = GUILayout.Toggle(VCSettings.Logging, new GUIContent("Logging(?)", "Output logs from Version Control to Unity console\nDefault: Off"));
             }
         }
     }

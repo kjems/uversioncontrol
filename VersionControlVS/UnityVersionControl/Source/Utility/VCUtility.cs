@@ -133,44 +133,38 @@ namespace VersionControl
 
         public static void RefreshEditableObject(GameObject gameObject)
         {
-            var assetPath = gameObject.GetAssetPath();
-            var assetStatus = gameObject.GetAssetStatus();
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
-            
-            bool hasAssetPath = assetPath != "";
-            bool haveSceneControl = HaveAssetControl(vcSceneStatus) || !LockScene(assetPath);
-            bool havePrefabControl = haveSceneControl && PrefabHelper.IsPrefab(gameObject, true, false, true) && (HaveAssetControl(assetStatus) || LockPrefab(assetPath));
-            bool prefabRootMovable = PrefabHelper.IsPrefabRoot(gameObject) && haveSceneControl;
-            bool changesStoredInScene = ObjectExtension.ChangesStoredInScene(gameObject);
-
-            bool editable = prefabRootMovable || HaveAssetControl(assetStatus) || !ManagedByRepository(assetStatus) || !hasAssetPath || (changesStoredInScene && !LockScene(assetPath)) || havePrefabControl;
-
+            bool editable = ShouleBeEditable(gameObject);
             SetEditable(gameObject, editable);
             foreach (var componentIt in gameObject.GetComponents<Component>())
             {
-                RefreshEditableComponent(gameObject, componentIt, assetStatus);
+                RefreshEditableComponent(gameObject, componentIt);
             }
         }
 
-        public static void RefreshEditableComponent(GameObject gameObject, Component component, VersionControlStatus assetStatus)
+        private static bool ShouleBeEditable(GameObject gameObject)
         {
             var assetPath = gameObject.GetAssetPath();
-            bool hasAssetPath = assetPath != "";
+            var assetStatus = gameObject.GetAssetStatus();
             bool lockScene = LockScene(assetPath);
             var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
+            bool hasAssetPath = assetPath != "";
             bool changesStoredInScene = ObjectExtension.ChangesStoredInScene(gameObject);
-            bool sceneObjectAndNoVCControl = !HaveAssetControl(assetStatus) && changesStoredInScene && !lockScene;
             bool haveSceneControl = HaveAssetControl(vcSceneStatus) || !lockScene;
             bool havePrefabControl = haveSceneControl && PrefabHelper.IsPrefab(gameObject, true, false, true) && (HaveAssetControl(assetStatus) || !LockPrefab(assetPath));
-            bool shouldLock = !(HaveAssetControl(assetStatus) || sceneObjectAndNoVCControl || havePrefabControl) && ManagedByRepository(assetStatus) && hasAssetPath;
+            bool editable = HaveAssetControl(assetStatus) || !ManagedByRepository(assetStatus) || !hasAssetPath || (changesStoredInScene && !lockScene) || havePrefabControl;
+            return editable;
+        }
 
-            SetEditable(component, !shouldLock);
+        public static void RefreshEditableComponent(GameObject gameObject, Component component)
+        {
+            bool editable = ShouleBeEditable(gameObject);
+            SetEditable(component, editable);
             var renderer = component as Renderer;
             if (renderer)
             {
                 foreach (var materialIt in renderer.sharedMaterials)
                 {
-                    SetMaterialLock(materialIt, shouldLock);
+                    SetMaterialLock(materialIt, !editable);
                 }
             }
         }

@@ -32,7 +32,7 @@ namespace VersionControl.UserInterface
             backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
             backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
 
-            var rect = new Rect(5, 5, 150, 55);
+            var rect = new Rect(5, 5, 200, 65);
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
             GUILayout.TextField(VCGUIControls.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
@@ -49,7 +49,7 @@ namespace VersionControl.UserInterface
                         if (vcSceneStatus.lockStatus == VCLockStatus.LockedOther)
                         {
                             numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent("Open", "Shift-click to steal lock"), buttonStyle))
+                            if (GUILayout.Button(new GUIContent(Terminology.bypass, "Shift-click to steal lock"), buttonStyle))
                             {
                                 if (Event.current.shift)
                                 {
@@ -72,7 +72,7 @@ namespace VersionControl.UserInterface
                             numberOfButtons++;
                             if (GUILayout.Button(Terminology.getlock, buttonStyle))
                             {
-                                VCCommands.Instance.GetLock(new[] {EditorApplication.currentScene});
+                                VCCommands.Instance.GetLockTask(new[] {EditorApplication.currentScene});
                             }
                             numberOfButtons++;
                             if (GUILayout.Button(Terminology.bypass, buttonStyle))
@@ -94,7 +94,7 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.bypassRevisionControl)
+                            if (vcSceneStatus.bypassRevisionControl && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.getlock, buttonStyle))

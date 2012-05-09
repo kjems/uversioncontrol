@@ -24,14 +24,15 @@ namespace VersionControl.UserInterface
             if (!VCSettings.SceneviewGUI || !VCCommands.Active || string.IsNullOrEmpty(EditorApplication.currentScene)) return;
 
             var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
-            buttonStyle = new GUIStyle(EditorStyles.miniButton) { margin = new RectOffset(0, 0, 0, 0), fixedWidth = 55 };
+            buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 70};
+
             backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
-            backgroundGuiStyle.padding = new RectOffset(1, 4, 1, 1);
+            backgroundGuiStyle.padding = new RectOffset(4, 8, 1, 1);
             backgroundGuiStyle.margin = new RectOffset(1, 1, 1, 1);
             backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
             backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
 
-            var rect = new Rect(5, 5, 100, 55);
+            var rect = new Rect(5, 5, 150, 55);
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
             GUILayout.TextField(VCGUIControls.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
@@ -73,6 +74,11 @@ namespace VersionControl.UserInterface
                             {
                                 VCCommands.Instance.GetLock(new[] {EditorApplication.currentScene});
                             }
+                            numberOfButtons++;
+                            if (GUILayout.Button(Terminology.bypass, buttonStyle))
+                            {
+                                VCCommands.Instance.BypassRevision(new[] { EditorApplication.currentScene });
+                            }
                         }
                     }
                     else
@@ -88,7 +94,15 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
+                            if (vcSceneStatus.bypassRevisionControl)
+                            {
+                                numberOfButtons++;
+                                if (GUILayout.Button(Terminology.getlock, buttonStyle))
+                                {
+                                    OnNextUpdate.Do(() => VCCommands.Instance.GetLockTask(new[] { EditorApplication.currentScene }));
+                                }
+                            }
+                            else if (vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.commit, buttonStyle))

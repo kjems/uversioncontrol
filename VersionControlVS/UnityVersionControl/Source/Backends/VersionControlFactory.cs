@@ -19,7 +19,7 @@ namespace VersionControl
             return new VCCFilteredAssets(new SVNCommands());
         }
 
-        private static IVersionControlCommands CreateAppDomainSVNCommands()
+        /*private static IVersionControlCommands CreateAppDomainSVNCommands()
         {
             var svnDomain = BuildChildDomain(AppDomain.CurrentDomain, "SVNDomain");
             var svnCommands = (IVersionControlCommands)svnDomain.CreateInstanceAndUnwrap("SVNBackend", "VersionControl.Backend.SVN.SVNCommands");
@@ -31,6 +31,6 @@ namespace VersionControl
             var evidence = new Evidence(parentDomain.Evidence);
             var setup = parentDomain.SetupInformation;
             return AppDomain.CreateDomain(name, evidence, setup);
-        }
+        }*/
     }
 }

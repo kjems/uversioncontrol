@@ -1,13 +1,45 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
-using UnityEngine;
+
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEditor;
 
 namespace VersionControl
 {
     internal class VCFileHandler : AssetModificationProcessor
     {
+
+        private static bool InUnversionedParentFolder(string asset, out string topUnversionedFolder)
+        {
+            topUnversionedFolder = "";
+            var unversionedFolders = ParentFolders(asset).Where(a => VCCommands.Instance.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
+            if (unversionedFolders.Any())
+            {
+                topUnversionedFolder = unversionedFolders.OrderBy(f => f.Length).First();
+                return true;
+            }
+            return false;
+        }
+
+        private static IEnumerable<string> ParentFolders(string asset)
+        {
+            const char pathSeparator = '/';
+            var parentFolders = new List<string>();
+            if (!string.IsNullOrEmpty(asset))
+            {
+                string currentFolder = "";
+                foreach (var folderIt in Path.GetDirectoryName(asset).Split(pathSeparator))
+                {
+                    currentFolder += folderIt + pathSeparator;
+                    parentFolders.Add(currentFolder.TrimEnd(pathSeparator));
+                }
+            }
+            return parentFolders;
+        }
+
         private static bool DisplayConfirmationDialog(string command, string assetPath, VersionControlStatus assetStatus)
         {
             bool acceptOperation = true;
@@ -25,12 +57,23 @@ namespace VersionControl
         private static AssetMoveResult OnWillMoveAsset(string from, string to)
         {
             if (!UnityEditorInternal.InternalEditorUtility.HasMaint()) return AssetMoveResult.DidNotMove;
-            
+
             VersionControlStatus status = VCCommands.Instance.GetAssetStatus(from);
             if (VCUtility.ManagedByRepository(status))
             {
                 if (DisplayConfirmationDialog("Move", from, status))
                 {
+                    string topUnversionedFolder;
+                    if (InUnversionedParentFolder(to, out topUnversionedFolder))
+                    {
+                        int result = EditorUtility.DisplayDialogComplex("Add Folder?", "Versioned files are moved into an unversioned folder. Add following unversioned folder first?\n\n" + topUnversionedFolder, "Yes", "No", "Cancel");
+                        if (result == 0)
+                        {
+                            VCCommands.Instance.Add(new[] { topUnversionedFolder });
+                            VCCommands.Instance.Status(new[] { topUnversionedFolder }, false);
+                        }
+                        if (result == 2) return AssetMoveResult.FailedMove;
+                    }
                     if (VCCommands.Instance.Move(from, to))
                     {
                         D.Log("Version Control Move: " + from + " => " + to);

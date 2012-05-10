@@ -168,7 +168,7 @@ namespace VersionControl.Backend.SVN
             return
                 Directory.GetFiles(assetPath, "*", SearchOption.AllDirectories)
                     .Concat(Directory.GetDirectories(assetPath, "*", SearchOption.AllDirectories))
-                    .Where(a => (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
+                    .Where(a => File.Exists(a) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
                     .Select(s => s.Replace("\\", "/"));
         }
 

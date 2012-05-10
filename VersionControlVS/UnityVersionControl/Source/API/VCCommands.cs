@@ -340,16 +340,33 @@ namespace VersionControl
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
                 {
+                    var metaAsset = assetIt + ".meta";
                     if (GetAssetStatus(assetIt).fileStatus != VCFileStatus.Unversioned)
                     {
-                        deleteAssets.Add(assetIt + ".meta");
+                        deleteAssets.Add(metaAsset);
                         deleteAssets.Add(assetIt);
                     }
                     else
                     {
-                        if (File.Exists(assetIt + ".meta")) File.Delete(assetIt + ".meta");
-                        if (File.Exists(assetIt)) File.Delete(assetIt);
-                        if (Directory.Exists(assetIt)) Directory.Delete(assetIt);
+                        if (File.Exists(metaAsset))
+                        {
+                            File.SetAttributes(metaAsset, FileAttributes.Normal);
+                            File.Delete(metaAsset);
+                        }
+                        if (File.Exists(assetIt))
+                        {
+                            File.SetAttributes(assetIt, FileAttributes.Normal);
+                            File.Delete(assetIt);
+                        }
+                        if (Directory.Exists(assetIt))
+                        {
+                            foreach (var subDirFile in Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories))
+                            {
+                                File.SetAttributes(subDirFile, FileAttributes.Normal);
+                                File.Delete(subDirFile);
+                            }
+                            Directory.Delete(assetIt, true);
+                        }
                     }
                 }
                 return vcc.Delete(deleteAssets, force) && RequestStatus();

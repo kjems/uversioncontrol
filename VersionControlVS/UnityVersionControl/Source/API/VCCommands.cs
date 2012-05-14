@@ -48,6 +48,7 @@ namespace VersionControl
         public static VCCommands Instance { get { Initialize(); return instance; } }
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
+        private List<string> unloadableResources = new List<string>();
         private int statusRequests;
         private bool statusPending;
 
@@ -191,6 +192,13 @@ namespace VersionControl
                 .Where(dep => Instance.GetAssetStatus(dep).fileStatus != VCFileStatus.Normal)
                 .Except(assetPaths.Select(ap => ap.ToLowerInvariant()));
         }
+
+        private bool RemoteHasUnloadableResourceChange()
+        {
+            var remoteChanged = GetFilteredAssets((a, s) => s.remoteStatus == VCRemoteFileStatus.Modified);
+            return unloadableResources.Any(b => remoteChanged.Any(a => String.CompareOrdinal(a.ToLowerInvariant(), b.ToLowerInvariant()) == 0));
+        }
+
         #endregion
 
         #region IVersionControlCommands Tasks
@@ -299,7 +307,16 @@ namespace VersionControl
 
         public bool Update(IEnumerable<string> assets, bool force = true)
         {
-            return HandleExceptions(() => vcc.Update(assets, force) && RequestStatus());
+            return HandleExceptions(() =>
+            {
+                //Status();
+                if(RemoteHasUnloadableResourceChange())
+                {
+                    OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
+                    return false;
+                }
+                return vcc.Update(assets, force) && RequestStatus();
+            });
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -450,6 +467,12 @@ namespace VersionControl
             vcc.ChangeListAdd(assets, "bypass");
             RequestStatus();
         }
+
+        public void AddUnloadableResource(IEnumerable<string> assets)
+        {
+            unloadableResources = unloadableResources.Concat(assets).Distinct().ToList();
+        }
+
         #endregion
 
     }

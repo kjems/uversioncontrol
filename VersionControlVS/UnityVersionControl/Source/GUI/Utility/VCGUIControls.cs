@@ -190,7 +190,7 @@ namespace VersionControl.UserInterface
     {
         public static Texture2D CreateBorderedTexture(Color border, Color body)
         {
-            var backgroundTexture = new Texture2D(3, 3) {hideFlags = HideFlags.HideAndDontSave};
+            var backgroundTexture = new Texture2D(3, 3, TextureFormat.ARGB32, false) {hideFlags = HideFlags.HideAndDontSave};
 
             backgroundTexture.SetPixels(new[]
             {
@@ -221,7 +221,7 @@ namespace VersionControl.UserInterface
                 }
             }
 
-            var iconTexture = new Texture2D(size, size) {hideFlags = HideFlags.HideAndDontSave};
+            var iconTexture = new Texture2D(size, size, TextureFormat.ARGB32, false) {hideFlags = HideFlags.HideAndDontSave};
             iconTexture.SetPixels(colors);
             iconTexture.wrapMode = TextureWrapMode.Clamp;
             iconTexture.filterMode = FilterMode.Point;

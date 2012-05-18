@@ -48,7 +48,7 @@ namespace VersionControl
         public static VCCommands Instance { get { Initialize(); return instance; } }
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
-        private List<string> unloadableResources = new List<string>();
+        private List<string> lockedFileResources = new List<string>();
         private int statusRequests;
         private bool statusPending;
 
@@ -196,7 +196,7 @@ namespace VersionControl
         private bool RemoteHasUnloadableResourceChange()
         {
             var remoteChanged = GetFilteredAssets((a, s) => s.remoteStatus == VCRemoteFileStatus.Modified);
-            return unloadableResources.Any(b => remoteChanged.Any(a => String.CompareOrdinal(a.ToLowerInvariant(), b.ToLowerInvariant()) == 0));
+            return lockedFileResources.Any(b => remoteChanged.Any(a => String.CompareOrdinal(a.ToLowerInvariant(), b.ToLowerInvariant()) == 0));
         }
 
         #endregion
@@ -468,12 +468,16 @@ namespace VersionControl
             RequestStatus();
         }
 
-        public void AddUnloadableResource(IEnumerable<string> assets)
-        {
-            unloadableResources = unloadableResources.Concat(assets).Distinct().ToList();
-        }
-
         #endregion
+
+        /// <summary>
+        /// Add files to a list that requires Unity to be closed to update correctly. Eg. native plugins
+        /// </summary>
+        /// <param name="assets">List of assetpaths</param>
+        public void AddLockedFileResources(IEnumerable<string> assets)
+        {
+            lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
+        }
 
     }
 }

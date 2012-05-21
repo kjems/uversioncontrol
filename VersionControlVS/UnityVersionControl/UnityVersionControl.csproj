@@ -76,6 +76,7 @@
     <Compile Include="Source\UnityHooks\VCRefreshOnNewAsset.cs" />
     <Compile Include="Source\Utility\BugReportUtilities.cs" />
     <Compile Include="Source\Utility\ContinuationManager.cs" />
+    <Compile Include="Source\Utility\EditableManager.cs" />
     <Compile Include="Source\Utility\OnNextUpdate.cs" />
     <Compile Include="Source\Utility\PrefabHelper.cs" />
     <Compile Include="Source\Utility\PushState.cs" />

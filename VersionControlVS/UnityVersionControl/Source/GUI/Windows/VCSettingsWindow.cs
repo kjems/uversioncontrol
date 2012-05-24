@@ -10,7 +10,7 @@ namespace VersionControl.UserInterface
     [Serializable]
     internal class VCSettingsWindow : EditorWindow
     {
-        //[MenuItem("UVC/Settings")]
+        [MenuItem("UVC/Settings", false, 2)]
         public static void Init()
         {
             GetWindow(typeof (VCSettingsWindow), false, "Version Control Settings");
@@ -20,7 +20,7 @@ namespace VersionControl.UserInterface
 
         private void OnEnable()
         {
-            minSize = new Vector2(200, 200);
+            minSize = new Vector2(200, 270);
         }
 
         private void OnGUI()
@@ -70,6 +70,7 @@ namespace VersionControl.UserInterface
             using (GUILayoutHelper.VerticalIdented(14))
             {
                 VCSettings.SceneviewGUI = GUILayout.Toggle(VCSettings.SceneviewGUI, new GUIContent("Scene GUI(?)", "Show Version Control GUI in Scene view\nDefault: On"));
+                VCSettings.MaterialGUI = GUILayout.Toggle(VCSettings.MaterialGUI, new GUIContent("Material GUI(?)", "Show Version Control GUI for material interaction on the Renderer inspector\nDefault: On"));
                 VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons(?)", "Show Version Control controls in hierachy view\nDefault: On"));
                 VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
             }

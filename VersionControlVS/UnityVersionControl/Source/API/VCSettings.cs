@@ -17,6 +17,7 @@ namespace VersionControl
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);
             lockMaterials = EditorPrefs.GetBool("VCSSettings/lockMaterials", true);
             sceneviewGUI = EditorPrefs.GetBool("VCSSettings/sceneviewGUI", true);
+            materialGUI = EditorPrefs.GetBool("VCSSettings/materialGUI", true);
             hierarchyIcons = EditorPrefs.GetBool("VCSSettings/hierarchyIcons", true);
             projectIcons = EditorPrefs.GetBool("VCSSettings/projectIcons", true);
             bugReport = EditorPrefs.GetBool("VCSSettings/bugReport", true);
@@ -34,6 +35,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/lockScenes", lockScenes);
                 EditorPrefs.SetBool("VCSSettings/lockMaterials", lockMaterials);
                 EditorPrefs.SetBool("VCSSettings/sceneviewGUI", sceneviewGUI);
+                EditorPrefs.SetBool("VCSSettings/materialGUI", materialGUI);
                 EditorPrefs.SetBool("VCSSettings/hierarchyIcons", hierarchyIcons);
                 EditorPrefs.SetBool("VCSSettings/projectIcons", projectIcons);
                 EditorPrefs.SetBool("VCSSettings/bugReport", bugReport);
@@ -88,7 +90,10 @@ namespace VersionControl
         
         [SerializeField] private static bool sceneviewGUI;
         public static bool SceneviewGUI { get { return sceneviewGUI; } set { if (sceneviewGUI != value) { sceneviewGUI = value; OnSettingsChanged(); } } }
-        
+
+        [SerializeField] private static bool materialGUI;
+        public static bool MaterialGUI { get { return materialGUI; } set { if (materialGUI != value) { materialGUI = value; OnSettingsChanged(); } } }
+
         [SerializeField] private static bool hierarchyIcons;
         public static bool HierarchyIcons { get { return hierarchyIcons; } set { if (hierarchyIcons != value) { hierarchyIcons = value; OnSettingsChanged(); } } }
         

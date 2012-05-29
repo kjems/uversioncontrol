@@ -25,6 +25,7 @@ namespace VersionControl
             lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
             lockPrefabsFilter = EditorPrefs.GetString("VCSSettings/lockPrefabsFilter");
             lockMaterialsFilter = EditorPrefs.GetString("VCSSettings/lockMaterialsFilter");
+            ClientPath = EditorPrefs.GetString("VCSSettings/clientPath"); // using ClientPath property instead of field by intention
             OnSettingsChanged();
             
             AppDomain.CurrentDomain.DomainUnload += (o, d) =>
@@ -42,7 +43,7 @@ namespace VersionControl
                 EditorPrefs.SetString("VCSSettings/lockScenesFilter", lockScenesFilter);
                 EditorPrefs.SetString("VCSSettings/lockPrefabsFilter", lockPrefabsFilter);
                 EditorPrefs.SetString("VCSSettings/lockMaterialsFilter", lockMaterialsFilter);
-
+                EditorPrefs.SetString("VCSSettings/clientPath", clientPath);
             };
         }
 
@@ -109,6 +110,22 @@ namespace VersionControl
         
         [SerializeField]private static string lockMaterialsFilter;
         public static string LockMaterialsFilter { get { return lockMaterialsFilter; } set { if (lockMaterialsFilter != value) { lockMaterialsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
+
+        [SerializeField]private static string clientPath;
+        public static string ClientPath
+        {
+            get { return clientPath; } 
+            set { 
+                if (clientPath != value)
+                {
+                    clientPath = value;
+                    if (!string.IsNullOrEmpty(clientPath))
+                    {
+                        EnvironmentManager.AddEnvironment("PATH", clientPath,  ":");
+                    }
+                }
+            }
+        }
 
         public static bool Logging
         {

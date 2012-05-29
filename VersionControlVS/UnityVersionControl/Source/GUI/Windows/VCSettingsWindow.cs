@@ -2,6 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 
@@ -29,10 +30,12 @@ namespace VersionControl.UserInterface
         }
 
     }
-
+    
     [Serializable]
     internal class VCSettingsGUI
     {
+        private string clientPath = null;
+
         private bool VCEnabled
         {
             get { return VCSettings.VCEnabled; }
@@ -83,6 +86,24 @@ namespace VersionControl.UserInterface
                 }
                 VCSettings.Logging = GUILayout.Toggle(VCSettings.Logging, new GUIContent("Logging(?)", "Output logs from Version Control to Unity console\nDefault: Off"));
             }
+            GUILayout.Label("Advanced", EditorStyles.boldLabel);
+            using (GUILayoutHelper.VerticalIdented(14))
+            {
+                if (clientPath == null) clientPath = VCSettings.ClientPath;
+                var textColor = ValidCommandLineClient(clientPath) ? new Color(0.2f, 0.9f, 0.2f) : new Color(0.9f, 0.2f, 0.2f);
+                var textStyle = new GUIStyle(EditorStyles.textField) { normal = { textColor = textColor } };
+                using (GUILayoutHelper.Horizontal())
+                {
+                    GUILayout.Label(new GUIContent("Environment Path(?)", "Specify the path to a command line client. eg MacPorts SVN : /opt/local/bin/\nDefault: <Empty>"));
+                    clientPath = EditorGUILayout.TextField(clientPath, textStyle, GUILayout.ExpandWidth(true), GUILayout.Width(180)).Trim(new[] { ' ' }).Replace('\\', '/');
+                }
+                if (ValidCommandLineClient(clientPath)) VCSettings.ClientPath = clientPath;
+            }
+        }
+
+        static bool ValidCommandLineClient(string path)
+        {
+            return string.IsNullOrEmpty(path) || Directory.Exists(path);
         }
     }
 }

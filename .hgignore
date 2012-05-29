@@ -1,0 +1,14 @@
+# Build Folders (you can keep bin if you'd like, to store dlls and pdbs)
+bin
+obj
+
+# Auto generated files
+.suo
+_ReSharper
+
+# Compiled assemblies
+Assemblies/debug
+Assemblies/release
+
+# mstest test results
+TestResults

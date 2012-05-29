@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{671D912C-1CFB-4912-9D0D-39A8C633E537}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UnityVersionControl</RootNamespace>
+    <AssemblyName>UnityVersionControl</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Assemblies\debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER; ENABLE_GENERICS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Assemblies\release\</OutputPath>
+    <DefineConstants>TRACE;ENABLE_GENERICS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Threading">
+      <HintPath>..\..\Externals\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor">
+      <HintPath>..\..\Externals\UnityEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\Externals\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\API\ObjectExtension.cs" />
+    <Compile Include="Source\API\TaskExtension.cs" />
+    <Compile Include="Source\API\VCCommands.cs" />
+    <Compile Include="Source\API\VCSettings.cs" />
+    <Compile Include="Source\Backends\VersionControlFactory.cs" />
+    <Compile Include="Source\GUI\Menus\VCMenuItems.cs" />
+    <Compile Include="Source\GUI\Utility\GUIControls.cs" />
+    <Compile Include="Source\GUI\Utility\VCConflictHandler.cs" />
+    <Compile Include="Source\GUI\Utility\VCExceptionHandler.cs" />
+    <Compile Include="Source\GUI\Utility\VCGUIControls.cs" />
+    <Compile Include="Source\GUI\Utility\VCMultiColumnAssetList.cs" />
+    <Compile Include="Source\GUI\Utility\VCSceneViewGUI.cs" />
+    <Compile Include="Source\GUI\Utility\VCStatusIcons.cs" />
+    <Compile Include="Source\GUI\Utility\Terminology.cs" />
+    <Compile Include="Source\GUI\Windows\VCAboutWindow.cs" />
+    <Compile Include="Source\GUI\Windows\VCBugReportWindow.cs" />
+    <Compile Include="Source\GUI\Windows\VCCommitWindow.cs" />
+    <Compile Include="Source\GUI\Windows\VCSettingsWindow.cs" />
+    <Compile Include="Source\GUI\Windows\VCWindow.cs" />
+    <Compile Include="Source\MultiColumnListView\MultiColumnState.cs" />
+    <Compile Include="Source\MultiColumnListView\MultiColumnView.cs" />
+    <Compile Include="Source\UnityHooks\VCRefreshEditable.cs" />
+    <Compile Include="Source\UnityHooks\VCRefreshOnNewAsset.cs" />
+    <Compile Include="Source\Utility\BugReportUtilities.cs" />
+    <Compile Include="Source\Utility\ContinuationManager.cs" />
+    <Compile Include="Source\Utility\EnvironmentManager.cs" />
+    <Compile Include="Source\Utility\OnNextUpdate.cs" />
+    <Compile Include="Source\Utility\PrefabHelper.cs" />
+    <Compile Include="Source\Utility\PushState.cs" />
+    <Compile Include="Source\Utility\ThreadUtility.cs" />
+    <Compile Include="Source\Utility\VCUtility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommandLine\CommandLine.csproj">
+      <Project>{FC5C4326-871A-40B7-AA94-4ABED60F2EE4}</Project>
+      <Name>CommandLine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{29EA8602-966F-4586-9695-9A120BC1DC5D}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SVNBackend\SVNBackend.csproj">
+      <Project>{99ABD2B2-792B-4ADD-8747-E6F9595691AB}</Project>
+      <Name>SVNBackend</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

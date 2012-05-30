@@ -43,7 +43,7 @@ namespace VersionControl
 
             var prefabRoot = PrefabHelper.FindPrefabRoot(gameObject);
             var prefabParent = PrefabHelper.GetPrefabParent(prefabRoot) as GameObject;
-            
+
             if (ShouldVCRevert(prefabParent)) VCCommands.Instance.Revert(prefabParent.ToAssetPaths());
 
             return gameObject;
@@ -116,59 +116,6 @@ namespace VersionControl
             return objectType;
         }
 
-        public static bool LockPrefab(string assetPath)
-        {
-            return VCSettings.LockPrefabs && assetPath.ToLowerInvariant().Contains(VCSettings.LockPrefabsFilter.ToLowerInvariant());
-        }
-
-        public static bool LockScene(string assetPath)
-        {
-            return VCSettings.LockScenes && assetPath.ToLowerInvariant().Contains(VCSettings.LockScenesFilter.ToLowerInvariant());
-        }
-
-        public static bool LockMaterial(string assetPath)
-        {
-            return VCSettings.LockMaterials && assetPath.ToLowerInvariant().Contains(VCSettings.LockMaterialsFilter.ToLowerInvariant());
-        }
-
-        public static void RefreshEditableObject(GameObject gameObject)
-        {
-            bool editable = ShouleBeEditable(gameObject);
-            SetEditable(gameObject, editable);
-            foreach (var componentIt in gameObject.GetComponents<Component>())
-            {
-                RefreshEditableComponent(gameObject, componentIt);
-            }
-        }
-
-        private static bool ShouleBeEditable(GameObject gameObject)
-        {
-            var assetPath = gameObject.GetAssetPath();
-            var assetStatus = gameObject.GetAssetStatus();
-            bool lockScene = LockScene(assetPath);
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
-            bool hasAssetPath = assetPath != "";
-            bool changesStoredInScene = ObjectExtension.ChangesStoredInScene(gameObject);
-            bool haveSceneControl = HaveAssetControl(vcSceneStatus) || !lockScene;
-            bool havePrefabControl = haveSceneControl && PrefabHelper.IsPrefab(gameObject, true, false, true) && (HaveAssetControl(assetStatus) || !LockPrefab(assetPath));
-            bool editable = HaveAssetControl(assetStatus) || !ManagedByRepository(assetStatus) || !hasAssetPath || (changesStoredInScene && !lockScene) || havePrefabControl;
-            return editable;
-        }
-
-        public static void RefreshEditableComponent(GameObject gameObject, Component component)
-        {
-            bool editable = ShouleBeEditable(gameObject);
-            SetEditable(component, editable);
-            var renderer = component as Renderer;
-            if (renderer)
-            {
-                foreach (var materialIt in renderer.sharedMaterials)
-                {
-                    SetMaterialLock(materialIt, !editable);
-                }
-            }
-        }
-
         public static void DiffWithBase(string assetPath)
         {
             string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
@@ -182,25 +129,16 @@ namespace VersionControl
             return textPostfix.Any(assetPath.EndsWith);
         }
 
-        public static bool MaterialStoredInScene(Material material)
-        {
-            return material && !EditorUtility.IsPersistent(material);
-        }
-
-        public static void SetMaterialLock(Material material, bool gameObjectLocked)
-        {
-            var assetPath = AssetDatabase.GetAssetPath(material);
-            var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-            bool materialStoredInScene = MaterialStoredInScene(material);
-            bool shouldLock = (materialStoredInScene ? gameObjectLocked : (ManagedByRepository(assetStatus) && !HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
-            SetEditable(material, !shouldLock);
-        }
-
         public static bool HaveVCLock(VersionControlStatus assetStatus)
         {
             bool isManagedByRepository = ManagedByRepository(assetStatus);
             bool hasLocalLock = assetStatus.lockStatus == VCLockStatus.LockedHere;
             return isManagedByRepository && hasLocalLock;
+        }
+
+        public static bool MaterialStoredInScene(Material material)
+        {
+            return material && !EditorUtility.IsPersistent(material);
         }
 
         public static bool HaveAssetControl(VersionControlStatus assetStatus)
@@ -211,30 +149,6 @@ namespace VersionControl
         public static bool ManagedByRepository(VersionControlStatus assetStatus)
         {
             return assetStatus.fileStatus != VCFileStatus.Unversioned && !System.String.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;
-        }
-
-        public static bool IsEditable(Object obj)
-        {
-            return (obj.hideFlags & HideFlags.NotEditable) == 0;
-        }
-
-        public static void SetEditable(Object obj, bool editable)
-        {
-            if (obj == null) return;
-            if (editable)
-            {
-                if (!IsEditable(obj))
-                {
-                    obj.hideFlags &= ~HideFlags.NotEditable;
-                }
-            }
-            else
-            {
-                if (IsEditable(obj))
-                {
-                    obj.hideFlags |= HideFlags.NotEditable;
-                }
-            }
         }
     }
 }

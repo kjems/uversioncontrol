@@ -31,11 +31,11 @@ namespace VersionControl
                 selectedObject = Selection.activeObject;
                 if (selectedObject is Material)
                 {
-                    VCUtility.SetEditable(selectedObject, VCUtility.HaveAssetControl(selectedObject.GetAssetStatus()));
+                    EditableManager.RefreshEditableMaterial(selectedObject as Material);
                 }
                 else if (selectedObject is GameObject)
                 {
-                    VCUtility.RefreshEditableObject(selectedObject as GameObject);
+                    EditableManager.RefreshEditableObject(selectedObject as GameObject);
                 }
             }
         }

@@ -17,6 +17,8 @@ namespace VersionControl.UserInterface
 
         private static void SubscribeToInspector(Object target)
         {
+            if (!VCSettings.MaterialGUI) return;
+
             var renderer = target as Renderer;
             var sharedMaterials = renderer.sharedMaterials;
 

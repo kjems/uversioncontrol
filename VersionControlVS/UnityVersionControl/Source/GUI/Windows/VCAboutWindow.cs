@@ -18,7 +18,7 @@ namespace VersionControl.UserInterface
             "Feedback can be given to 'kristian.kjems+UnityVC@gmail.com'";
         
         
-        [MenuItem("UVC/About", false, 3)]
+        [MenuItem("UVC/About", false, 4)]
         public static void Init()
         {
             GetWindow<VCAboutWindow>(false, "UVC About");

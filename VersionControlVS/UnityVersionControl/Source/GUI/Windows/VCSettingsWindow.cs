@@ -21,7 +21,7 @@ namespace VersionControl.UserInterface
 
         private void OnEnable()
         {
-            minSize = new Vector2(200, 270);
+            minSize = new Vector2(320, 310);
         }
 
         private void OnGUI()
@@ -91,7 +91,7 @@ namespace VersionControl.UserInterface
             using (GUILayoutHelper.VerticalIdented(14))
             {
                 if (clientPath == null) clientPath = VCSettings.ClientPath;
-                var textColor = ValidCommandLineClient(clientPath) ? new Color(0.2f, 0.9f, 0.2f) : new Color(0.9f, 0.2f, 0.2f);
+                var textColor = ValidCommandLineClient(clientPath) ? new Color(0.0f, 0.6f, 0.0f) : new Color(0.6f, 0.0f, 0.0f);
                 var textStyle = new GUIStyle(EditorStyles.textField) { normal = { textColor = textColor } };
                 using (GUILayoutHelper.Horizontal())
                 {

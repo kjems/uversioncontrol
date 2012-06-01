@@ -124,10 +124,8 @@ namespace VersionControl
                 if (clientPath != value)
                 {
                     clientPath = value;
-                    if (!string.IsNullOrEmpty(clientPath))
-                    {
-                        EnvironmentManager.AddEnvironment("PATH", clientPath,  ":");
-                    }
+                    if (!string.IsNullOrEmpty(clientPath)) EnvironmentManager.AddPathEnvironment(clientPath,  ":");
+                    else EnvironmentManager.ResetPathEnvironment();
                 }
             }
         }

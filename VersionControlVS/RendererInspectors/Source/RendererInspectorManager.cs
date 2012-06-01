@@ -9,12 +9,12 @@ public class RendererInspectorManager : Editor
 {
     private struct PrioritizedInspectorCallback
     {
-        public PrioritizedInspectorCallback(System.Action<Object> inspectorcallback, int priority)
+        public PrioritizedInspectorCallback(System.Action<Object[]> inspectorcallback, int priority)
         {
             this.inspectorcallback = inspectorcallback;
             this.priority = priority;
         }
-        public readonly System.Action<Object> inspectorcallback;
+        public readonly System.Action<Object[]> inspectorcallback;
         public readonly int priority;
     }
     private static readonly List<PrioritizedInspectorCallback> prioritizedInspectors = new List<PrioritizedInspectorCallback>();
@@ -24,7 +24,7 @@ public class RendererInspectorManager : Editor
     /// </summary>
     /// <param name="inspectorcallback">Callback for inspector</param>
     /// <param name="priority">Priority of the added inspector where higher priority is called first</param>
-    public static void AddInspector(System.Action<Object> inspectorcallback, int priority = 0)
+    public static void AddInspector(System.Action<Object[]> inspectorcallback, int priority = 0)
     {
         prioritizedInspectors.Add(new PrioritizedInspectorCallback(inspectorcallback, priority));
         prioritizedInspectors.Sort((a, b) => b.priority - a.priority);
@@ -36,7 +36,7 @@ public class RendererInspectorManager : Editor
 
         foreach (var prioritizedInspectorIt in prioritizedInspectors)
         {
-            prioritizedInspectorIt.inspectorcallback(target);
+            prioritizedInspectorIt.inspectorcallback(targets);
         }
     }
 }

@@ -4,8 +4,9 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(MeshRenderer))]
-internal class MeshRendererInspector : RendererInspectorManager
+[CanEditMultipleObjects]
+[CustomEditor(typeof(ClothRenderer))]
+internal class ClothRendererInspector : RendererInspectorManager
 {
 }
 

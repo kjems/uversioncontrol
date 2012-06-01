@@ -4,8 +4,9 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(TrailRenderer))]
-internal class TrailRendererInspector : RendererInspectorManager
+[CanEditMultipleObjects]
+[CustomEditor(typeof(LineRenderer))]
+internal class LineRendererInspector : RendererInspectorManager
 {
 }
 

@@ -4,8 +4,9 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(ClothRenderer))]
-internal class ClothRendererInspector : RendererInspectorManager
+[CanEditMultipleObjects]
+[CustomEditor(typeof(TrailRenderer))]
+internal class TrailRendererInspector : RendererInspectorManager
 {
 }
 

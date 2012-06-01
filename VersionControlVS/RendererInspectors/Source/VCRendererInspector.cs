@@ -15,11 +15,11 @@ namespace VersionControl.UserInterface
             RendererInspectorManager.AddInspector(SubscribeToInspector, -1);
         }
 
-        private static void SubscribeToInspector(Object target)
+        private static void SubscribeToInspector(Object[] targets)
         {
-            if (!VCSettings.MaterialGUI) return;
+            if (!VCSettings.MaterialGUI && targets.Length == 0) return;
 
-            var renderer = target as Renderer;
+            var renderer = targets[0] as Renderer;
             var sharedMaterials = renderer.sharedMaterials;
 
             for (int i = 0; i < renderer.sharedMaterials.Length; ++i)

@@ -115,7 +115,10 @@ namespace VersionControl.UserInterface
             EditorGUILayout.BeginHorizontal();
 
             GUI.SetNextControlName("CommitMessage");
-            commitMessage = GUILayout.TextField(commitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            using (GUILayoutHelper.BackgroundColor(commitMessage.Length < 10 ? new Color(1, 0, 0) : new Color(0, 1, 0)))
+            {
+                commitMessage = GUILayout.TextField(commitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            }
             if (firstTime)
             {
                 GUI.FocusControl("CommitMessage");

@@ -9,10 +9,21 @@ UVersionControl README
  * SceneView gui to quickly get the lock on the current open scene
  * The concept of .meta files are abstracted away from the user
 
+= Important Note =
+When using UVersionControl without Unity’s Team License it is highly recommended to 
+use SVN v1.7 on both Windows and Mac. 
+
+== Windows ==
+On windows it is recommended to install Tortoise SVN 1.7+ with commandline enabled 
+during the installation.
+
+== Mac / OSX ==
+It is recommended to install MacPorts. With MacPorts installed do 
+‘sudo port install subversion’. In Unity select the Settings item in UVC menu. 
+Add /opt/local/bin/ to the environment path.
+
 = Requirements =
- * Commandline svn client needs to be installed
-  - OSX : Installed by default (version 1.6)
-  - Win : Eg. Tortoise SVN 1.7+ with commandline enabled
+ * Commandline svn client. A version 1.7 client is recommended.  
  * An already existing SVN checkout with credentials cached
 
 = Information =

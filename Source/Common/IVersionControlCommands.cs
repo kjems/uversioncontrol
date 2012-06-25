@@ -27,6 +27,10 @@ namespace VersionControl
         IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter);
         bool Status(bool remote, bool full);
         bool Status(IEnumerable<string> assets, bool remote);
+
+        bool Invalidate(IEnumerable<string> assets);
+        bool Invalidate(string asset);
+
         bool Update(IEnumerable<string> assets = null, bool force = true);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
         bool Add(IEnumerable<string> assets);

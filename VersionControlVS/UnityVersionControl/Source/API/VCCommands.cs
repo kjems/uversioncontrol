@@ -66,7 +66,7 @@ namespace VersionControl
         public bool RequestStatus()
         {
             statusRequests++;
-            //D.Log("RequestStatus : " + statusRequests);
+            D.Log("StatusRequest : " + statusRequests);
             return true;
         }
 
@@ -74,8 +74,9 @@ namespace VersionControl
         {
             if (!statusPending && statusRequests > 0 && vcc.IsReady() && !EditorApplication.isCompiling)
             {
+                D.Log("StatusPending");
                 statusPending = true;
-                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; });
+                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; D.Log("StatusComplete"); });
             }
         }
 
@@ -305,6 +306,16 @@ namespace VersionControl
             });
         }
 
+        public bool Invalidate(IEnumerable<string> assets)
+        {
+            return vcc.Invalidate(assets);
+        }
+
+        public bool Invalidate(string asset)
+        {
+            return vcc.Invalidate(asset);
+        }
+
         public bool Update(IEnumerable<string> assets, bool force = true)
         {
             return HandleExceptions(() =>
@@ -315,7 +326,7 @@ namespace VersionControl
                     OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && RequestStatus();
+                return vcc.Update(assets, force) && Invalidate(assets) /*&& RequestStatus()*/;
             });
         }
 

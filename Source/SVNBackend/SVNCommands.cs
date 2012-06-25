@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using CommandLineExecution;
 
@@ -19,6 +20,30 @@ namespace VersionControl.Backend.SVN
         private StatusDatabase statusDatabase = new StatusDatabase();
         private bool operationActive = false;
         private readonly object operationActiveLockToken = new object();
+
+        public SVNCommands()
+        {
+            RefreshStatusLoop();
+        }
+
+        private void RefreshStatusLoop()
+        {
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                while(true)
+                {
+                    Thread.Sleep(100);
+                    RefreshStatusDatabase();
+                }
+            });
+        }
+        
+        private void RefreshStatusDatabase()
+        {
+            var invalidAssets = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.None).Select(a => a.Key).ToList();
+            if (invalidAssets.Count > 20) Status(true, false);
+            else if (invalidAssets.Count > 0) Status(invalidAssets, false);
+        }
 
         public bool IsReady()
         {
@@ -73,7 +98,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Status(IEnumerable<string> assets, bool remote)
         {
-            string arguments = "status --xml -v --depth=empty ";
+            string arguments = "status --xml -v "; //--depth=empty
             if (remote) arguments += "-u ";
             arguments += ConcatAssetPaths(assets);
             foreach (var assetIt in assets)
@@ -85,11 +110,11 @@ namespace VersionControl.Backend.SVN
             {
                 commandLineOutput = ExecuteCommandLine(svnStatusTask);
             }
-
             if (commandLineOutput.Failed) return false;
             try
             {
-                foreach (var statusIt in SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr))
+                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                foreach (var statusIt in db)
                 {
                     statusDatabase[statusIt.Key] = statusIt.Value;
                 }
@@ -128,7 +153,6 @@ namespace VersionControl.Backend.SVN
             CommandLineOutput commandLineOutput;
             lock (operationActiveLockToken)
             {
-                //D.Log(">>>> Locked >>>>");
                 try
                 {
                     operationActive = true;
@@ -143,7 +167,6 @@ namespace VersionControl.Backend.SVN
                 finally
                 {
                     operationActive = false;
-                    //D.Log("<<<< UnLocked <<<<");
                 }
             }
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
@@ -185,6 +208,21 @@ namespace VersionControl.Backend.SVN
             assets = assets.Select(FixAtChar);
             if (assets.Any()) return " \"" + assets.Aggregate((i, j) => i + "\" \"" + j) + "\"";
             return "";
+        }
+
+        public virtual bool Invalidate(IEnumerable<string> assets)
+        {
+            return assets.Aggregate(true, (current, assetIt) => current & Invalidate(assetIt));
+        }
+
+        public virtual bool Invalidate(string asset)
+        {
+            if(statusDatabase.ContainsKey(asset))
+            {
+                statusDatabase[asset].reflectionLevel = VCReflectionLevel.None;
+                return true;
+            }
+            return false;
         }
 
         public bool Update(IEnumerable<string> assets = null, bool force = true)

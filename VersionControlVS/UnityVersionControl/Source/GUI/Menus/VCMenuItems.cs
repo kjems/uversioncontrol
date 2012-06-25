@@ -104,7 +104,7 @@ namespace VersionControl
         [MenuItem("UVC/Refresh", false, -12)]
         public static void VCRefresh()
         {
-            VCCommands.Instance.RequestStatus();
+            D.Log("Refresh not implemented");
         }
 
         [MenuItem("Assets/UVC/" + Terminology.update)]

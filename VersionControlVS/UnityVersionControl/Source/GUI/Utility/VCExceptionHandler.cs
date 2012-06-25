@@ -12,16 +12,8 @@ namespace VersionControl
     [InitializeOnLoad]
     internal static class VCExceptionHandler
     {
-        private static int exceptionStackSize;
-
-        static VCExceptionHandler()
-        {
-            VCCommands.Instance.StatusCompleted += () => exceptionStackSize = 0;
-        }
-
         public static void HandleException(VCException e)
         {
-            exceptionStackSize++;
             OnNextUpdate.Do(() =>
             {
                 if (e is VCConnectionTimeoutException) HandleConnectionTimeOut(e as VCConnectionTimeoutException);
@@ -73,7 +65,6 @@ namespace VersionControl
             {
                 VCSettings.VCEnabled = false;
             }
-            if (exceptionStackSize == 1) VCCommands.Instance.RequestStatus();
         }
 
         private static void HandleBase(VCException e)
@@ -88,7 +79,6 @@ namespace VersionControl
             {
                 EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage, "OK");
             }
-            if (exceptionStackSize == 1) VCCommands.Instance.RequestStatus();
         }
         
         private static void ReportError(VCException e)

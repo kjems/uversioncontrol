@@ -37,10 +37,7 @@ namespace VersionControl
         private VCCommands()
         {
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
-            RequestStatus();
-            EditorApplication.playmodeStateChanged += () => RequestStatus();
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
-            EditorApplication.update += Update;
         }
 
         static VCCommands instance;
@@ -49,8 +46,6 @@ namespace VersionControl
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private List<string> lockedFileResources = new List<string>();
-        private int statusRequests;
-        private bool statusPending;
 
         public static bool Active
         {
@@ -61,24 +56,8 @@ namespace VersionControl
             }
         }
 
-        public bool Ready { get { return Active && vcc.IsReady() && statusRequests == 0; } }
+        public bool Ready { get { return Active && vcc.IsReady(); } }
 
-        public bool RequestStatus()
-        {
-            statusRequests++;
-            D.Log("StatusRequest : " + statusRequests);
-            return true;
-        }
-
-        private void Update()
-        {
-            if (!statusPending && statusRequests > 0 && vcc.IsReady() && !EditorApplication.isCompiling)
-            {
-                D.Log("StatusPending");
-                statusPending = true;
-                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; D.Log("StatusComplete"); });
-            }
-        }
 
         #region Private methods
 
@@ -320,13 +299,12 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                //Status();
                 if(RemoteHasUnloadableResourceChange())
                 {
                     OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && Invalidate(assets) /*&& RequestStatus()*/;
+                return vcc.Update(assets, force) && Invalidate(assets);
             });
         }
 
@@ -336,7 +314,7 @@ namespace VersionControl
             {
                 FlushFiles();
                 assets = AddMeta(assets);
-                return Status(assets) && vcc.Commit(assets, commitMessage) && RequestStatus();
+                return Status(assets) && vcc.Commit(assets, commitMessage);
             });
         }
         public bool Add(IEnumerable<string> assets)
@@ -344,7 +322,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 assets = AddMeta(assets, true);
-                return vcc.Add(assets) && RequestStatus();
+                return vcc.Add(assets);
             });
         }
         public bool Revert(IEnumerable<string> assets)
@@ -357,7 +335,6 @@ namespace VersionControl
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);
                 if (revertResult) vcc.ReleaseLock(assets);
-                RequestStatus();
                 return revertResult;
             });
         }
@@ -397,39 +374,39 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, force) && RequestStatus();
+                return vcc.Delete(deleteAssets, force);
             });
         }
         public bool GetLock(IEnumerable<string> assets, bool force = false)
         {
-            return HandleExceptions(() => vcc.GetLock(assets, force) && vcc.ChangeListRemove(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.GetLock(assets, force) && vcc.ChangeListRemove(assets));
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.ReleaseLock(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.ReleaseLock(assets));
         }
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return HandleExceptions(() => vcc.ChangeListAdd(assets, changelist) && RequestStatus());
+            return HandleExceptions(() => vcc.ChangeListAdd(assets, changelist));
         }
         public bool ChangeListRemove(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.ChangeListRemove(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.ChangeListRemove(assets));
         }
         public bool Checkout(string url, string path = "")
         {
-            return HandleExceptions(() => vcc.Checkout(url, path) && RequestStatus());
+            return HandleExceptions(() => vcc.Checkout(url, path));
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution) && RequestStatus());
+            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution));
         }
         public bool Move(string from, string to)
         {
             return HandleExceptions(() =>
                 {
                     FlushFiles();
-                    return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta") && RequestStatus();
+                    return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
                 });
         }
         public string GetBasePath(string assetPath)
@@ -438,7 +415,7 @@ namespace VersionControl
         }
         public bool CleanUp()
         {
-            return HandleExceptions(() => vcc.CleanUp() && RequestStatus());
+            return HandleExceptions(() => vcc.CleanUp());
         }
         public void ClearDatabase()
         {
@@ -476,7 +453,6 @@ namespace VersionControl
         public void BypassRevision(IEnumerable<string> assets)
         {
             vcc.ChangeListAdd(assets, "bypass");
-            RequestStatus();
         }
 
         #endregion

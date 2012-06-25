@@ -75,6 +75,8 @@ namespace VersionControl
     public enum VCReflectionLevel
     {
         None,
+        RequestLocal,
+        RequestRepository,
         Pending,
         Local,
         Repository,
@@ -101,6 +103,6 @@ namespace VersionControl
         public int revision;
         public int lastModifiedRevision;
         public bool bypassRevisionControl;
-        public bool Reflected { get { return reflectionLevel != VCReflectionLevel.None && reflectionLevel != VCReflectionLevel.Pending; } }
+        public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local && reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

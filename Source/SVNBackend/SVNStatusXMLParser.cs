@@ -135,7 +135,7 @@ namespace VersionControl.Backend.SVN
                 if (wcStatus.Attributes["item"] == null || !SVNToVersionControlStatusMap.fileStatusMap.TryGetValue(wcStatus.Attributes["item"].InnerText, out versionControlStatus.fileStatus)) D.Log("SVN: Unknown file status: " + wcStatus.Attributes["item"].InnerText);
                 if (wcStatus.Attributes["props"] == null || !SVNToVersionControlStatusMap.propertyMap.TryGetValue(wcStatus.Attributes["props"].InnerText, out versionControlStatus.property)) D.Log("SVN: Unknown property: " + wcStatus.Attributes["props"].InnerText);
 
-                if (versionControlStatus.reflectionLevel == VCReflectionLevel.None) versionControlStatus.reflectionLevel = VCReflectionLevel.Local;
+                if (versionControlStatus.reflectionLevel != VCReflectionLevel.Repository) versionControlStatus.reflectionLevel = VCReflectionLevel.Local;
                 if (wcStatus.Attributes["revision"] != null) versionControlStatus.revision = Int32.Parse(wcStatus.Attributes["revision"].InnerText);
                 if (wcStatus.Attributes["wc-locked"] != null && wcStatus.Attributes["wc-locked"].InnerText == "true") versionControlStatus.repositoryStatus = VCRepositoryStatus.Locked;
                 if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;

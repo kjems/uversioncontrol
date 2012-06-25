@@ -51,6 +51,16 @@ namespace VersionControl
             return vcc.Status(assets, remote);
         }
 
+        public virtual bool Invalidate(IEnumerable<string> assets)
+        {
+            return vcc.Invalidate(assets);
+        }
+
+        public virtual bool Invalidate(string asset)
+        {
+            return vcc.Invalidate(asset);
+        }
+
         public virtual bool Update(IEnumerable<string> assets = null, bool force = true)
         {
             return vcc.Update(assets, force);

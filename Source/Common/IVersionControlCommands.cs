@@ -28,8 +28,8 @@ namespace VersionControl
         bool Status(bool remote, bool full);
         bool Status(IEnumerable<string> assets, bool remote);
 
-        bool Invalidate(IEnumerable<string> assets);
-        bool Invalidate(string asset);
+        bool RequestStatus(IEnumerable<string> assets, bool repository);
+        bool RequestStatus(string asset, bool repository);
 
         bool Update(IEnumerable<string> assets = null, bool force = true);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
@@ -46,6 +46,8 @@ namespace VersionControl
         string GetBasePath(string assetPath);
         bool CleanUp();
         void ClearDatabase();
+        
         event Action<string> ProgressInformation;
+        event Action StatusUpdated;
     }
 }

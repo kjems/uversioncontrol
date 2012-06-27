@@ -71,7 +71,7 @@ namespace VersionControl.UserInterface
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
             vcMultiColumnAssetList.SetGUIFilter(GUIFilter);
 
-            VCCommands.Instance.StatusCompleted += RefreshGUI;
+            VCCommands.Instance.StatusUpdated += RefreshGUI;
             VCSettings.SettingChanged += Repaint;
             VCCommands.Instance.ProgressInformation += s =>
             {
@@ -84,7 +84,7 @@ namespace VersionControl.UserInterface
 
         virtual protected void OnDisable()
         {
-            VCCommands.Instance.StatusCompleted -= RefreshGUI;
+            VCCommands.Instance.StatusUpdated -= RefreshGUI;
             VCSettings.SettingChanged -= Repaint;
             vcMultiColumnAssetList.Dispose();
         }

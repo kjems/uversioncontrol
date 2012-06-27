@@ -35,7 +35,7 @@ namespace VersionControl.UserInterface
             // Add delegates
             EditorApplication.projectWindowItemOnGUI += ProjectWindowListElementOnGUI;
             EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowListElementOnGUI;
-            VCCommands.Instance.StatusCompleted += RefreshGUI;
+            VCCommands.Instance.StatusUpdated += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
 
             // Request repaint of project and hierarchy windows 
@@ -127,6 +127,7 @@ namespace VersionControl.UserInterface
             if (VCSettings.VCEnabled)
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
+                if(assetStatus.reflectionLevel == VCReflectionLevel.None) VCCommands.Instance.RequestStatus(assetStatus.assetPath, false);
                 bool isPrefab = PrefabHelper.IsPrefab(obj);
                 bool isPrefabRoot = PrefabHelper.IsPrefabRoot(obj);
                 bool halfsize = isPrefab && !isPrefabRoot;
@@ -137,6 +138,7 @@ namespace VersionControl.UserInterface
 
         private static void RefreshGUI()
         {
+            D.Log("GUI Refresh");
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
         }

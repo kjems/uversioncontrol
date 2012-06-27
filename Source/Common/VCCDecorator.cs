@@ -12,6 +12,7 @@ namespace VersionControl
         {
             this.vcc = vcc;
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) ProgressInformation(progress); };
+            vcc.StatusUpdated += () => { if (StatusUpdated != null) StatusUpdated(); };
         }
 
         protected readonly IVersionControlCommands vcc;
@@ -51,14 +52,14 @@ namespace VersionControl
             return vcc.Status(assets, remote);
         }
 
-        public virtual bool Invalidate(IEnumerable<string> assets)
+        public virtual bool RequestStatus(IEnumerable<string> assets, bool repository)
         {
-            return vcc.Invalidate(assets);
+            return vcc.RequestStatus(assets, repository);
         }
 
-        public virtual bool Invalidate(string asset)
+        public virtual bool RequestStatus(string asset, bool repository)
         {
-            return vcc.Invalidate(asset);
+            return vcc.RequestStatus(asset, repository);
         }
 
         public virtual bool Update(IEnumerable<string> assets = null, bool force = true)
@@ -137,5 +138,6 @@ namespace VersionControl
         }
 
         public event Action<string> ProgressInformation;
+        public event Action StatusUpdated;
     }
 }

@@ -32,7 +32,7 @@ namespace VersionControl.Backend.SVN
             {
                 while(true)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(50);
                     RefreshStatusDatabase();
                 }
             });
@@ -40,9 +40,14 @@ namespace VersionControl.Backend.SVN
         
         private void RefreshStatusDatabase()
         {
-            var invalidAssets = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.None).Select(a => a.Key).ToList();
-            if (invalidAssets.Count > 20) Status(true, false);
-            else if (invalidAssets.Count > 0) Status(invalidAssets, false);
+            var requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
+            var requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
+            
+            if (requestLocal.Count > 50) Status(true, false);
+            else if (requestLocal.Count > 0) Status(requestLocal, false);
+
+            if (requestRepository.Count > 50) Status(true, true);
+            else if (requestRepository.Count > 0) Status(requestRepository, true);
         }
 
         public bool IsReady()
@@ -88,6 +93,7 @@ namespace VersionControl.Backend.SVN
             try
             {
                 statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                StatusUpdated();
             }
             catch (XmlException)
             {
@@ -98,7 +104,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Status(IEnumerable<string> assets, bool remote)
         {
-            string arguments = "status --xml -v "; //--depth=empty
+            string arguments = "status --xml -v --depth=empty  "; //
             if (remote) arguments += "-u ";
             arguments += ConcatAssetPaths(assets);
             foreach (var assetIt in assets)
@@ -118,6 +124,7 @@ namespace VersionControl.Backend.SVN
                 {
                     statusDatabase[statusIt.Key] = statusIt.Value;
                 }
+                StatusUpdated();
             }
             catch (XmlException)
             {
@@ -194,7 +201,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets));
+            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, false);
         }
 
         private static string FixAtChar(string asset)
@@ -210,19 +217,18 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
-        public virtual bool Invalidate(IEnumerable<string> assets)
+        public virtual bool RequestStatus(IEnumerable<string> assets, bool repository)
         {
-            return assets.Aggregate(true, (current, assetIt) => current & Invalidate(assetIt));
+            return assets.Aggregate(true, (current, assetIt) => current & RequestStatus(assetIt, true));
         }
 
-        public virtual bool Invalidate(string asset)
+        public virtual bool RequestStatus(string asset, bool repository)
         {
-            if(statusDatabase.ContainsKey(asset))
-            {
-                statusDatabase[asset].reflectionLevel = VCReflectionLevel.None;
-                return true;
-            }
-            return false;
+            //statusDatabase[asset].reflectionLevel = repository ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
+            var assetStatus = statusDatabase[asset];
+            assetStatus.reflectionLevel = repository ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
+            statusDatabase[asset] = assetStatus;
+            return true;            
         }
 
         public bool Update(IEnumerable<string> assets = null, bool force = true)
@@ -332,10 +338,15 @@ namespace VersionControl.Backend.SVN
         }
 
         public event Action<string> ProgressInformation;
-
         private void OnProgressInformation(string info)
         {
             if (ProgressInformation != null) ProgressInformation(info);
+        }
+
+        public event Action StatusUpdated;
+        private void OnStatusUpdated()
+        {
+            if (StatusUpdated != null) StatusUpdated();
         }
     }
 }

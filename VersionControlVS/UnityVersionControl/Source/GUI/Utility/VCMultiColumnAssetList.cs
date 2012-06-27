@@ -41,14 +41,14 @@ namespace VersionControl.UserInterface
         public VCMultiColumnAssetList()
         {            
             Initialize();
-            VCCommands.Instance.StatusCompleted += RefreshGUI;
+            VCCommands.Instance.StatusUpdated += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
 
         }
 
         public void Dispose()
         {
-            VCCommands.Instance.StatusCompleted -= RefreshGUI;
+            VCCommands.Instance.StatusUpdated -= RefreshGUI;
             VCSettings.SettingChanged -= RefreshGUI;
         }
 

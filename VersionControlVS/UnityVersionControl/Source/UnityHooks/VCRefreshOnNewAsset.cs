@@ -17,7 +17,7 @@ namespace VersionControl
             changedAssets.AddRange(deletedAssets);
             changedAssets.AddRange(movedAssets);
             changedAssets.AddRange(movedFromAssetPaths);
-            if (changedAssets.Count > 0) VCCommands.Instance.Invalidate(changedAssets);
+            if (changedAssets.Count > 0) VCCommands.Instance.RequestStatus(changedAssets, true);
         }
     }
 }

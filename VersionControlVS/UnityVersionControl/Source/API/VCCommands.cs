@@ -38,6 +38,8 @@ namespace VersionControl
         {
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
+            vcc.StatusUpdated += () => { if (StatusUpdated != null) OnNextUpdate.Do(() => StatusUpdated()); };
+            OnNextUpdate.Do(() => vcc.Status(false, false));
         }
 
         static VCCommands instance;
@@ -264,7 +266,6 @@ namespace VersionControl
                 if (result)
                 {
                     OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                    OnNextUpdate.Do(OnStatusComplete);
                 }
                 return result;
             });
@@ -279,20 +280,19 @@ namespace VersionControl
                 if (result)
                 {
                     OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                    OnNextUpdate.Do(OnStatusComplete);
                 }
                 return result;
             });
         }
 
-        public bool Invalidate(IEnumerable<string> assets)
+        public bool RequestStatus(IEnumerable<string> assets, bool repository)
         {
-            return vcc.Invalidate(assets);
+            return vcc.RequestStatus(assets, repository);
         }
 
-        public bool Invalidate(string asset)
+        public bool RequestStatus(string asset, bool repository)
         {
-            return vcc.Invalidate(asset);
+            return vcc.RequestStatus(asset, repository);
         }
 
         public bool Update(IEnumerable<string> assets, bool force = true)
@@ -304,7 +304,7 @@ namespace VersionControl
                     OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && Invalidate(assets);
+                return vcc.Update(assets, force) && RequestStatus(assets, true);
             });
         }
 
@@ -422,10 +422,8 @@ namespace VersionControl
             vcc.ClearDatabase();
         }
         public event Action<string> ProgressInformation;
-        public event Action StatusCompleted;
-
-        private void OnStatusComplete() { if (StatusCompleted != null) StatusCompleted(); }
-
+        public event Action StatusUpdated;
+        
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();

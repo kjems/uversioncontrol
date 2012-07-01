@@ -39,7 +39,7 @@ namespace VersionControl
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
             vcc.StatusUpdated += () => { if (StatusUpdated != null) OnNextUpdate.Do(() => StatusUpdated()); };
-            OnNextUpdate.Do(() => vcc.Status(false, false));
+            OnNextUpdate.Do(() => StatusTask(false, false));
         }
 
         static VCCommands instance;
@@ -48,6 +48,7 @@ namespace VersionControl
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private List<string> lockedFileResources = new List<string>();
+        private bool ignoreStatusRequests = false;
 
         public static bool Active
         {
@@ -93,8 +94,10 @@ namespace VersionControl
         {
             if (ThreadUtility.IsMainThread())
             {
+                ignoreStatusRequests = true;
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
+                ignoreStatusRequests = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
@@ -285,14 +288,16 @@ namespace VersionControl
             });
         }
 
-        public bool RequestStatus(IEnumerable<string> assets, bool repository)
+        public bool RequestStatus(IEnumerable<string> assets, bool remote)
         {
-            return vcc.RequestStatus(assets, repository);
+            if (ignoreStatusRequests) return false;
+            return vcc.RequestStatus(assets, remote);
         }
 
-        public bool RequestStatus(string asset, bool repository)
+        public bool RequestStatus(string asset, bool remote)
         {
-            return vcc.RequestStatus(asset, repository);
+            if (ignoreStatusRequests) return false;
+            return vcc.RequestStatus(asset, remote);
         }
 
         public bool Update(IEnumerable<string> assets, bool force = true)
@@ -304,7 +309,7 @@ namespace VersionControl
                     OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && RequestStatus(assets, true);
+                return vcc.Update(assets, force) && RequestStatus(assets, false);
             });
         }
 

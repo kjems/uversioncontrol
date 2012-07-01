@@ -52,14 +52,14 @@ namespace VersionControl
             return vcc.Status(assets, remote);
         }
 
-        public virtual bool RequestStatus(IEnumerable<string> assets, bool repository)
+        public virtual bool RequestStatus(IEnumerable<string> assets, bool remote)
         {
-            return vcc.RequestStatus(assets, repository);
+            return vcc.RequestStatus(assets, remote);
         }
 
-        public virtual bool RequestStatus(string asset, bool repository)
+        public virtual bool RequestStatus(string asset, bool remote)
         {
-            return vcc.RequestStatus(asset, repository);
+            return vcc.RequestStatus(asset, remote);
         }
 
         public virtual bool Update(IEnumerable<string> assets = null, bool force = true)

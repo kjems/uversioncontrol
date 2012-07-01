@@ -62,10 +62,8 @@ namespace VersionControl
                 if (vcEnabled != value)
                 {
                     vcEnabled = value;
-                    if (!vcEnabled)
-                    {
-                        VCCommands.Instance.ClearDatabase();
-                    }
+                    if (vcEnabled) VCCommands.Instance.StatusTask(false, false);
+                    else VCCommands.Instance.ClearDatabase();
                 }
                 OnSettingsChanged();
             }

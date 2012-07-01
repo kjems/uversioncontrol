@@ -73,7 +73,16 @@ namespace VersionControl
 
         public override bool GetLock(IEnumerable<string> assets, bool force = false)
         {
-            return base.GetLock(force ? Versioned(assets) : NotLocked(assets), force);
+            try
+            {
+                return base.GetLock(force ? Versioned(assets) : NotLocked(assets), force);
+            }
+            catch(VCLockedByOther e)
+            {
+                D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a,b) => a + ", " + b) + "\n" + e.Message);
+                RequestStatus(assets, true);
+                return false;
+            }
         }
 
         public override bool ReleaseLock(IEnumerable<string> assets)

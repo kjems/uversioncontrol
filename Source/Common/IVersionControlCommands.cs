@@ -28,8 +28,8 @@ namespace VersionControl
         bool Status(bool remote, bool full);
         bool Status(IEnumerable<string> assets, bool remote);
 
-        bool RequestStatus(IEnumerable<string> assets, bool repository);
-        bool RequestStatus(string asset, bool repository);
+        bool RequestStatus(IEnumerable<string> assets, bool remote);
+        bool RequestStatus(string asset, bool remote);
 
         bool Update(IEnumerable<string> assets = null, bool force = true);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");

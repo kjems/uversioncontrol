@@ -43,4 +43,10 @@ namespace VersionControl
         public VCLocalCopyLockedException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
         public VCLocalCopyLockedException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
     }
+
+    public class VCLockedByOther : VCException
+    {
+        public VCLockedByOther(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
+        public VCLockedByOther(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
+    }
 }

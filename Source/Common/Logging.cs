@@ -26,7 +26,7 @@ namespace VersionControl
         public static Action<string> writeLogCallback;
         public static void Log(string message)
         {
-            if (writeLogCallback != null) writeLogCallback(message + "\n\n" + GetCallstack());
+            if (writeLogCallback != null) writeLogCallback(DateTime.Now.ToString("HH:mm:ss.ffff") + ":" + message + "\n\n" + GetCallstack());
         }
     }
 }

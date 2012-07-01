@@ -20,6 +20,7 @@ namespace VersionControl.Backend.SVN
         private StatusDatabase statusDatabase = new StatusDatabase();
         private bool operationActive = false;
         private readonly object operationActiveLockToken = new object();
+        private readonly object statusDatabaseLockToken = new object();
 
         public SVNCommands()
         {
@@ -32,22 +33,29 @@ namespace VersionControl.Backend.SVN
             {
                 while(true)
                 {
-                    Thread.Sleep(50);
+                    Thread.Sleep(100);
                     RefreshStatusDatabase();
                 }
             });
         }
         
-        private void RefreshStatusDatabase()
+        private bool RefreshStatusDatabase()
         {
-            var requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
-            var requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
-            
-            if (requestLocal.Count > 50) Status(true, false);
-            else if (requestLocal.Count > 0) Status(requestLocal, false);
+            lock (statusDatabaseLockToken)
+            {
+                var requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
+                var requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
 
-            if (requestRepository.Count > 50) Status(true, true);
-            else if (requestRepository.Count > 0) Status(requestRepository, true);
+                if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
+                if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
+
+                //if (requestLocal.Count > 50) Status(true, false);
+                if (requestLocal.Count > 0) Status(requestLocal, false);
+
+                //if (requestRepository.Count > 50) Status(true, true);
+                if (requestRepository.Count > 0) Status(requestRepository, true);
+            }
+            return true;
         }
 
         public bool IsReady()
@@ -104,9 +112,10 @@ namespace VersionControl.Backend.SVN
 
         public bool Status(IEnumerable<string> assets, bool remote)
         {
-            string arguments = "status --xml -v --depth=empty  "; //
+            string arguments = "status --xml -v ";
             if (remote) arguments += "-u ";
-            arguments += ConcatAssetPaths(assets);
+            else arguments += " --depth=empty ";
+            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
             foreach (var assetIt in assets)
             {
                 statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
@@ -120,9 +129,12 @@ namespace VersionControl.Backend.SVN
             try
             {
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
-                foreach (var statusIt in db)
+                lock (statusDatabaseLockToken)
                 {
-                    statusDatabase[statusIt.Key] = statusIt.Value;
+                    foreach (var statusIt in db)
+                    {
+                        statusDatabase[statusIt.Key] = statusIt.Value;
+                    }
                 }
                 StatusUpdated();
             }
@@ -193,6 +205,8 @@ namespace VersionControl.Backend.SVN
                     throw new VCOutOfDate(errStr, commandLine.ToString());
                 if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
+                if (errStr.Contains("W160035") || errStr.Contains("run 'svn cleanup'"))
+                    throw new VCLockedByOther(errStr, commandLine.ToString());
                 throw new VCException(errStr, commandLine.ToString());
             }
             return commandLineOutput;
@@ -209,6 +223,11 @@ namespace VersionControl.Backend.SVN
             return asset.Contains("@") ? asset + "@" : asset;
         }
 
+        private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)
+        {
+            return assets.Select(a => a.Replace(workingDirectory, ""));
+        }
+
         private static string ConcatAssetPaths(IEnumerable<string> assets)
         {
             assets = assets.Select(a => a.Replace("\\", "/"));
@@ -217,17 +236,26 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
-        public virtual bool RequestStatus(IEnumerable<string> assets, bool repository)
+        public virtual bool RequestStatus(IEnumerable<string> assets, bool remote)
         {
-            return assets.Aggregate(true, (current, assetIt) => current & RequestStatus(assetIt, true));
+            if (assets == null || assets.Count() == 0) return true;
+            bool result = true;
+            foreach (string asset in assets)
+            {
+                result &= RequestStatus(asset, remote);
+            }
+            return result;
         }
 
-        public virtual bool RequestStatus(string asset, bool repository)
+        public virtual bool RequestStatus(string asset, bool remote)
         {
-            //statusDatabase[asset].reflectionLevel = repository ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
-            var assetStatus = statusDatabase[asset];
-            assetStatus.reflectionLevel = repository ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
-            statusDatabase[asset] = assetStatus;
+            lock (statusDatabaseLockToken)
+            {
+                var assetStatus = statusDatabase[asset];
+                assetStatus.reflectionLevel = remote ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
+                statusDatabase[asset] = assetStatus;
+                D.Log("Request Status : " + asset + ", reflection level after : '" + statusDatabase[asset].reflectionLevel + "'");
+            }
             return true;            
         }
 

@@ -40,6 +40,7 @@ namespace VersionControl
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
             vcc.StatusUpdated += () => { if (StatusUpdated != null) OnNextUpdate.Do(() => StatusUpdated()); };
             OnNextUpdate.Do(() => StatusTask(false, false));
+            EditorApplication.playmodeStateChanged += () => StatusTask(false, false);
         }
 
         static VCCommands instance;

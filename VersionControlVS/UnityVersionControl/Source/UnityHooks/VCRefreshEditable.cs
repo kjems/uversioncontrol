@@ -14,7 +14,7 @@ namespace VersionControl
         static VCRefreshEditable()
         {
             EditorApplication.update += RefreshEditable;
-            VCCommands.Instance.StatusUpdated += RefreshGUI;
+            VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += () => { RefreshGUI(); D.Log("Settings changed"); };
         }
 

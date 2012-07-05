@@ -12,7 +12,7 @@ namespace VersionControl
         {
             this.vcc = vcc;
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) ProgressInformation(progress); };
-            vcc.StatusUpdated += () => { if (StatusUpdated != null) StatusUpdated(); };
+            vcc.StatusCompleted += () => { if (StatusCompleted != null) StatusCompleted(); };
         }
 
         protected readonly IVersionControlCommands vcc;
@@ -143,6 +143,6 @@ namespace VersionControl
         }
 
         public event Action<string> ProgressInformation;
-        public event Action StatusUpdated;
+        public event Action StatusCompleted;
     }
 }

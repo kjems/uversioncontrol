@@ -10,12 +10,12 @@ public class RendererInspectorManager : Editor
 {
     void OnEnable()
     {
-        VCCommands.Instance.StatusUpdated += Repaint;
+        VCCommands.Instance.StatusCompleted += Repaint;
     }
 
     void OnDisable()
     {
-        VCCommands.Instance.StatusUpdated -= Repaint;
+        VCCommands.Instance.StatusCompleted -= Repaint;
     }
 
     private struct PrioritizedInspectorCallback

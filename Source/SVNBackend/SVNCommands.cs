@@ -101,7 +101,7 @@ namespace VersionControl.Backend.SVN
             try
             {
                 statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
-                StatusUpdated();
+                StatusCompleted();
             }
             catch (XmlException)
             {
@@ -136,7 +136,7 @@ namespace VersionControl.Backend.SVN
                         statusDatabase[statusIt.Key] = statusIt.Value;
                     }
                 }
-                StatusUpdated();
+                StatusCompleted();
             }
             catch (XmlException)
             {
@@ -379,10 +379,10 @@ namespace VersionControl.Backend.SVN
             if (ProgressInformation != null) ProgressInformation(info);
         }
 
-        public event Action StatusUpdated;
+        public event Action StatusCompleted;
         private void OnStatusUpdated()
         {
-            if (StatusUpdated != null) StatusUpdated();
+            if (StatusCompleted != null) StatusCompleted();
         }
     }
 }

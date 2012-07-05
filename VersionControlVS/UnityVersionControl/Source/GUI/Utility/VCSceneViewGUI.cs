@@ -16,7 +16,7 @@ namespace VersionControl.UserInterface
         {
             SceneView.onSceneGUIDelegate += SceneViewUpdate;
             VCSettings.SettingChanged += SceneView.RepaintAll;
-            VCCommands.Instance.StatusUpdated += SceneView.RepaintAll;
+            VCCommands.Instance.StatusCompleted += SceneView.RepaintAll;
         }
 
         static void SceneViewUpdate(SceneView sceneView)

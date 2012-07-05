@@ -137,6 +137,11 @@ namespace VersionControl
             vcc.ClearDatabase();
         }
 
+        public virtual void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            vcc.RemoveFromDatabase(assets);
+        }
+
         public event Action<string> ProgressInformation;
         public event Action StatusUpdated;
     }

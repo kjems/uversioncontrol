@@ -46,8 +46,8 @@ namespace VersionControl.Backend.SVN
                 var requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
                 var requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
 
-                if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
-                if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
+                //if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
+                //if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
 
                 //if (requestLocal.Count > 50) Status(true, false);
                 if (requestLocal.Count > 0) Status(requestLocal, false);
@@ -254,7 +254,7 @@ namespace VersionControl.Backend.SVN
                 var assetStatus = statusDatabase[asset];
                 assetStatus.reflectionLevel = remote ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
                 statusDatabase[asset] = assetStatus;
-                D.Log("Request Status : " + asset + ", reflection level after : '" + statusDatabase[asset].reflectionLevel + "'");
+                //D.Log("Request Status : " + asset + ", reflection level after : '" + statusDatabase[asset].reflectionLevel + "'");
             }
             return true;            
         }
@@ -319,7 +319,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"");
+            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[]{from, to}, false);
         }
 
         public string GetBasePath(string assetPath)
@@ -363,6 +363,14 @@ namespace VersionControl.Backend.SVN
         public void ClearDatabase()
         {
             statusDatabase.Clear();
+        }
+
+        public void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            foreach(var assetIt in assets)
+            {
+                statusDatabase.Remove(assetIt);
+            }
         }
 
         public event Action<string> ProgressInformation;

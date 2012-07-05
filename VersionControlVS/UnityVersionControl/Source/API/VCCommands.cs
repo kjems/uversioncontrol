@@ -38,7 +38,7 @@ namespace VersionControl
         {
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
-            vcc.StatusUpdated += () => { if (StatusUpdated != null) OnNextUpdate.Do(() => StatusUpdated()); };
+            vcc.StatusUpdated += OnStatusUpdated;
             OnNextUpdate.Do(() => StatusTask(false, false));
             EditorApplication.playmodeStateChanged += () => StatusTask(false, false);
         }
@@ -267,10 +267,6 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.Status(remote, full);
-                if (result)
-                {
-                    OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                }
                 return result;
             });
         }
@@ -281,10 +277,6 @@ namespace VersionControl
             {
                 var withMeta = AddMeta(assets, true);
                 bool result = vcc.Status(withMeta, remote);
-                if (result)
-                {
-                    OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                }
                 return result;
             });
         }
@@ -305,9 +297,9 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                if(RemoteHasUnloadableResourceChange())
+                if (RemoteHasUnloadableResourceChange())
                 {
-                    OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
+                    OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
                 return vcc.Update(assets, force) && RequestStatus(assets, false);
@@ -427,9 +419,21 @@ namespace VersionControl
         {
             vcc.ClearDatabase();
         }
+        public void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            vcc.RemoveFromDatabase(assets);
+        }
+
+        private void OnStatusUpdated()
+        {
+            D.Log("Status Updatees : " + (StatusUpdated != null ? StatusUpdated.GetInvocationList().Length : 0));
+            OnNextUpdate.Do(() => AssetDatabase.Refresh());
+            if (StatusUpdated != null) OnNextUpdate.Do(StatusUpdated);
+        }
+
         public event Action<string> ProgressInformation;
         public event Action StatusUpdated;
-        
+
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();

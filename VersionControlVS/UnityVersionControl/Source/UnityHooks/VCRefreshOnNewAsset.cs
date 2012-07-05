@@ -11,18 +11,28 @@ namespace VersionControl
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
+        private static List<string> removedAssets = new List<string>();
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             changedAssets.AddRange(importedAssets);
-            changedAssets.AddRange(deletedAssets);
             changedAssets.AddRange(movedAssets);
-            changedAssets.AddRange(movedFromAssetPaths);
             changedAssets = changedAssets.Distinct().ToList();
             if (changedAssets.Count > 0)
             {
                 VCCommands.Instance.RequestStatus(changedAssets, false);
                 changedAssets.Clear();
             }
+
+            removedAssets.AddRange(deletedAssets);
+            removedAssets.AddRange(movedFromAssetPaths);
+            removedAssets = removedAssets.Distinct().ToList();
+            if (removedAssets.Count > 0)
+            {
+                //VCCommands.Instance.RemoveFromDatabase(removedAssets);
+                VCCommands.Instance.RequestStatus(changedAssets, true);
+                removedAssets.Clear();
+            }
+
         }
     }
 }

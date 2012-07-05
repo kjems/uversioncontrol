@@ -65,7 +65,7 @@ namespace VersionControl.UserInterface
             minSize = new Vector2(250,100);
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
             UpdateFilteringOfKeys();
-            VCCommands.Instance.StatusUpdated += StatusCompleted;
+            VCCommands.Instance.StatusCompleted += StatusCompleted;
         }
 
         private void StatusCompleted()

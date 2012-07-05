@@ -47,6 +47,6 @@ namespace VersionControl
         void RemoveFromDatabase(IEnumerable<string> assets);
         
         event Action<string> ProgressInformation;
-        event Action StatusUpdated;
+        event Action StatusCompleted;
     }
 }

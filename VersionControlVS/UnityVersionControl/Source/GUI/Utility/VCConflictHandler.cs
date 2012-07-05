@@ -12,7 +12,7 @@ namespace VersionControl
     {
         static VCConflictHandler()
         {
-            VCCommands.Instance.StatusUpdated += HandleConflicts;
+            VCCommands.Instance.StatusCompleted += HandleConflicts;
         }
         private static readonly List<string> ignoredConflicts = new List<string>();
         private static void HandleConflicts()

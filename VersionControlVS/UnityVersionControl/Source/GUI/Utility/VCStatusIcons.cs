@@ -35,7 +35,7 @@ namespace VersionControl.UserInterface
             // Add delegates
             EditorApplication.projectWindowItemOnGUI += ProjectWindowListElementOnGUI;
             EditorApplication.hierarchyWindowItemOnGUI += HierarchyWindowListElementOnGUI;
-            VCCommands.Instance.StatusUpdated += RefreshGUI;
+            VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
 
             // Request repaint of project and hierarchy windows 

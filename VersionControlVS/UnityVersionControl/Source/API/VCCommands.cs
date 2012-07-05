@@ -38,7 +38,7 @@ namespace VersionControl
         {
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
-            vcc.StatusUpdated += OnStatusUpdated;
+            vcc.StatusCompleted += OnStatusCompleted;
             OnNextUpdate.Do(() => StatusTask(false, false));
             EditorApplication.playmodeStateChanged += () => StatusTask(false, false);
         }
@@ -424,15 +424,15 @@ namespace VersionControl
             vcc.RemoveFromDatabase(assets);
         }
 
-        private void OnStatusUpdated()
+        private void OnStatusCompleted()
         {
-            D.Log("Status Updatees : " + (StatusUpdated != null ? StatusUpdated.GetInvocationList().Length : 0));
+            D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
             OnNextUpdate.Do(() => AssetDatabase.Refresh());
-            if (StatusUpdated != null) OnNextUpdate.Do(StatusUpdated);
+            if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
         }
 
         public event Action<string> ProgressInformation;
-        public event Action StatusUpdated;
+        public event Action StatusCompleted;
 
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {

@@ -63,6 +63,7 @@ namespace VersionControl
         public static void ApplyAndCommit(Object obj, string commitMessage, bool showCommitDialog = false)
         {
             var gameObject = obj as GameObject;
+            if (ObjectExtension.ChangesStoredInScene(obj)) VCCommands.Instance.SaveScene(obj);
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
             VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
         }

@@ -58,6 +58,8 @@ namespace VersionControl.Backend.SVN
             var statusDatabase = new StatusDatabase();
 
             XmlNodeList entries = xmlDoc.GetElementsByTagName("entry");
+            var target = xmlDoc.GetElementsByTagName("status")[0]["target"];
+            bool repositoryReflection = target != null && target["against"] != null;
             foreach (XmlNode entryIt in entries)
             {
                 string assetPath = (entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim();
@@ -65,6 +67,10 @@ namespace VersionControl.Backend.SVN
                 status.assetPath = assetPath;
                 if (status.reflectionLevel != VCReflectionLevel.None)
                 {
+                    if (repositoryReflection)
+                    {
+                        status.reflectionLevel = VCReflectionLevel.Repository;
+                    }
                     statusDatabase[assetPath] = status;
                 }
             }

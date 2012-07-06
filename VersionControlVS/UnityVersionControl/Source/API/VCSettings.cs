@@ -19,7 +19,9 @@ namespace VersionControl
             sceneviewGUI = EditorPrefs.GetBool("VCSSettings/sceneviewGUI", true);
             materialGUI = EditorPrefs.GetBool("VCSSettings/materialGUI", true);
             hierarchyIcons = EditorPrefs.GetBool("VCSSettings/hierarchyIcons", true);
+            hierarchyReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/hierarchyReflectionMode", (int)EReflectionLevel.Remote);
             projectIcons = EditorPrefs.GetBool("VCSSettings/projectIcons", true);
+            projectReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/projectReflectionMode", (int)EReflectionLevel.Local);
             bugReport = EditorPrefs.GetBool("VCSSettings/bugReport", true);
             bugReportMode = (EBugReportMode)EditorPrefs.GetInt("VCSSettings/bugReportMode", (int)EBugReportMode.Manual);
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
@@ -38,7 +40,9 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/sceneviewGUI", sceneviewGUI);
                 EditorPrefs.SetBool("VCSSettings/materialGUI", materialGUI);
                 EditorPrefs.SetBool("VCSSettings/hierarchyIcons", hierarchyIcons);
+                EditorPrefs.SetInt("VCSSettings/hierarchyReflectionMode", (int)hierarchyReflectionMode);
                 EditorPrefs.SetBool("VCSSettings/projectIcons", projectIcons);
+                EditorPrefs.SetInt("VCSSettings/projectReflectionMode", (int)projectReflectionMode);
                 EditorPrefs.SetBool("VCSSettings/bugReport", bugReport);
                 EditorPrefs.SetInt("VCSSettings/bugReportMode", (int)bugReportMode);
                 EditorPrefs.SetBool("VCSSettings/logging", logging);
@@ -50,6 +54,7 @@ namespace VersionControl
         }
 
         public enum EBugReportMode { Automatic, Manual }
+        public enum EReflectionLevel { Local, Remote }
 
         public static event Action SettingChanged;
 
@@ -91,9 +96,17 @@ namespace VersionControl
 
         [SerializeField] private static bool hierarchyIcons;
         public static bool HierarchyIcons { get { return hierarchyIcons; } set { if (hierarchyIcons != value) { hierarchyIcons = value; OnSettingsChanged(); } } }
+
+        [SerializeField]
+        private static EReflectionLevel hierarchyReflectionMode;
+        public static EReflectionLevel HierarchyReflectionMode { get { return hierarchyReflectionMode; } set { if (hierarchyReflectionMode != value) { hierarchyReflectionMode = value; } } }
         
         [SerializeField] private static bool projectIcons;
         public static bool ProjectIcons { get { return projectIcons; } set { if (projectIcons != value) { projectIcons = value; OnSettingsChanged(); } } }
+
+        [SerializeField]
+        private static EReflectionLevel projectReflectionMode;
+        public static EReflectionLevel ProjectReflectionMode { get { return projectReflectionMode; } set { if (projectReflectionMode != value) { projectReflectionMode = value; } } }
         
         [SerializeField] private static bool bugReport;
         public static bool BugReport { get { return bugReport; } set { if (bugReport != value) { bugReport = value; OnSettingsChanged(); } } }

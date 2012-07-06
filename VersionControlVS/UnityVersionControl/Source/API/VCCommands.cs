@@ -50,6 +50,7 @@ namespace VersionControl
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private List<string> lockedFileResources = new List<string>();
         private bool ignoreStatusRequests = false;
+        private Action<Object> _saveSceneCallback = o => EditorApplication.SaveScene();
 
         public static bool Active
         {
@@ -302,7 +303,7 @@ namespace VersionControl
                     OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && RequestStatus(assets, false);
+                return vcc.Update(assets, force);
             });
         }
 
@@ -426,7 +427,7 @@ namespace VersionControl
 
         private void OnStatusCompleted()
         {
-            D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
+            //D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
             OnNextUpdate.Do(() => AssetDatabase.Refresh());
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
         }
@@ -473,6 +474,17 @@ namespace VersionControl
         {
             lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
         }
-
+        public void SetSceneObjectToAssetPathCallback(Func<Object, string> sceneObjectToAssetPath)
+        {
+            ObjectExtension.SetSceneObjectToAssetPath(sceneObjectToAssetPath);
+        }
+        public void SetSaveSceneCallback(Action<Object> saveSceneCallback)
+        {
+            _saveSceneCallback = saveSceneCallback;
+        }
+        public void SaveScene(Object obj)
+        {
+            _saveSceneCallback(obj);
+        }
     }
 }

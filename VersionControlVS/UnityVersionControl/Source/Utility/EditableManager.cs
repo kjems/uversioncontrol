@@ -72,7 +72,7 @@ namespace VersionControl
             var assetPath = gameObject.GetAssetPath();
             var assetStatus = gameObject.GetAssetStatus();
             bool lockScene = LockScene(assetPath);
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
+            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(ObjectExtension.SceneObjectToAssetPath(gameObject));
             bool hasAssetPath = assetPath != "";
             bool changesStoredInScene = ObjectExtension.ChangesStoredInScene(gameObject);
             bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus) || !lockScene;

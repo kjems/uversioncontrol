@@ -110,15 +110,28 @@ namespace VersionControl.UserInterface
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
-
-            DrawVersionControlStatusIcon(AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid)), selectionRect);
+            var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+            if (VCSettings.VCEnabled)
+            {
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
+                if (assetStatus.reflectionLevel == VCReflectionLevel.None) VCCommands.Instance.RequestStatus(assetStatus.assetPath, false);
+            }
+            DrawVersionControlStatusIcon(obj, selectionRect);
         }
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
-
+            
             var obj = EditorUtility.InstanceIDToObject(instanceID);
+            if (VCSettings.VCEnabled)
+            {
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
+                if (assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, true);
+                }
+            }
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
 
@@ -127,7 +140,6 @@ namespace VersionControl.UserInterface
             if (VCSettings.VCEnabled)
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
-                if(assetStatus.reflectionLevel == VCReflectionLevel.None) VCCommands.Instance.RequestStatus(assetStatus.assetPath, false);
                 bool isPrefab = PrefabHelper.IsPrefab(obj);
                 bool isPrefabRoot = PrefabHelper.IsPrefabRoot(obj);
                 bool halfsize = isPrefab && !isPrefabRoot;
@@ -138,7 +150,7 @@ namespace VersionControl.UserInterface
 
         private static void RefreshGUI()
         {
-            D.Log("GUI Refresh");
+            //D.Log("GUI Refresh");
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
         }

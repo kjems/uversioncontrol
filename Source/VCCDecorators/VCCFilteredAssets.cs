@@ -39,6 +39,18 @@ namespace VersionControl
             return assets.Any() ? base.Status(assets, remote) : false;
         }
 
+        public override bool RequestStatus(IEnumerable<string> assets, bool remote)
+        {
+            if (assets == null) return true;
+            assets = NonEmpty(assets);
+            return assets.Any() ? base.RequestStatus(assets, remote) : true;
+        }
+
+        public override bool RequestStatus(string asset, bool remote)
+        {
+            return !string.IsNullOrEmpty(asset) ? base.RequestStatus(asset, remote) : true;
+        }
+
         public override bool Update(IEnumerable<string> assets = null, bool force = true)
         {
             return base.Update((assets != null ? Versioned(assets) : null), force);
@@ -52,7 +64,6 @@ namespace VersionControl
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
                 base.Delete(Missing(filesInFolders)) &&
                 base.Commit(ShortestFirst(toBeCommited), commitMessage) &&
-                base.Status(false, false) &&
                 ReleaseLock(assets);
         }
 

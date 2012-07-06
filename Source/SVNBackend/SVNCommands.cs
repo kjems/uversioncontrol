@@ -31,30 +31,29 @@ namespace VersionControl.Backend.SVN
         {
             ThreadPool.QueueUserWorkItem(o =>
             {
-                while(true)
+                while (true)
                 {
                     Thread.Sleep(100);
                     RefreshStatusDatabase();
                 }
             });
         }
-        
+
         private bool RefreshStatusDatabase()
         {
+            List<string> requestLocal;
+            List<string> requestRepository;
             lock (statusDatabaseLockToken)
             {
-                var requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
-                var requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
-
-                //if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
-                //if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
-
-                //if (requestLocal.Count > 50) Status(true, false);
-                if (requestLocal.Count > 0) Status(requestLocal, false);
-
-                //if (requestRepository.Count > 50) Status(true, true);
-                if (requestRepository.Count > 0) Status(requestRepository, true);
+                requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
+                requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
             }
+            //if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
+            //if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
+
+            if (requestLocal.Count > 0) Status(requestLocal, false);
+            if (requestRepository.Count > 0) Status(requestRepository, true);
+
             return true;
         }
 
@@ -176,7 +175,7 @@ namespace VersionControl.Backend.SVN
                 {
                     operationActive = true;
                     D.Log(commandLine.ToString());
-                    //System.Threading.Thread.Sleep(100); // emulate latency to SVN server
+                    //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
                     commandLineOutput = commandLine.Execute();
                 }
                 catch (Exception e)
@@ -256,7 +255,7 @@ namespace VersionControl.Backend.SVN
                 statusDatabase[asset] = assetStatus;
                 //D.Log("Request Status : " + asset + ", reflection level after : '" + statusDatabase[asset].reflectionLevel + "'");
             }
-            return true;            
+            return true;
         }
 
         public bool Update(IEnumerable<string> assets = null, bool force = true)
@@ -319,7 +318,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[]{from, to}, false);
+            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, false);
         }
 
         public string GetBasePath(string assetPath)
@@ -367,7 +366,7 @@ namespace VersionControl.Backend.SVN
 
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
-            foreach(var assetIt in assets)
+            foreach (var assetIt in assets)
             {
                 statusDatabase.Remove(assetIt);
             }

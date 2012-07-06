@@ -107,31 +107,35 @@ namespace VersionControl.UserInterface
             return defaultIcon;
         }
 
+        private static void RequestStatus(Object asset, VCSettings.EReflectionLevel reflectionLevel)
+        {
+            if (VCSettings.VCEnabled)
+            {
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
+                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, true);
+                }
+                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, false);
+                }
+            }
+        }
+
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
             var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
-            if (VCSettings.VCEnabled)
-            {
-                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
-                if (assetStatus.reflectionLevel == VCReflectionLevel.None) VCCommands.Instance.RequestStatus(assetStatus.assetPath, false);
-            }
+            RequestStatus(obj, VCSettings.ProjectReflectionMode);
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
-
+        
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
-            
             var obj = EditorUtility.InstanceIDToObject(instanceID);
-            if (VCSettings.VCEnabled)
-            {
-                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
-                if (assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
-                {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, true);
-                }
-            }
+            RequestStatus(obj, VCSettings.HierarchyReflectionMode);
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
 

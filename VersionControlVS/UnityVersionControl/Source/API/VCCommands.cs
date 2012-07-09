@@ -319,7 +319,7 @@ namespace VersionControl
             {
                 FlushFiles();
                 assets = AddMeta(assets);
-                return Status(assets) && vcc.Commit(assets, commitMessage);
+                return Status(assets) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
             });
         }
         public bool Add(IEnumerable<string> assets)

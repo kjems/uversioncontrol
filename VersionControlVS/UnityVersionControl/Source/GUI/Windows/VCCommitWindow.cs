@@ -18,8 +18,12 @@ namespace VersionControl.UserInterface
 
         public IEnumerable<string> commitedFiles = new List<string>();
 
-
-        string commitMessage = "";
+        private string commitMessage = null;
+        private string CommitMessage
+        {
+            get { return commitMessage ?? (commitMessage = EditorPrefs.GetString("VCCommitWindow/CommitMessage", "")); }
+            set { commitMessage = value; EditorPrefs.SetString("VCCommitWindow/CommitMessage", commitMessage); }
+        }
         bool firstTime = true;
         bool commitInProgress = false;
         bool commitCompleted = false;
@@ -115,9 +119,9 @@ namespace VersionControl.UserInterface
             EditorGUILayout.BeginHorizontal();
 
             GUI.SetNextControlName("CommitMessage");
-            using (GUILayoutHelper.BackgroundColor(commitMessage.Length < 10 ? new Color(1, 0, 0) : new Color(0, 1, 0)))
+            using (GUILayoutHelper.BackgroundColor(CommitMessage.Length < 10 ? new Color(1, 0, 0) : new Color(0, 1, 0)))
             {
-                commitMessage = GUILayout.TextField(commitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+                CommitMessage = GUILayout.TextField(CommitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             }
             if (firstTime)
             {
@@ -136,10 +140,14 @@ namespace VersionControl.UserInterface
                             commitProgress = s + "\n" + commitProgress;
                             Repaint();
                         };
-                        var commitTask = VCCommands.Instance.CommitTask(vcMultiColumnAssetList.GetSelectedAssets().ToList(), commitMessage);
-                        commitTask.ContinueWith(result =>
+                        var commitTask = VCCommands.Instance.CommitTask(vcMultiColumnAssetList.GetSelectedAssets().ToList(), CommitMessage);
+                        commitTask.ContinueWithOnNextUpdate(result =>
                         {
-                            if (result.Result) commitedFiles = vcMultiColumnAssetList.GetSelectedAssets();
+                            if (result)
+                            {
+                                commitedFiles = vcMultiColumnAssetList.GetSelectedAssets();
+                                CommitMessage = "";
+                            }
                             commitCompleted = true;
                         });
                         commitInProgress = true;

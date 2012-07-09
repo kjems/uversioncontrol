@@ -92,6 +92,12 @@ namespace VersionControl
             return false;
         }
 
+        private bool RefreshAssetDatabase()
+        {
+            OnNextUpdate.Do(() => { D.Log("Refresh AssetDatabase"); AssetDatabase.Refresh(); });
+            return true;
+        }
+
         private void FlushFiles()
         {
             if (ThreadUtility.IsMainThread())
@@ -303,7 +309,7 @@ namespace VersionControl
                     OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force);
+                return vcc.Update(assets, force) && RefreshAssetDatabase();
             });
         }
 
@@ -334,6 +340,7 @@ namespace VersionControl
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);
                 if (revertResult) vcc.ReleaseLock(assets);
+                RefreshAssetDatabase();
                 return revertResult;
             });
         }
@@ -373,7 +380,7 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, force);
+                return vcc.Delete(deleteAssets, force) && RefreshAssetDatabase();
             });
         }
         public bool GetLock(IEnumerable<string> assets, bool force = false)
@@ -398,7 +405,7 @@ namespace VersionControl
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution));
+            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution)) && RefreshAssetDatabase();
         }
         public bool Move(string from, string to)
         {
@@ -406,7 +413,7 @@ namespace VersionControl
                 {
                     FlushFiles();
                     return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
-                });
+                }) && RefreshAssetDatabase();
         }
         public string GetBasePath(string assetPath)
         {
@@ -428,7 +435,6 @@ namespace VersionControl
         private void OnStatusCompleted()
         {
             //D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
-            OnNextUpdate.Do(() => AssetDatabase.Refresh());
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
         }
 

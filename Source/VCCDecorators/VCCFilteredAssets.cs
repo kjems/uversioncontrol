@@ -95,6 +95,11 @@ namespace VersionControl
                 return false;
             }
         }
+        
+        public override bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
+        {
+            return base.Resolve(FilesExist(assets), conflictResolution);
+        }
 
         public override bool ReleaseLock(IEnumerable<string> assets)
         {
@@ -182,11 +187,15 @@ namespace VersionControl
                 assets.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Unversioned &&
                 vcc.GetAssetStatus(a).lockStatus == VCLockStatus.NoLock);
         }
-        private static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
+        IEnumerable<string> FilesExist(IEnumerable<string> assets)
+        {
+            return assets.Where(File.Exists);
+        }
+        static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
         {
             return assets.OrderBy(s => s.Length);
         }
-        private IEnumerable<string> AddFolders(IEnumerable<string> assets)
+        IEnumerable<string> AddFolders(IEnumerable<string> assets)
         {
             return assets
                 .Select(a => Path.GetDirectoryName(a))
@@ -195,12 +204,12 @@ namespace VersionControl
                 .Distinct();
         }
 
-        private bool InUnversionedParentFolder(string asset)
+        bool InUnversionedParentFolder(string asset)
         {
             return ParentFolders(asset).Any(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
         }
 
-        private static IEnumerable<string> ParentFolders(string asset)
+        static IEnumerable<string> ParentFolders(string asset)
         {
             const char pathSeparator = '/';
             var parentFolders = new List<string>();
@@ -216,7 +225,7 @@ namespace VersionControl
             return parentFolders;
         }
 
-        private IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets, bool versionedFoldersOnly = false)
+        IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets, bool versionedFoldersOnly = false)
         {
             foreach (var assetIt in new List<string>(assets))
             {
@@ -231,12 +240,12 @@ namespace VersionControl
             return assets;
         }
 
-        private IEnumerable<string> RemoveFolders(IEnumerable<string> assets)
+        IEnumerable<string> RemoveFolders(IEnumerable<string> assets)
         {
             return assets.Where(a => !Directory.Exists(a));
         }
 
-        private IEnumerable<string> RemoveFilesUnderUnversionedFolders(IEnumerable<string> assets)
+        IEnumerable<string> RemoveFilesUnderUnversionedFolders(IEnumerable<string> assets)
         {
             var folders = assets.Where(a => Directory.Exists(a) && GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
             assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));

@@ -147,9 +147,29 @@ namespace VersionControl
             return HaveVCLock(assetStatus) || assetStatus.bypassRevisionControl || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying;
         }
 
+        public static bool HaveAssetControl(string assetPath)
+        {
+            return HaveAssetControl(VCCommands.Instance.GetAssetStatus(assetPath));
+        }
+
+        public static bool HaveAssetControl(Object obj)
+        {
+            return HaveAssetControl(obj.GetAssetPath());
+        }
+        
         public static bool ManagedByRepository(VersionControlStatus assetStatus)
         {
             return assetStatus.fileStatus != VCFileStatus.Unversioned && !System.String.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;
+        }
+
+        public static bool ManagedByRepository(string assetPath)
+        {
+            return ManagedByRepository(VCCommands.Instance.GetAssetStatus(assetPath));
+        }
+
+        public static bool ManagedByRepository(Object obj)
+        {
+            return ManagedByRepository(obj.GetAssetPath());
         }
     }
 }

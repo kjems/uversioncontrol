@@ -46,7 +46,7 @@ namespace VersionControl
         }
         private static System.Func<Object, string> _sceneObjectToAssetPath = o => EditorApplication.currentScene;
 
-        private static string ObjectToAssetPath(Object obj, bool treatPrefabsAsSceneObjects = false)
+        private static string ObjectToAssetPath(Object obj)
         {
             if (obj is Material) return AssetDatabase.GetAssetPath(obj);
             if (obj is TextAsset) return AssetDatabase.GetAssetPath(obj);

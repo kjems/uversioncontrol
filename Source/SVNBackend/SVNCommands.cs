@@ -262,7 +262,6 @@ namespace VersionControl.Backend.SVN
                 {
                     if (!remoteRequestQueue.Contains(asset))
                     {
-                        D.Log("RequestStatus : remote for '" + asset + "'");
                         remoteRequestQueue.Add(asset);
                     }
                 }
@@ -270,7 +269,6 @@ namespace VersionControl.Backend.SVN
                 {
                     if (!localRequestQueue.Contains(asset))
                     {
-                        D.Log("RequestStatus : local for '" + asset + "'");
                         localRequestQueue.Add(asset);
                     }
                 }

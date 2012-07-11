@@ -126,8 +126,10 @@ namespace VersionControl.UserInterface
 
                 bool ready = VCCommands.Instance.Ready;
                 bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
+                bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
                 bool isFolder = System.IO.Directory.Exists(assetPath);
                 bool modifiedTextAsset = VCUtility.IsTextAsset(assetPath) && assetStatus.fileStatus != VCFileStatus.Normal;
+                bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
                 bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
                 bool added = assetStatus.fileStatus == VCFileStatus.Added;
                 bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
@@ -142,14 +144,14 @@ namespace VersionControl.UserInterface
                 bool showAdd = ready && !ignored && unversioned;
                 bool showOpen = ready && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
                 bool showDiff = ready && !ignored && modifiedTextAsset && managedByRep;
-                bool showCommit = ready && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder);
-                bool showRevert = ready && !ignored && (haveControl || added || deleted || replaced || modifiedTextAsset);
-                bool showDelete = ready && !ignored && managedByRep && !deleted && !lockedByOther;
+                bool showCommit = ready && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
+                bool showRevert = ready && !ignored && !unversioned && (haveControl || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
+                bool showDelete = ready && !ignored && !deleted && !lockedByOther;
                 bool showOpenLocal = ready && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
                 bool showUnlock = ready && !ignored && !bypass && haveLock;
                 bool showUpdate = ready && !ignored && !added && managedByRep && instance != null;
                 bool showForceOpen = ready && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
-                bool showDisconnect = isPrefab;
+                bool showDisconnect = isPrefab && !isPrefabParent;
 
                 if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] {assetPath}));
                 if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => VCCommands.Instance.GetLock(new[] {assetPath}));

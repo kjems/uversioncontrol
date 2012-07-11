@@ -94,7 +94,7 @@ namespace VersionControl
 
         private bool RefreshAssetDatabase()
         {
-            OnNextUpdate.Do(() => { D.Log("Refresh AssetDatabase"); AssetDatabase.Refresh(); });
+            OnNextUpdate.Do(AssetDatabase.Refresh);
             return true;
         }
 

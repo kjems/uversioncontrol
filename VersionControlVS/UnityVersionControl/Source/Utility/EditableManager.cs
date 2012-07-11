@@ -18,6 +18,7 @@ namespace VersionControl
 
         public static void SetEditable(Object obj, bool editable)
         {
+            //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
             if (obj == null) return;
             if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
             if (!editable && IsEditable(obj)) obj.hideFlags |= HideFlags.NotEditable;

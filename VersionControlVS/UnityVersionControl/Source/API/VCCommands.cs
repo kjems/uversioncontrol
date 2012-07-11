@@ -198,7 +198,7 @@ namespace VersionControl
 
         private Task<bool> StartTask(Func<bool> work)
         {
-            var task = (Active && vcc.IsReady()) ? new Task<bool>(work) : new Task<bool>(() => false);
+            var task = Active ? new Task<bool>(work) : new Task<bool>(() => false);
             task.Start(); // Sync: task.RunSynchronously();
             return task;
         }

@@ -20,7 +20,9 @@ namespace VersionControl.Backend.SVN
         private StatusDatabase statusDatabase = new StatusDatabase();
         private bool operationActive = false;
         private readonly object operationActiveLockToken = new object();
-        private readonly object statusDatabaseLockToken = new object();
+        private readonly object requestQueueLockToken = new object();
+        private readonly List<string> localRequestQueue = new List<string>();
+        private readonly List<string> remoteRequestQueue = new List<string>();
 
         public SVNCommands()
         {
@@ -41,18 +43,26 @@ namespace VersionControl.Backend.SVN
 
         private bool RefreshStatusDatabase()
         {
-            List<string> requestLocal;
-            List<string> requestRepository;
-            lock (statusDatabaseLockToken)
+            List<string> localCopy = null;
+            List<string> remoteCopy = null;
+            lock (requestQueueLockToken)
             {
-                requestLocal = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestLocal).Select(a => a.Key).ToList();
-                requestRepository = statusDatabase.Where(a => a.Value.reflectionLevel == VCReflectionLevel.RequestRepository).Select(a => a.Key).ToList();
+                if (localRequestQueue.Count > 0)
+                {
+                    localCopy = new List<string>(localRequestQueue);
+                    localRequestQueue.Clear();
+                }
+                if (remoteRequestQueue.Count > 0)
+                {
+                    remoteCopy = new List<string>(remoteRequestQueue);
+                    remoteRequestQueue.Clear();
+                }
             }
-            //if (requestLocal.Count > 0) D.Log("Local Status : " + requestLocal.Aggregate((a, b) => a + ", " + b));
-            //if (requestRepository.Count > 0) D.Log("\nRemote Status : " + requestRepository.Aggregate((a, b) => a + ", " + b));
+            //if (localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
+            //if (repositoryCopy.Count > 0) D.Log("\nRemote Status : " + repositoryCopy.Aggregate((a, b) => a + ", " + b));
 
-            if (requestLocal.Count > 0) Status(requestLocal, false);
-            if (requestRepository.Count > 0) Status(requestRepository, true);
+            if (localCopy != null && localCopy.Count > 0) Status(localCopy, false);
+            if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, true);
 
             return true;
         }
@@ -128,13 +138,11 @@ namespace VersionControl.Backend.SVN
             try
             {
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
-                lock (statusDatabaseLockToken)
+                foreach (var statusIt in db)
                 {
-                    foreach (var statusIt in db)
-                    {
-                        statusDatabase[statusIt.Key] = statusIt.Value;
-                    }
+                    statusDatabase[statusIt.Key] = statusIt.Value;
                 }
+
                 StatusCompleted();
             }
             catch (XmlException)
@@ -248,12 +256,24 @@ namespace VersionControl.Backend.SVN
 
         public virtual bool RequestStatus(string asset, bool remote)
         {
-            lock (statusDatabaseLockToken)
+            lock (requestQueueLockToken)
             {
-                var assetStatus = statusDatabase[asset];
-                assetStatus.reflectionLevel = remote ? VCReflectionLevel.RequestRepository : VCReflectionLevel.RequestLocal;
-                statusDatabase[asset] = assetStatus;
-                //D.Log("Request Status : " + asset + ", reflection level after : '" + statusDatabase[asset].reflectionLevel + "'");
+                if (remote)
+                {
+                    if (!remoteRequestQueue.Contains(asset))
+                    {
+                        D.Log("RequestStatus : remote for '" + asset + "'");
+                        remoteRequestQueue.Add(asset);
+                    }
+                }
+                else
+                {
+                    if (!localRequestQueue.Contains(asset))
+                    {
+                        D.Log("RequestStatus : local for '" + asset + "'");
+                        localRequestQueue.Add(asset);
+                    }
+                }
             }
             return true;
         }

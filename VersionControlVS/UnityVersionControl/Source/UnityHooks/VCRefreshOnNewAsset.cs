@@ -28,8 +28,8 @@ namespace VersionControl
             removedAssets = removedAssets.Distinct().ToList();
             if (removedAssets.Count > 0)
             {
-                //VCCommands.Instance.RemoveFromDatabase(removedAssets);
-                VCCommands.Instance.RequestStatus(changedAssets, true);
+                VCCommands.Instance.RemoveFromDatabase(removedAssets);
+                VCCommands.Instance.RequestStatus(removedAssets, false);
                 removedAssets.Clear();
             }
 

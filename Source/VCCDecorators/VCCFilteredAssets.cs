@@ -108,12 +108,14 @@ namespace VersionControl
 
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return base.ChangeListAdd(Versioned(assets), changelist);
+            assets = Versioned(NonEmpty(assets));
+            return assets.Any() ? base.ChangeListAdd(assets, changelist) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            return base.ChangeListRemove(Versioned(OnChangeList(assets)));
+            assets = Versioned(OnChangeList(NonEmpty(assets)));
+            return assets.Any() ? base.ChangeListRemove(Versioned(OnChangeList(assets))) : false;
         }
 
         public override bool Move(string from, string to)

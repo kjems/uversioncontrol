@@ -16,7 +16,7 @@ namespace VersionControl
         {
             changedAssets.AddRange(importedAssets);
             changedAssets.AddRange(movedAssets);
-            changedAssets = changedAssets.Distinct().ToList();
+            changedAssets = AssetpathsFilters.AddMeta(changedAssets.Distinct(), true).ToList();
             if (changedAssets.Count > 0)
             {
                 VCCommands.Instance.RequestStatus(changedAssets, false);
@@ -25,7 +25,7 @@ namespace VersionControl
 
             removedAssets.AddRange(deletedAssets);
             removedAssets.AddRange(movedFromAssetPaths);
-            removedAssets = removedAssets.Distinct().ToList();
+            removedAssets = AssetpathsFilters.AddMeta(removedAssets.Distinct(), true).ToList();
             if (removedAssets.Count > 0)
             {
                 VCCommands.Instance.RemoveFromDatabase(removedAssets);

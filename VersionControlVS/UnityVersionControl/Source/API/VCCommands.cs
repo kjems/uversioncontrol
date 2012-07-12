@@ -110,65 +110,6 @@ namespace VersionControl
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
 
-
-        private IEnumerable<string> AddMeta(IEnumerable<string> assets, bool includeNormal = false)
-        {
-            if (!assets.Any()) return assets;
-            var metaFiles = new List<string>();
-            foreach (var assetPathIt in assets)
-            {
-                if (!assetPathIt.EndsWith(".meta"))
-                {
-                    var metaAssetPath = assetPathIt + ".meta";
-                    var metaStatus = GetAssetStatus(assetPathIt).MetaStatus();
-                    if (includeNormal || metaStatus.fileStatus != VCFileStatus.Normal)
-                    {
-                        metaFiles.Add(metaAssetPath);
-                    }
-                }
-            }
-            return assets.Concat(metaFiles).Distinct().OrderByDescending(a => a.EndsWith(".meta"));
-        }
-
-        private IEnumerable<string> RemoveMetaPostFix(IEnumerable<string> assets)
-        {
-            return assets.Select(a => a.EndsWith(".meta") ? a.Remove(a.Length - 5) : a).Distinct();
-        }
-
-        private IEnumerable<string> AddFolders(IEnumerable<string> assets)
-        {
-            return assets
-                .Select(a => Path.GetDirectoryName(a))
-                .Where(d => GetAssetStatus(d).fileStatus != VCFileStatus.Normal)
-                .Concat(assets)
-                .Distinct();
-        }
-
-        private IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets)
-        {
-            foreach (var assetIt in new List<string>(assets))
-            {
-                if (Directory.Exists(assetIt))
-                {
-                    assets = assets
-                        .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
-                        .Where(a => File.Exists(a) && !a.Contains(".meta") && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                        .Select(s => s.Replace("\\", "/")));
-                }
-            }
-            return assets;
-        }
-
-        private static IEnumerable<string> AddDeletedInFolders(IEnumerable<string> assetPaths)
-        {
-            var deletedInFolders = assetPaths
-                .Where(Directory.Exists)
-                .SelectMany(d => VCCommands.Instance.GetFilteredAssets((assetPath, status) =>
-                    (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && assetPath.StartsWith(d)));
-            return assetPaths.Concat(deletedInFolders);
-        }
-
-
         private static bool OpenCommitDialogWindow(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
             var commitWindow = ScriptableObject.CreateInstance<VCCommitWindow>();
@@ -177,13 +118,6 @@ namespace VersionControl
             commitWindow.SetAssetPaths(assets, dependencies);
             commitWindow.ShowUtility();
             return commitWindow.commitedFiles.Any();
-        }
-
-        private static IEnumerable<string> GetDependencies(IEnumerable<string> assetPaths)
-        {
-            return AssetDatabase.GetDependencies(assetPaths.ToArray())
-                .Where(dep => Instance.GetAssetStatus(dep).fileStatus != VCFileStatus.Normal)
-                .Except(assetPaths.Select(ap => ap.ToLowerInvariant()));
         }
 
         private bool RemoteHasUnloadableResourceChange()
@@ -267,7 +201,7 @@ namespace VersionControl
         }
         public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
+            return AssetpathsFilters.RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
         }
         public bool Status(bool remote = true, bool full = true)
         {
@@ -282,7 +216,7 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                var withMeta = AddMeta(assets, true);
+                var withMeta = AssetpathsFilters.AddMeta(assets, true);
                 bool result = vcc.Status(withMeta, remote);
                 return result;
             });
@@ -318,7 +252,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                assets = AddMeta(assets);
+                assets = AssetpathsFilters.AddMeta(assets);
                 return Status(assets) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
             });
         }
@@ -326,7 +260,7 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                assets = AddMeta(assets, true);
+                assets = AssetpathsFilters.AddMeta(assets, true);
                 return vcc.Add(assets);
             });
         }
@@ -336,7 +270,7 @@ namespace VersionControl
             {
                 FlushFiles();
                 Status(assets);
-                assets = AddMeta(assets);
+                assets = AssetpathsFilters.AddMeta(assets);
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);
                 if (revertResult) vcc.ReleaseLock(assets);
@@ -446,12 +380,12 @@ namespace VersionControl
             int initialAssetCount = assets.Count();
             if (initialAssetCount == 0) return true;
 
-            assets = AddFilesInFolders(assets);
-            assets = AddFolders(assets);
-            var dependencies = GetDependencies(assets);
-            dependencies = AddFilesInFolders(dependencies);
-            dependencies = AddFolders(dependencies);
-            dependencies = dependencies.Concat(AddDeletedInFolders(assets));
+            assets = AssetpathsFilters.AddFilesInFolders(assets);
+            assets = AssetpathsFilters.AddFolders(assets);
+            var dependencies = AssetpathsFilters.GetDependencies(assets);
+            dependencies = AssetpathsFilters.AddFilesInFolders(dependencies);
+            dependencies = AssetpathsFilters.AddFolders(dependencies);
+            dependencies = dependencies.Concat(AssetpathsFilters.AddDeletedInFolders(assets));
 
             if (assets.Contains(EditorApplication.currentScene))
             {

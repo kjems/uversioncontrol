@@ -74,6 +74,7 @@
     <Compile Include="Source\MultiColumnListView\MultiColumnView.cs" />
     <Compile Include="Source\UnityHooks\VCRefreshEditable.cs" />
     <Compile Include="Source\UnityHooks\VCRefreshOnNewAsset.cs" />
+    <Compile Include="Source\Utility\AssetpathsFilters.cs" />
     <Compile Include="Source\Utility\BugReportUtilities.cs" />
     <Compile Include="Source\Utility\ContinuationManager.cs" />
     <Compile Include="Source\Utility\EditableManager.cs" />

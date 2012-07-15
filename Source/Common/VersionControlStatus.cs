@@ -82,7 +82,7 @@ namespace VersionControl
     #endregion
     
     [Serializable]
-    public class VersionControlStatus
+    public sealed class VersionControlStatus
     {
         public VCReflectionLevel reflectionLevel = VCReflectionLevel.None;
         public VCFileStatus fileStatus = VCFileStatus.Normal;

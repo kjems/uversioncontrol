@@ -17,6 +17,16 @@ namespace VersionControl
 
         protected readonly IVersionControlCommands vcc;
 
+        public virtual void Start()
+        {
+            vcc.Start();
+        }
+
+        public virtual void Stop()
+        {
+            vcc.Stop();
+        }
+
         public virtual bool IsReady()
         {
             return vcc.IsReady();

@@ -39,8 +39,12 @@ namespace VersionControl
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
             vcc.StatusCompleted += OnStatusCompleted;
-            OnNextUpdate.Do(() => StatusTask(false, false));
-            EditorApplication.playmodeStateChanged += () => StatusTask(false, false);
+            OnNextUpdate.Do(Start);
+            EditorApplication.playmodeStateChanged += () =>
+            {
+                if(!Application.isPlaying) Start();
+                else Stop();
+            };
         }
 
         static VCCommands instance;
@@ -62,6 +66,21 @@ namespace VersionControl
         }
 
         public bool Ready { get { return Active && vcc.IsReady(); } }
+
+        public void Start()
+        {
+            if (Active)
+            {
+                StatusTask(false, false);
+                vcc.Start();
+            }
+        }
+
+        public void Stop()
+        {
+            vcc.Stop();
+            vcc.ClearDatabase();
+        }
 
 
         #region Private methods

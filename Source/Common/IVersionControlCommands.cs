@@ -20,6 +20,8 @@ namespace VersionControl
     /// </summary>
     public interface IVersionControlCommands
     {
+        void Start();
+        void Stop();
         bool IsReady();
         void SetWorkingDirectory(string workingDirectory);
         void SetUserCredentials(string userName, string password);

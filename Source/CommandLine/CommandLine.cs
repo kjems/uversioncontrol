@@ -8,7 +8,7 @@ using System.Text;
 
 namespace CommandLineExecution
 {
-    public class CommandLineOutput
+    public sealed class CommandLineOutput
     {
         public CommandLineOutput(string command, string arguments, string outputStr, string errorStr, int exitcode)
         {
@@ -29,7 +29,7 @@ namespace CommandLineExecution
 
 
 
-    public class CommandLine : IDisposable
+    public sealed class CommandLine : IDisposable
     {
         public CommandLine(string command, string arguments, string workingDirectory)
         {

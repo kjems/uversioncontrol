@@ -11,34 +11,69 @@ using CommandLineExecution;
 
 namespace VersionControl.Backend.SVN
 {
-    public class SVNCommands : IVersionControlCommands
+    public class SVNCommands : IVersionControlCommands, IDisposable
     {
         private string workingDirectory = ".";
         private string userName;
         private string password;
         private string versionNumber;
         private StatusDatabase statusDatabase = new StatusDatabase();
-        private bool operationActive = false;
+        private bool OperationActive { get { return currentExecutingCommandLine != null; } }
+        private CommandLine currentExecutingCommandLine = null;
         private readonly object operationActiveLockToken = new object();
         private readonly object requestQueueLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
-
+        private bool refreshLoopActive = false;
+        private bool requestRefreshLoopStop = false;
+        private bool active = false;
+        
         public SVNCommands()
         {
-            RefreshStatusLoop();
+            AppDomain.CurrentDomain.DomainUnload += Unload;
+            AppDomain.CurrentDomain.ProcessExit += Unload;
         }
 
+        private void Unload(object sender, EventArgs args)
+        {
+            Stop();
+        }
+
+        public void Dispose()
+        {
+            AppDomain.CurrentDomain.DomainUnload -= Unload;
+            AppDomain.CurrentDomain.ProcessExit -= Unload;
+            Stop();
+        }
+        
         private void RefreshStatusLoop()
         {
-            ThreadPool.QueueUserWorkItem(o =>
+            if (!refreshLoopActive)
             {
-                while (true)
+                requestRefreshLoopStop = false;
+                ThreadPool.QueueUserWorkItem(o =>
                 {
-                    Thread.Sleep(100);
-                    RefreshStatusDatabase();
-                }
-            });
+                    while (!requestRefreshLoopStop)
+                    {
+                        RefreshStatusDatabase();
+                        Thread.Sleep(20);
+                    }
+                    refreshLoopActive = false;
+                });
+            }
+        }
+
+        public void Start()
+        {
+            RefreshStatusLoop();
+            active = true;
+        }
+
+        public void Stop()
+        {
+            active = false;
+            requestRefreshLoopStop = true;
+            if(OperationActive) currentExecutingCommandLine.Dispose();
         }
 
         private bool RefreshStatusDatabase()
@@ -69,7 +104,7 @@ namespace VersionControl.Backend.SVN
 
         public bool IsReady()
         {
-            return !operationActive;
+            return !OperationActive && active;
         }
 
         public void SetWorkingDirectory(string workingDirectory)
@@ -96,6 +131,8 @@ namespace VersionControl.Backend.SVN
 
         public bool Status(bool remote, bool full)
         {
+            if (!active) return false;
+
             string arguments = "status --xml";
             if (remote) arguments += " -u";
             if (full) arguments += " -v";
@@ -121,6 +158,8 @@ namespace VersionControl.Backend.SVN
 
         public bool Status(IEnumerable<string> assets, bool remote)
         {
+            if (!active) return false;
+
             string arguments = "status --xml -v ";
             if (remote) arguments += "-u ";
             else arguments += " --depth=empty ";
@@ -137,7 +176,7 @@ namespace VersionControl.Backend.SVN
             if (commandLineOutput.Failed) return false;
             try
             {
-                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);                
                 foreach (var statusIt in db)
                 {
                     statusDatabase[statusIt.Key] = statusIt.Value;
@@ -164,6 +203,8 @@ namespace VersionControl.Backend.SVN
 
         private bool CreateOperation(string arguments)
         {
+            if (!active) return false;
+
             CommandLineOutput commandLineOutput;
             using (var commandLineOperation = CreateSVNCommandLine(arguments))
             {
@@ -181,8 +222,8 @@ namespace VersionControl.Backend.SVN
             {
                 try
                 {
-                    operationActive = true;
                     D.Log(commandLine.ToString());
+                    currentExecutingCommandLine = commandLine;
                     //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
                     commandLineOutput = commandLine.Execute();
                 }
@@ -192,7 +233,7 @@ namespace VersionControl.Backend.SVN
                 }
                 finally
                 {
-                    operationActive = false;
+                    currentExecutingCommandLine = null;
                 }
             }
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))

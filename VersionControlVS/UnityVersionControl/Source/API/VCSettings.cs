@@ -12,6 +12,9 @@ namespace VersionControl
     {
         static VCSettings()
         {
+            D.writeErrorCallback += Debug.LogError;
+            D.exceptionCallback += e => OnNextUpdate.Do(() => { throw e; });
+            
             vcEnabled = EditorPrefs.GetBool("VCSSettings/vcEnabled", true);
             lockPrefabs = EditorPrefs.GetBool("VCSSettings/lockPrefabs", false);
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);

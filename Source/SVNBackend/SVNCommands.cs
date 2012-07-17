@@ -53,12 +53,22 @@ namespace VersionControl.Backend.SVN
                 requestRefreshLoopStop = false;
                 ThreadPool.QueueUserWorkItem(o =>
                 {
-                    while (!requestRefreshLoopStop)
+                    try
                     {
-                        RefreshStatusDatabase();
-                        Thread.Sleep(100);
+                        while (!requestRefreshLoopStop)
+                        {
+                            RefreshStatusDatabase();
+                            Thread.Sleep(100);
+                        }
                     }
-                    refreshLoopActive = false;
+                    catch (Exception e)
+                    {
+                        D.ThrowException(e);
+                    }
+                    finally
+                    {
+                        refreshLoopActive = false;
+                    }
                 });
             }
         }

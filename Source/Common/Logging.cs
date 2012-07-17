@@ -23,10 +23,32 @@ namespace VersionControl
             return callstack;
         }
 
-        public static Action<string> writeLogCallback;
-        public static void Log(string message)
+
+        public enum Severity
         {
-            if (writeLogCallback != null) writeLogCallback(DateTime.Now.ToString("HH:mm:ss.ffff") + ":" + message + "\n\n" + GetCallstack());
+            Log,
+            Error
+        }
+
+        public static Action<string> writeLogCallback;
+        public static Action<string> writeErrorCallback;
+        public static Action<Exception> exceptionCallback;
+
+        public static void ThrowException(Exception exception)
+        {
+            if (exceptionCallback != null) exceptionCallback(exception);
+            else Log("Unhandled exception : " + exception.Message, Severity.Error);
+        }
+
+        private static string FormatMessage(string message)
+        {
+            return DateTime.Now.ToString("HH:mm:ss.ffff") + ":" + message + "\n\n" + GetCallstack();
+        }
+
+        public static void Log(string message, Severity severity = Severity.Log)
+        {
+            if (severity == Severity.Log && writeLogCallback != null) writeLogCallback(FormatMessage(message));
+            if (severity == Severity.Error && writeErrorCallback != null) writeErrorCallback(FormatMessage(message));
         }
     }
 }

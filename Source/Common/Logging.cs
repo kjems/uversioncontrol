@@ -32,11 +32,11 @@ namespace VersionControl
 
         public static Action<string> writeLogCallback;
         public static Action<string> writeErrorCallback;
-        public static Action<Exception> exceptionCallback;
+        public static Action<VCException> exceptionCallback;
 
         public static void ThrowException(Exception exception)
         {
-            if (exceptionCallback != null) exceptionCallback(exception);
+            if (exceptionCallback != null) exceptionCallback(new VCException(exception.Message, exception.StackTrace, exception));
             else Log("Unhandled exception : " + exception.Message, Severity.Error);
         }
 

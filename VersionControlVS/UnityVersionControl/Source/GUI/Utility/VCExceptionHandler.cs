@@ -12,6 +12,12 @@ namespace VersionControl
     [InitializeOnLoad]
     internal static class VCExceptionHandler
     {
+        static VCExceptionHandler()
+        {
+            D.writeErrorCallback += Debug.LogError;
+            D.exceptionCallback += e => OnNextUpdate.Do(() => { HandleException(e); });
+        }
+
         public static void HandleException(VCException e)
         {
             OnNextUpdate.Do(() =>
@@ -24,7 +30,7 @@ namespace VersionControl
                 else HandleBase(e);
             });
         }
-
+        
         private static void HandleConnectionTimeOut(VCConnectionTimeoutException e)
         {
             Debug.LogWarning(e.ErrorMessage);

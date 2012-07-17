@@ -86,7 +86,7 @@ namespace VersionControl.Backend.SVN
             if (OperationActive) currentExecutingCommandLine.Dispose();
         }
 
-        private bool RefreshStatusDatabase()
+        private void RefreshStatusDatabase()
         {
             List<string> localCopy = null;
             List<string> remoteCopy = null;
@@ -107,7 +107,6 @@ namespace VersionControl.Backend.SVN
             //if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
             if (localCopy != null && localCopy.Count > 0) Status(localCopy, StatusLevel.Local);
             if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
-            return true;
         }
 
         public bool IsReady()

@@ -50,7 +50,7 @@ namespace VersionControl
             {
                 if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + assetStatus.owner + "]", "Yes", "Cancel"))
                 {
-                    VCCommands.Instance.GetLock(new[] {assetPath}, true);
+                    VCCommands.Instance.GetLock(new[] {assetPath}, OperationMode.Force);
                 }
             }
         }

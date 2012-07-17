@@ -52,29 +52,29 @@ namespace VersionControl
             return vcc.GetFilteredAssets(filter);
         }
 
-        public virtual bool Status(bool remote, bool full)
+        public virtual bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return vcc.Status(remote, full);
+            return vcc.Status(statusLevel, detailLevel);
         }
 
-        public virtual bool Status(IEnumerable<string> assets, bool remote)
+        public virtual bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return vcc.Status(assets, remote);
+            return vcc.Status(assets, statusLevel);
         }
 
-        public virtual bool RequestStatus(IEnumerable<string> assets, bool remote)
+        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return vcc.RequestStatus(assets, remote);
+            return vcc.RequestStatus(assets, statusLevel);
         }
 
-        public virtual bool RequestStatus(string asset, bool remote)
+        public virtual bool RequestStatus(string asset, StatusLevel statusLevel)
         {
-            return vcc.RequestStatus(asset, remote);
+            return vcc.RequestStatus(asset, statusLevel);
         }
 
-        public virtual bool Update(IEnumerable<string> assets = null, bool force = true)
+        public virtual bool Update(IEnumerable<string> assets = null)
         {
-            return vcc.Update(assets, force);
+            return vcc.Update(assets);
         }
 
         public virtual bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -92,14 +92,14 @@ namespace VersionControl
             return vcc.Revert(assets);
         }
 
-        public virtual bool Delete(IEnumerable<string> assets, bool force = false)
+        public virtual bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return vcc.Delete(assets, force);
+            return vcc.Delete(assets, mode);
         }
-        
-        public virtual bool GetLock(IEnumerable<string> assets, bool force = false)
+
+        public virtual bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return vcc.GetLock(assets, force);
+            return vcc.GetLock(assets, mode);
         }
 
         public virtual bool ReleaseLock(IEnumerable<string> assets)

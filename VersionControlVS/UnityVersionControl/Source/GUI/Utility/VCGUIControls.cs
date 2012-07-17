@@ -158,7 +158,7 @@ namespace VersionControl.UserInterface
                 if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => VCCommands.Instance.BypassRevision(new[] { assetPath }));
                 if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => VCUtility.VCForceOpen(assetPath, assetStatus));
                 if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] {assetPath}, true));
+                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] {assetPath}, OperationMode.Force));
                 if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
                 if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                 if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));

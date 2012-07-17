@@ -42,7 +42,7 @@ namespace VersionControl
             OnNextUpdate.Do(Start);
             EditorApplication.playmodeStateChanged += () =>
             {
-                if(!Application.isPlaying) Start();
+                if (!Application.isPlaying) Start();
                 else Stop();
             };
         }
@@ -71,7 +71,7 @@ namespace VersionControl
         {
             if (Active)
             {
-                StatusTask(false, false);
+                StatusTask(StatusLevel.Local, DetailLevel.Normal);
                 vcc.Start();
             }
         }
@@ -156,21 +156,21 @@ namespace VersionControl
             return task;
         }
 
-        public Task<bool> StatusTask(bool remote = true, bool full = true)
+        public Task<bool> StatusTask(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return StartTask(() => Status(remote, full));
+            return StartTask(() => Status(statusLevel, detailLevel));
         }
 
-        public Task<bool> StatusTask(IEnumerable<string> assets, bool remote = true)
+        public Task<bool> StatusTask(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             assets = new List<string>(assets);
-            return StartTask(() => Status(assets, remote));
+            return StartTask(() => Status(assets, statusLevel));
         }
 
-        public Task<bool> UpdateTask(IEnumerable<string> assets = null, bool force = true)
+        public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
-            return StartTask(() => Update(assets, force));
+            return StartTask(() => Update(assets));
         }
 
         public Task<bool> AddTask(IEnumerable<string> assets)
@@ -186,10 +186,10 @@ namespace VersionControl
             return StartTask(() => Commit(assets, commitMessage));
         }
 
-        public Task<bool> GetLockTask(IEnumerable<string> assets, bool force = false)
+        public Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             assets = new List<string>(assets);
-            return StartTask(() => GetLock(assets, force));
+            return StartTask(() => GetLock(assets, mode));
         }
 
         public Task<bool> RevertTask(IEnumerable<string> assets)
@@ -222,38 +222,38 @@ namespace VersionControl
         {
             return AssetpathsFilters.RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
         }
-        public bool Status(bool remote = true, bool full = true)
+        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
             return HandleExceptions(() =>
             {
-                bool result = vcc.Status(remote, full);
+                bool result = vcc.Status(statusLevel, detailLevel);
                 return result;
             });
         }
 
-        public bool Status(IEnumerable<string> assets, bool remote = false)
+        public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             return HandleExceptions(() =>
             {
                 var withMeta = AssetpathsFilters.AddMeta(assets, true);
-                bool result = vcc.Status(withMeta, remote);
+                bool result = vcc.Status(withMeta, statusLevel);
                 return result;
             });
         }
 
-        public bool RequestStatus(IEnumerable<string> assets, bool remote)
+        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (ignoreStatusRequests) return false;
-            return vcc.RequestStatus(assets, remote);
+            return vcc.RequestStatus(assets, statusLevel);
         }
 
-        public bool RequestStatus(string asset, bool remote)
+        public bool RequestStatus(string asset, StatusLevel statusLevel)
         {
             if (ignoreStatusRequests) return false;
-            return vcc.RequestStatus(asset, remote);
+            return vcc.RequestStatus(asset, statusLevel);
         }
 
-        public bool Update(IEnumerable<string> assets, bool force = true)
+        public bool Update(IEnumerable<string> assets)
         {
             return HandleExceptions(() =>
             {
@@ -262,7 +262,7 @@ namespace VersionControl
                     OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && RefreshAssetDatabase();
+                return vcc.Update(assets) && RefreshAssetDatabase();
             });
         }
 
@@ -272,7 +272,7 @@ namespace VersionControl
             {
                 FlushFiles();
                 assets = AssetpathsFilters.AddMeta(assets);
-                return Status(assets) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
+                return Status(assets, StatusLevel.Local) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
             });
         }
         public bool Add(IEnumerable<string> assets)
@@ -288,7 +288,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                Status(assets);
+                Status(assets, StatusLevel.Local);
                 assets = AssetpathsFilters.AddMeta(assets);
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);
@@ -297,7 +297,7 @@ namespace VersionControl
                 return revertResult;
             });
         }
-        public bool Delete(IEnumerable<string> assets, bool force = false)
+        public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             return HandleExceptions(() =>
             {
@@ -333,12 +333,12 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, force) && RefreshAssetDatabase();
+                return vcc.Delete(deleteAssets, mode) && RefreshAssetDatabase();
             });
         }
-        public bool GetLock(IEnumerable<string> assets, bool force = false)
+        public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
-            return HandleExceptions(() => vcc.GetLock(assets, force) && vcc.ChangeListRemove(assets));
+            return HandleExceptions(() => vcc.GetLock(assets, mode) && vcc.ChangeListRemove(assets));
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {

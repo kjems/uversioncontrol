@@ -83,7 +83,7 @@ namespace VersionControl
         {
             if (!showConfirmation || VCDialog(Terminology.delete, assetPaths))
             {
-                VCCommands.Instance.Delete(assetPaths, false);
+                VCCommands.Instance.Delete(assetPaths);
             }
         }
 
@@ -96,7 +96,7 @@ namespace VersionControl
         {
             if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
             {
-                VCCommands.Instance.GetLock(new[] { assetPath }, true);
+                VCCommands.Instance.GetLock(new[] { assetPath }, OperationMode.Force);
             }
         }
 

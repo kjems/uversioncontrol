@@ -124,7 +124,7 @@ namespace VersionControl.UserInterface
             {
                 if (Event.current.keyCode == KeyCode.F5)
                 {
-                    VCCommands.Instance.Status();
+                    VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Verbose);
                     Event.current.Use();
                 }
                 if (Event.current.keyCode == KeyCode.Delete)
@@ -146,7 +146,7 @@ namespace VersionControl.UserInterface
                 {
                     if (GUILayout.Button(Terminology.status, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.StatusTask();
+                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose);
                     }
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {

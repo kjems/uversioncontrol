@@ -22,9 +22,9 @@ namespace VersionControl
         {
         }
 
-        public override bool Status(bool remote, bool full)
+        public override bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return base.Status(remote, full);
+            return base.Status(statusLevel, detailLevel);
         }
 
         public override VersionControlStatus GetAssetStatus(string assetPath)
@@ -33,27 +33,27 @@ namespace VersionControl
             return vcc.GetAssetStatus(assetPath);
         }
 
-        public override bool Status(IEnumerable<string> assets, bool remote)
+        public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             assets = NonPending(InVersionedFolder(NonEmpty(assets)));
-            return assets.Any() ? base.Status(assets, remote) : false;
+            return assets.Any() ? base.Status(assets, statusLevel) : false;
         }
 
-        public override bool RequestStatus(IEnumerable<string> assets, bool remote)
+        public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null) return true;
             assets = NonEmpty(assets);
-            return assets.Any() ? base.RequestStatus(assets, remote) : true;
+            return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
         }
 
-        public override bool RequestStatus(string asset, bool remote)
+        public override bool RequestStatus(string asset, StatusLevel statusLevel)
         {
-            return !string.IsNullOrEmpty(asset) ? base.RequestStatus(asset, remote) : true;
+            return !string.IsNullOrEmpty(asset) ? base.RequestStatus(asset, statusLevel) : true;
         }
 
-        public override bool Update(IEnumerable<string> assets = null, bool force = true)
+        public override bool Update(IEnumerable<string> assets = null)
         {
-            return base.Update((assets != null ? Versioned(assets) : null), force);
+            return base.Update((assets != null ? Versioned(assets) : null));
         }
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -62,7 +62,7 @@ namespace VersionControl
             var toBeCommited = filesInFolders.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal || Directory.Exists(a));
             return
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
-                base.Delete(Missing(filesInFolders)) &&
+                base.Delete(Missing(filesInFolders), OperationMode.Normal) &&
                 base.Commit(ShortestFirst(toBeCommited), commitMessage) &&
                 ReleaseLock(assets);
         }
@@ -77,21 +77,21 @@ namespace VersionControl
             return base.Revert(NonNormal(assets));
         }
 
-        public override bool Delete(IEnumerable<string> assets, bool force = false)
+        public override bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.Delete(Versioned(assets), force);
+            return base.Delete(Versioned(assets), mode);
         }
 
-        public override bool GetLock(IEnumerable<string> assets, bool force = false)
+        public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
             try
             {
-                return base.GetLock(force ? Versioned(assets) : NotLocked(assets), force);
+                return base.GetLock(mode == OperationMode.Force ? Versioned(assets) : NotLocked(assets), mode);
             }
             catch(VCLockedByOther e)
             {
                 D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a,b) => a + ", " + b) + "\n" + e.Message);
-                RequestStatus(assets, true);
+                RequestStatus(assets, StatusLevel.Remote);
                 return false;
             }
         }

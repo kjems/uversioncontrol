@@ -60,7 +60,7 @@ namespace VersionControl.UserInterface
                         {
                             sharedMaterials[index] = SaveMaterial(material, newMaterialName);
                             renderer.sharedMaterials = sharedMaterials;
-                            VCCommands.Instance.Status();
+                            VCCommands.Instance.RequestStatus(newMaterialName, StatusLevel.Local);
                         }
                     });
                 }

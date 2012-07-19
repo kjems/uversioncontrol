@@ -15,7 +15,7 @@ namespace VersionControl
         static VCExceptionHandler()
         {
             D.writeErrorCallback += Debug.LogError;
-            D.exceptionCallback += e => OnNextUpdate.Do(() => { HandleException(e); });
+            D.exceptionCallback += HandleException;
         }
 
         public static void HandleException(VCException e)

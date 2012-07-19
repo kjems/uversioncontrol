@@ -18,72 +18,70 @@ namespace VersionControl.Backend.SVN
         private string password;
         private string versionNumber;
         private StatusDatabase statusDatabase = new StatusDatabase();
-        private bool OperationActive { get { return currentExecutingCommandLine != null; } }
-        private CommandLine currentExecutingCommandLine = null;
+        private bool OperationActive { get { return currentExecutingOperation != null; } }
+        private CommandLine currentExecutingOperation = null;
         private readonly object operationActiveLockToken = new object();
         private readonly object requestQueueLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
-        private bool refreshLoopActive = false;
-        private bool requestRefreshLoopStop = false;
         private bool active = false;
+        private bool requestRefreshLoopStop = false;
 
         public SVNCommands()
         {
+            RefreshStatusLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
 
         private void Unload(object sender, EventArgs args)
         {
-            Stop();
+            QuitRefreshLoop();
         }
 
         public void Dispose()
         {
             AppDomain.CurrentDomain.DomainUnload -= Unload;
             AppDomain.CurrentDomain.ProcessExit -= Unload;
-            Stop();
+            QuitRefreshLoop();
         }
 
         private void RefreshStatusLoop()
         {
-            if (!refreshLoopActive)
+            ThreadPool.QueueUserWorkItem(o =>
             {
-                requestRefreshLoopStop = false;
-                ThreadPool.QueueUserWorkItem(o =>
+                try
                 {
-                    try
+                    while (!requestRefreshLoopStop)
                     {
-                        while (!requestRefreshLoopStop)
-                        {
-                            RefreshStatusDatabase();
-                            Thread.Sleep(100);
-                        }
+                        Thread.Sleep(100);
+                        if (active) RefreshStatusDatabase();
                     }
-                    catch (Exception e)
-                    {
-                        D.ThrowException(e);
-                    }
-                    finally
-                    {
-                        refreshLoopActive = false;
-                    }
-                });
-            }
+                }
+                catch(ThreadAbortException){}
+                catch(Exception e)
+                {
+                    D.ThrowException(e);
+                }
+            });
         }
 
         public void Start()
         {
-            RefreshStatusLoop();
             active = true;
         }
 
         public void Stop()
         {
             active = false;
+        }
+
+        public void QuitRefreshLoop()
+        {
+            active = false;
             requestRefreshLoopStop = true;
-            if (OperationActive) currentExecutingCommandLine.Dispose();
+            if (OperationActive) currentExecutingOperation.Dispose();
+            currentExecutingOperation = null;
         }
 
         private void RefreshStatusDatabase()
@@ -150,7 +148,7 @@ namespace VersionControl.Backend.SVN
                 commandLineOutput = ExecuteCommandLine(svnStatusTask);
             }
 
-            if (commandLineOutput.Failed) return false;
+            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
             {
                 statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
@@ -171,7 +169,6 @@ namespace VersionControl.Backend.SVN
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (!active) return false;
-
             string arguments = "status --xml -v ";
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
@@ -185,7 +182,7 @@ namespace VersionControl.Backend.SVN
             {
                 commandLineOutput = ExecuteCommandLine(svnStatusTask);
             }
-            if (commandLineOutput.Failed) return false;
+            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
             {
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
@@ -193,11 +190,11 @@ namespace VersionControl.Backend.SVN
                 {
                     statusDatabase[statusIt.Key] = statusIt.Value;
                 }
-
                 StatusCompleted();
             }
-            catch (XmlException)
+            catch (XmlException e)
             {
+                D.ThrowException(e);
                 return false;
             }
             return true;
@@ -224,7 +221,7 @@ namespace VersionControl.Backend.SVN
                 commandLineOperation.ErrorReceived += OnProgressInformation;
                 commandLineOutput = ExecuteCommandLine(commandLineOperation);
             }
-            return !commandLineOutput.Failed;
+            return !(commandLineOutput == null || commandLineOutput.Failed);
         }
 
         private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)
@@ -235,7 +232,7 @@ namespace VersionControl.Backend.SVN
                 try
                 {
                     D.Log(commandLine.ToString());
-                    currentExecutingCommandLine = commandLine;
+                    currentExecutingOperation = commandLine;
                     //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
                     commandLineOutput = commandLine.Execute();
                 }
@@ -245,7 +242,7 @@ namespace VersionControl.Backend.SVN
                 }
                 finally
                 {
-                    currentExecutingCommandLine = null;
+                    currentExecutingOperation = null;
                 }
             }
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))

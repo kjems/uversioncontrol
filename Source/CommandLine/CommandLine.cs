@@ -24,7 +24,7 @@ namespace CommandLineExecution
         public string OutputStr { get; private set; }
         public string ErrorStr { get; private set; }
         public int Exitcode { get; private set; }
-        public bool Failed { get { return (Exitcode != 0 || ErrorStr.Length > 0); } }
+        public bool Failed { get { return (Exitcode != 0 || !string.IsNullOrEmpty(ErrorStr)); } }
     }
 
 

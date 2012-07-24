@@ -11,6 +11,7 @@ using CommandLineExecution;
 
 namespace VersionControl.Backend.SVN
 {
+
     public class SVNCommands : IVersionControlCommands, IDisposable
     {
         private string workingDirectory = ".";
@@ -20,6 +21,7 @@ namespace VersionControl.Backend.SVN
         private StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
+        private Thread refreshThread = null;
         private readonly object operationActiveLockToken = new object();
         private readonly object requestQueueLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
@@ -36,34 +38,39 @@ namespace VersionControl.Backend.SVN
 
         private void Unload(object sender, EventArgs args)
         {
-            QuitRefreshLoop();
+            TerminateRefreshLoop();
         }
 
         public void Dispose()
         {
             AppDomain.CurrentDomain.DomainUnload -= Unload;
             AppDomain.CurrentDomain.ProcessExit -= Unload;
-            QuitRefreshLoop();
+            TerminateRefreshLoop();
         }
 
         private void RefreshStatusLoop()
         {
-            ThreadPool.QueueUserWorkItem(o =>
+            if (refreshThread == null)
             {
-                try
+                refreshThread = new Thread(() =>
                 {
-                    while (!requestRefreshLoopStop)
+                    try
                     {
-                        Thread.Sleep(100);
-                        if (active) RefreshStatusDatabase();
+                        while (!requestRefreshLoopStop)
+                        {
+                            Thread.Sleep(100);
+                            if (active) RefreshStatusDatabase();
+                        }
                     }
-                }
-                catch(ThreadAbortException){}
-                catch(Exception e)
-                {
-                    D.ThrowException(e);
-                }
-            });
+                    catch (ThreadAbortException)
+                    {
+                    }
+                    catch (Exception e)
+                    {
+                        D.ThrowException(e);
+                    }
+                });
+            }
         }
 
         public void Start()
@@ -76,12 +83,21 @@ namespace VersionControl.Backend.SVN
             active = false;
         }
 
-        public void QuitRefreshLoop()
+        // This should only be used during termination of the host AppDomain or Process
+        private void TerminateRefreshLoop()
         {
             active = false;
             requestRefreshLoopStop = true;
-            if (OperationActive) currentExecutingOperation.Dispose();
-            currentExecutingOperation = null;
+            if (currentExecutingOperation != null)
+            {
+                currentExecutingOperation.Dispose();
+                currentExecutingOperation = null;
+            }
+            if(refreshThread != null)
+            {
+                refreshThread.Abort();
+                refreshThread = null;
+            }
         }
 
         private void RefreshStatusDatabase()
@@ -152,7 +168,7 @@ namespace VersionControl.Backend.SVN
             try
             {
                 statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
-                StatusCompleted();
+                OnStatusCompleted();
             }
             catch (XmlException)
             {
@@ -190,7 +206,7 @@ namespace VersionControl.Backend.SVN
                 {
                     statusDatabase[statusIt.Key] = statusIt.Value;
                 }
-                StatusCompleted();
+                OnStatusCompleted();
             }
             catch (XmlException e)
             {
@@ -447,7 +463,7 @@ namespace VersionControl.Backend.SVN
         }
 
         public event Action StatusCompleted;
-        private void OnStatusUpdated()
+        private void OnStatusCompleted()
         {
             if (StatusCompleted != null) StatusCompleted();
         }

@@ -12,7 +12,7 @@ using CommandLineExecution;
 namespace VersionControl.Backend.SVN
 {
 
-    public class SVNCommands : IVersionControlCommands, IDisposable
+    public class SVNCommands : MarshalByRefObject, IVersionControlCommands, IDisposable
     {
         private string workingDirectory = ".";
         private string userName;

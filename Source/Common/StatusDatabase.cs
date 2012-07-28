@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
-    [Serializable]
     public class StatusDatabase : Dictionary<string, VersionControlStatus>
     {
         public StatusDatabase() { }

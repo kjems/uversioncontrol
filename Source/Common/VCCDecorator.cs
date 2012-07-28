@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
+    [Serializable]
     public class VCCDecorator : IVersionControlCommands
     {
         protected VCCDecorator(IVersionControlCommands vcc)

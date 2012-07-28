@@ -15,6 +15,7 @@ namespace VersionControl
     /// * Commit an unversioned file without adding it first
     /// * Unlock a file that is not locked
     /// </summary>
+    [System.Serializable]
     public class VCCFilteredAssets : VCCDecorator
     {
         public VCCFilteredAssets(IVersionControlCommands vcc)
@@ -43,7 +44,7 @@ namespace VersionControl
         {
             if (assets == null) return true;
             assets = NonEmpty(assets);
-            return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
+            return assets.Any() ? base.RequestStatus(assets.ToList(), statusLevel) : true;
         }
 
         public override bool RequestStatus(string asset, StatusLevel statusLevel)

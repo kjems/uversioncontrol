@@ -20,7 +20,7 @@ namespace VersionControl.UnitTests
             vcc = new VCCFilteredAssets(new SVNCommands());
             vcc.SetWorkingDirectory(localPathForTest);
             Directory.SetCurrentDirectory(localPathForTest);
-            vcc.ProgressInformation += D.Log;
+            vcc.ProgressInformation += s => D.Log(s);
         }
 
         [Test]
@@ -38,31 +38,31 @@ namespace VersionControl.UnitTests
             var fs = File.Create(localPathForTest + "\\" + fileA, 10);
             fs.Close();
             
-            vcc.Status(false, false);
+            vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             var status = vcc.GetAssetStatus(fileA);
             Assert.IsTrue(status.assetPath == fileA, "AssetPath mismatch: " + status.assetPath + "!=" + fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Unversioned, "Unversioned");
             
             vcc.Add(new[]{fileA});
-            vcc.Status(false, false);
+            vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             status = vcc.GetAssetStatus(fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Added, "Added");
             
             vcc.Commit(new[] {fileA}, "AddFile Test 1/2");
-            vcc.Status(false, false);
+            vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             status = vcc.GetAssetStatus(fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Normal, "Normal");
 
             var basePath = vcc.GetBasePath(fileA);
             Assert.That(File.Exists(basePath), Is.True, "Base path exist: " + basePath);
             
-            vcc.Delete(new[] {fileA});
-            vcc.Status(false, false);
+            vcc.Delete(new[] {fileA}, OperationMode.Normal);
+            vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             status = vcc.GetAssetStatus(fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Deleted, "Deleted");
 
             vcc.Commit(new[] { fileA }, "AddFile Test 2/2");
-            vcc.Status(false, false);
+            vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             status = vcc.GetAssetStatus(fileA);
             Assert.That(status.Reflected, Is.False, "fileA is not present in repo");
             Assert.IsTrue(!File.Exists(localPathForTest + "\\" + fileA), "File removed again");
@@ -78,7 +78,7 @@ namespace VersionControl.UnitTests
             var fa = File.Create(localPathForTest + "\\" + fileA, 10);
             fa.Close();
 
-            bool result = vcc.Status(false, false);
+            bool result = vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             Assert.That(result, Is.True, "Status #1");
             var folderAstatus = vcc.GetAssetStatus(folderA);
             Assert.That(folderAstatus.Reflected, Is.True, "The unversioned folder dirA is reflected");
@@ -91,7 +91,7 @@ namespace VersionControl.UnitTests
 
             result = vcc.Commit(new[] { folderA }, "Directory Test 1/3");
             Assert.That(result, Is.True, "Commit #1");
-            result = vcc.Status(true, true);
+            result = vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             Assert.That(result, Is.True, "Status #2");
             fileAstatus = vcc.GetAssetStatus(fileA);
             Assert.That(fileAstatus.Reflected, Is.True, "fileA is reflected");
@@ -100,7 +100,7 @@ namespace VersionControl.UnitTests
             var fb = File.Create(localPathForTest + "\\" + fileB, 10);
             fb.Close();
             File.Delete(localPathForTest + "\\" + fileA);
-            result = vcc.Status(true, true);
+            result = vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             Assert.That(result, Is.True, "Status #3");
             fileAstatus = vcc.GetAssetStatus(fileA);
             var fileBstatus = vcc.GetAssetStatus(fileB);
@@ -111,7 +111,7 @@ namespace VersionControl.UnitTests
 
             result = vcc.Commit(new[] { folderA, fileA }, "Directory Test 2/3");
             Assert.That(result, Is.True, "Commit #2");
-            result = vcc.Status(true, true);
+            result = vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             Assert.That(result, Is.True, "Status #4");
 
             Assert.That(!File.Exists(localPathForTest + "\\" + fileA), "Missing file deleted");
@@ -121,10 +121,10 @@ namespace VersionControl.UnitTests
             Assert.That(fileBstatus.Reflected, Is.True, "fileB is reflected after commited");
             Assert.That(fileBstatus.fileStatus, Is.EqualTo(VCFileStatus.Normal), "Unversioned file Added and Commited");
 
-            result = vcc.Delete(new[] { folderA });
+            result = vcc.Delete(new[] { folderA }, OperationMode.Normal);
             Assert.That(result, Is.True, "Delete #1");
-            
-            result = vcc.Status(false, false);
+
+            result = vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             Assert.That(result, Is.True, "Status #5");
             fileBstatus = vcc.GetAssetStatus(fileB);
             Assert.That(fileBstatus.Reflected && fileBstatus.fileStatus == VCFileStatus.Deleted, "FileB Deleted");

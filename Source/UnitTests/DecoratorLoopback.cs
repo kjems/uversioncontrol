@@ -23,6 +23,14 @@ namespace VersionControl.UnitTests
             this.statusDatabase = statusDatabase;
         }
 
+        public void Start()
+        {
+        }
+
+        public void Stop()
+        {
+        }
+
         public bool IsReady()
         {
             return true;
@@ -46,17 +54,27 @@ namespace VersionControl.UnitTests
             return statusDatabase.Keys.Where(k => filter(k, statusDatabase[k])).ToList();
         }
 
-        public bool Status(bool remote, bool full)
+        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
             return true;
         }
 
-        public virtual bool Status(IEnumerable<string> assets, bool remote)
+        public virtual bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             return true;
         }
 
-        public bool Update(IEnumerable<string> assets = null, bool force = true)
+        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            return true;
+        }
+        
+        public bool RequestStatus(string asset, StatusLevel statusLevel)
+        {
+            return true;
+        }
+
+        public bool Update(IEnumerable<string> assets)
         {
             if (assets != null)
             {
@@ -84,13 +102,13 @@ namespace VersionControl.UnitTests
             return true;
         }
 
-        public bool Delete(IEnumerable<string> assets, bool force = false)
+        public bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
             dataCarrier.assets = assets.ToList();
             return true;
         }
 
-        public bool GetLock(IEnumerable<string> assets, bool force)
+        public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
             dataCarrier.assets = assets.ToList();
             return true;
@@ -144,6 +162,11 @@ namespace VersionControl.UnitTests
         {
         }
 
+        public void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+        }
+
         public event Action<string> ProgressInformation;
+        public event Action StatusCompleted;
     }
 }

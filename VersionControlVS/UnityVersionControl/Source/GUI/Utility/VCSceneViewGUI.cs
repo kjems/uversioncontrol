@@ -35,7 +35,7 @@ namespace VersionControl.UserInterface
             var rect = new Rect(5, 5, 200, 65);
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
-            GUILayout.TextField(VCGUIControls.GetLockStatusMessage(vcSceneStatus) + " "+ vcSceneStatus.reflectionLevel.ToString(), backgroundGuiStyle);
+            GUILayout.TextField(VCGUIControls.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
 
             int numberOfButtons = 0;
             const int maxButtons = 4;

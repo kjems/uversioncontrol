@@ -23,6 +23,10 @@ namespace VersionControl.UnitTests
             this.statusDatabase = statusDatabase;
         }
 
+        public void Dispose()
+        {
+        }
+
         public void Start()
         {
         }

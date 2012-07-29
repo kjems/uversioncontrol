@@ -34,7 +34,7 @@ namespace VersionControl
     /// * All version control backends implement this interface.
     /// * All VCCDecorator's decorates this interface
     /// </summary>
-    public interface IVersionControlCommands
+    public interface IVersionControlCommands : IDisposable
     {
         void Start();
         void Stop();

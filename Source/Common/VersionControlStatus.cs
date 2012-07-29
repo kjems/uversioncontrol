@@ -101,6 +101,6 @@ namespace VersionControl
         public int revision;
         public int lastModifiedRevision;
         public bool bypassRevisionControl;
-        public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local && reflectionLevel == VCReflectionLevel.Repository; } }
+        public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local || reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

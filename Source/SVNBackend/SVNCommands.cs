@@ -12,7 +12,7 @@ using CommandLineExecution;
 namespace VersionControl.Backend.SVN
 {
 
-    public class SVNCommands : MarshalByRefObject, IVersionControlCommands, IDisposable
+    public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         private string workingDirectory = ".";
         private string userName;
@@ -26,12 +26,12 @@ namespace VersionControl.Backend.SVN
         private readonly object requestQueueLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
-        private bool active = false;
-        private bool requestRefreshLoopStop = false;
+        private volatile bool active = false;
+        private volatile bool requestRefreshLoopStop = false;
 
         public SVNCommands()
         {
-            RefreshStatusLoop();
+            StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -48,39 +48,31 @@ namespace VersionControl.Backend.SVN
             TerminateRefreshLoop();
         }
 
-        private void RefreshStatusLoop()
+        private void RefreshLoop()
         {
-            if (refreshThread == null)
+            try
             {
-                refreshThread = new Thread(() =>
+                while (!requestRefreshLoopStop)
                 {
-                    try
-                    {
-                        while (!requestRefreshLoopStop)
-                        {
-                            Thread.Sleep(100);
-                            if (active) RefreshStatusDatabase();
-                        }
-                    }
-                    catch (ThreadAbortException)
-                    {
-                    }
-                    catch (Exception e)
-                    {
-                        D.ThrowException(e);
-                    }
-                });
+                    Thread.Sleep(200);
+                    if (active) RefreshStatusDatabase();
+                }
+            }
+            catch (ThreadAbortException) { }
+            catch (AppDomainUnloadedException) { }
+            catch (Exception e)
+            {
+                D.ThrowException(e);
             }
         }
 
-        public void Start()
+        private void StartRefreshLoop()
         {
-            active = true;
-        }
-
-        public void Stop()
-        {
-            active = false;
+            if (refreshThread == null)
+            {
+                refreshThread = new Thread(RefreshLoop);
+                refreshThread.Start();
+            }
         }
 
         // This should only be used during termination of the host AppDomain or Process
@@ -93,11 +85,21 @@ namespace VersionControl.Backend.SVN
                 currentExecutingOperation.Dispose();
                 currentExecutingOperation = null;
             }
-            if(refreshThread != null)
+            if (refreshThread != null)
             {
                 refreshThread.Abort();
                 refreshThread = null;
             }
+        }
+
+        public void Start()
+        {
+            active = true;
+        }
+
+        public void Stop()
+        {
+            active = false;
         }
 
         private void RefreshStatusDatabase()
@@ -117,8 +119,8 @@ namespace VersionControl.Backend.SVN
                     remoteRequestQueue.Clear();
                 }
             }
-            //if (localCopy != null && localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
-            //if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
+            if (localCopy != null && localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
+            if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
             if (localCopy != null && localCopy.Count > 0) Status(localCopy, StatusLevel.Local);
             if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
         }

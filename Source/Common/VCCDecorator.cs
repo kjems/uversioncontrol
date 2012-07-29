@@ -18,6 +18,11 @@ namespace VersionControl
 
         protected readonly IVersionControlCommands vcc;
 
+        public void Dispose()
+        {
+            vcc.Dispose();
+        }
+
         public virtual void Start()
         {
             vcc.Start();

@@ -67,6 +67,11 @@ namespace VersionControl
 
         public bool Ready { get { return Active && vcc.IsReady(); } }
 
+        public void Dispose()
+        {
+            vcc.Dispose();
+        }
+
         public void Start()
         {
             if (Active)

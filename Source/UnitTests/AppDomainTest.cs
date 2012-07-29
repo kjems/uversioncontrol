@@ -15,7 +15,7 @@ namespace VersionControl.UnitTests
     [TestFixture]
     public class AppDomainTest
     {
-        private const string localPathForTest = @"c:\develop\Game2.4";
+        private const string localPathForTest = @"d:\develop\Game2.4";
 
         [Test]
         public void TestStatus()

@@ -62,7 +62,8 @@ namespace VersionControl.UnitTests
         private void QueueWork(IVersionControlCommands vcc)
         {
             var files = Directory.GetFiles(localPathForTest, "*.asset", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/"));
-            vcc.RequestStatus(files, StatusLevel.Remote);
+            vcc.SetStatusRequestRule(files, StatusLevel.Remote);
+            vcc.RequestStatus(files);
         }
 
         private static AppDomain svnDomain = null;

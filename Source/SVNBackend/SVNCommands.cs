@@ -18,14 +18,16 @@ namespace VersionControl.Backend.SVN
         private string userName;
         private string password;
         private string versionNumber;
-        private StatusDatabase statusDatabase = new StatusDatabase();
+        private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
         private Thread refreshThread = null;
         private readonly object operationActiveLockToken = new object();
         private readonly object requestQueueLockToken = new object();
+        private readonly object statusDatabaseLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
+        private readonly List<string> remoteRequestRuleList = new List<string>();
         private volatile bool active = false;
         private volatile bool requestRefreshLoopStop = false;
 
@@ -143,13 +145,19 @@ namespace VersionControl.Backend.SVN
 
         public VersionControlStatus GetAssetStatus(string assetPath)
         {
-            assetPath = assetPath.Replace("\\", "/");
-            return statusDatabase[assetPath];
+            lock (statusDatabaseLockToken)
+            {
+                assetPath = assetPath.Replace("\\", "/");
+                return statusDatabase[assetPath];
+            }
         }
 
         public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+            lock (statusDatabaseLockToken)
+            {
+                return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+            }
         }
 
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
@@ -169,7 +177,14 @@ namespace VersionControl.Backend.SVN
             if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
             {
-                statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                lock (statusDatabaseLockToken)
+                {
+                    foreach (var statusIt in db)
+                    {
+                        statusDatabase[statusIt.Key] = statusIt.Value;
+                    }
+                }
                 OnStatusCompleted();
             }
             catch (XmlException)
@@ -177,11 +192,6 @@ namespace VersionControl.Backend.SVN
                 return false;
             }
             return true;
-        }
-
-        private void MakePending(string asset)
-        {
-            statusDatabase[asset] = new VersionControlStatus { assetPath = asset, reflectionLevel = VCReflectionLevel.Pending };
         }
 
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
@@ -198,9 +208,12 @@ namespace VersionControl.Backend.SVN
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
-            foreach (var assetIt in assets)
+            lock (statusDatabaseLockToken)
             {
-                MakePending(assetIt);
+                foreach (var assetIt in assets)
+                {
+                    statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
+                }
             }
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
@@ -211,9 +224,12 @@ namespace VersionControl.Backend.SVN
             try
             {
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
-                foreach (var statusIt in db)
+                lock (statusDatabaseLockToken)
                 {
-                    statusDatabase[statusIt.Key] = statusIt.Value;
+                    foreach (var statusIt in db)
+                    {
+                        statusDatabase[statusIt.Key] = statusIt.Value;
+                    }
                 }
                 OnStatusCompleted();
             }
@@ -297,7 +313,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Local);
+            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets);
         }
 
         private static string FixAtChar(string asset)
@@ -318,27 +334,45 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
-        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        public virtual bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            if (assets == null || assets.Count() == 0) return true;
-
-            lock (requestQueueLockToken)
+            foreach (var assetIt in assets)
             {
-                foreach (string asset in assets)
+                if (statusLevel == StatusLevel.Remote)
                 {
-                    if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Add(asset);
-                    else localRequestQueue.Add(asset);
+                    if (!remoteRequestRuleList.Contains(assetIt))
+                    {
+                        remoteRequestRuleList.Add(assetIt);
+                    }
+                }
+                else
+                {
+                    remoteRequestRuleList.Remove(assetIt);
                 }
             }
             return true;
         }
 
-        public virtual bool RequestStatus(string asset, StatusLevel statusLevel)
+        public virtual bool RequestStatus(IEnumerable<string> assets)
         {
+            if (assets == null || assets.Count() == 0) return true;
+
             lock (requestQueueLockToken)
             {
-                if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Add(asset);
-                else localRequestQueue.Add(asset);
+                foreach (string assetIt in assets)
+                {
+                    //if (GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Pending) continue;
+                    if (remoteRequestRuleList.Contains(assetIt))
+                    {
+                        //D.Log(" Request Remote: " + assetIt + " : " + GetAssetStatus(assetIt).reflectionLevel);
+                        remoteRequestQueue.Add(assetIt);
+                    }
+                    else
+                    {
+                        //D.Log(" Request Local : " + assetIt + " : " + GetAssetStatus(assetIt).reflectionLevel);
+                        localRequestQueue.Add(assetIt);
+                    }
+                }
             }
             return true;
         }
@@ -403,7 +437,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Local);
+            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to });
         }
 
         public string GetBasePath(string assetPath)
@@ -446,14 +480,20 @@ namespace VersionControl.Backend.SVN
 
         public void ClearDatabase()
         {
-            statusDatabase.Clear();
+            lock (statusDatabaseLockToken)
+            {
+                statusDatabase.Clear();
+            }
         }
 
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
-            foreach (var assetIt in assets)
+            lock (statusDatabaseLockToken)
             {
-                statusDatabase.Remove(assetIt);
+                foreach (var assetIt in assets)
+                {
+                    statusDatabase.Remove(assetIt);
+                }
             }
         }
 

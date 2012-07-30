@@ -58,6 +58,16 @@ namespace VersionControl
             return vcc.GetFilteredAssets(filter);
         }
 
+        public virtual bool RequestStatus(IEnumerable<string> assets)
+        {
+            return vcc.RequestStatus(assets);
+        }
+        
+        public virtual bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            return vcc.SetStatusRequestRule(assets, statusLevel);
+        }
+
         public virtual bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
             return vcc.Status(statusLevel, detailLevel);
@@ -67,17 +77,7 @@ namespace VersionControl
         {
             return vcc.Status(assets, statusLevel);
         }
-
-        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
-        {
-            return vcc.RequestStatus(assets, statusLevel);
-        }
-
-        public virtual bool RequestStatus(string asset, StatusLevel statusLevel)
-        {
-            return vcc.RequestStatus(asset, statusLevel);
-        }
-
+        
         public virtual bool Update(IEnumerable<string> assets = null)
         {
             return vcc.Update(assets);

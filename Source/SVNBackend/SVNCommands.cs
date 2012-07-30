@@ -187,6 +187,13 @@ namespace VersionControl.Backend.SVN
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (!active) return false;
+
+            const int assetsPerStatus = 20;
+            if (assets.Count() > assetsPerStatus)
+            {
+                return Status(assets.Take(assetsPerStatus), statusLevel) && Status(assets.Skip(assetsPerStatus), statusLevel);
+            }
+
             string arguments = "status --xml -v ";
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
@@ -314,32 +321,24 @@ namespace VersionControl.Backend.SVN
         public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null || assets.Count() == 0) return true;
-            bool result = true;
-            foreach (string asset in assets)
+
+            lock (requestQueueLockToken)
             {
-                result &= RequestStatus(asset, statusLevel);
+                foreach (string asset in assets)
+                {
+                    if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Add(asset);
+                    else localRequestQueue.Add(asset);
+                }
             }
-            return result;
+            return true;
         }
 
         public virtual bool RequestStatus(string asset, StatusLevel statusLevel)
         {
             lock (requestQueueLockToken)
             {
-                if (statusLevel == StatusLevel.Remote)
-                {
-                    if (!remoteRequestQueue.Contains(asset))
-                    {
-                        remoteRequestQueue.Add(asset);
-                    }
-                }
-                else
-                {
-                    if (!localRequestQueue.Contains(asset))
-                    {
-                        localRequestQueue.Add(asset);
-                    }
-                }
+                if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Add(asset);
+                else localRequestQueue.Add(asset);
             }
             return true;
         }

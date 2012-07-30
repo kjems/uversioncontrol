@@ -19,7 +19,7 @@ namespace VersionControl
             changedAssets = AssetpathsFilters.AddMeta(changedAssets.Distinct(), true).ToList();
             if (changedAssets.Count > 0)
             {
-                VCCommands.Instance.RequestStatus(changedAssets, StatusLevel.Local);
+                VCCommands.Instance.RequestStatus(changedAssets);
                 changedAssets.Clear();
             }
 
@@ -29,7 +29,7 @@ namespace VersionControl
             if (removedAssets.Count > 0)
             {
                 VCCommands.Instance.RemoveFromDatabase(removedAssets);
-                VCCommands.Instance.RequestStatus(removedAssets, StatusLevel.Local);
+                VCCommands.Instance.RequestStatus(removedAssets);
                 removedAssets.Clear();
             }
 

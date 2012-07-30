@@ -43,10 +43,10 @@ namespace VersionControl
         void SetUserCredentials(string userName, string password);
         VersionControlStatus GetAssetStatus(string assetPath);
         IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter);
+        bool RequestStatus(IEnumerable<string> assets);
+        bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel);
         bool Status(StatusLevel statusLevel, DetailLevel detailLevel);
         bool Status(IEnumerable<string> assets, StatusLevel statusLevel);
-        bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel);
-        bool RequestStatus(string asset, StatusLevel statusLevel);
         bool Update(IEnumerable<string> assets = null);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
         bool Add(IEnumerable<string> assets);

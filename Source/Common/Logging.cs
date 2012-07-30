@@ -36,13 +36,17 @@ namespace VersionControl
 
         public static void ThrowException(Exception exception)
         {
-            if (exceptionCallback != null) exceptionCallback(new VCException(exception.Message, exception.StackTrace, exception));
+            if (exceptionCallback != null)
+            {
+                if (exception is VCException) exceptionCallback((VCException)exception);
+                else exceptionCallback(new VCException(exception.Message, exception.StackTrace, exception));
+            }
             else Log("Unhandled exception : " + exception.Message, Severity.Error);
         }
 
         private static string FormatMessage(string message)
         {
-            return DateTime.Now.ToString("HH:mm:ss.ffff") + ":" + message + "\n\n" + GetCallstack();
+            return DateTime.Now.ToString("HH:mm:ss.ffff") + "(" + System.Threading.Thread.CurrentThread.ExecutionContext.GetHashCode() + "): " + message + "\n\n" + GetCallstack();
         }
 
         public static void Log(string message, Severity severity = Severity.Log)

@@ -68,16 +68,16 @@ namespace VersionControl.UnitTests
             return true;
         }
 
-        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
-        {
-            return true;
-        }
-        
-        public bool RequestStatus(string asset, StatusLevel statusLevel)
+        public virtual bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             return true;
         }
 
+        public bool RequestStatus(IEnumerable<string> assets)
+        {
+            return true;
+        }
+        
         public bool Update(IEnumerable<string> assets)
         {
             if (assets != null)

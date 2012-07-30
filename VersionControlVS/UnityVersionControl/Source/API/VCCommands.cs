@@ -245,17 +245,23 @@ namespace VersionControl
                 return result;
             });
         }
-
-        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        public bool RequestStatus(string asset)
+        {
+            return RequestStatus(new[] { asset });
+        }
+        public bool RequestStatus(IEnumerable<string> assets)
         {
             if (ignoreStatusRequests) return false;
-            return vcc.RequestStatus(assets, statusLevel);
+            return vcc.RequestStatus(assets);
         }
 
-        public bool RequestStatus(string asset, StatusLevel statusLevel)
+        public bool SetStatusRequestRule(string asset, StatusLevel statusLevel)
         {
-            if (ignoreStatusRequests) return false;
-            return vcc.RequestStatus(asset, statusLevel);
+            return SetStatusRequestRule(new[] { asset }, statusLevel);
+        }
+        public bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            return vcc.SetStatusRequestRule(assets, statusLevel);
         }
 
         public bool Update(IEnumerable<string> assets)

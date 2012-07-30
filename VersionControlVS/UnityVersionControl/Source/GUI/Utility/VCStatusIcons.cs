@@ -90,7 +90,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Missing) return missingIcon;
             if (assetStatus.bypassRevisionControl) return modifiedIcon;
             if (assetStatus.fileStatus == VCFileStatus.Added) return addedIcon;
-            
+
             if (includeLockStatus)
             {
                 if (assetStatus.lockStatus == VCLockStatus.LockedHere) return lockedIcon;
@@ -114,11 +114,12 @@ namespace VersionControl.UserInterface
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
+                    VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, StatusLevel.Remote);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath);
                 }
                 else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
                 {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Local);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath);
                 }
             }
         }
@@ -130,7 +131,7 @@ namespace VersionControl.UserInterface
             RequestStatus(obj, VCSettings.ProjectReflectionMode);
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
-        
+
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;

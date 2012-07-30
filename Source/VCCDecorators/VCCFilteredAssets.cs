@@ -40,16 +40,11 @@ namespace VersionControl
             return assets.Any() ? base.Status(assets, statusLevel) : false;
         }
 
-        public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        public override bool RequestStatus(IEnumerable<string> assets)
         {
             if (assets == null) return true;
             assets = NonEmpty(assets);
-            return assets.Any() ? base.RequestStatus(assets.ToList(), statusLevel) : true;
-        }
-
-        public override bool RequestStatus(string asset, StatusLevel statusLevel)
-        {
-            return !string.IsNullOrEmpty(asset) ? base.RequestStatus(asset, statusLevel) : true;
+            return assets.Any() ? base.RequestStatus(assets.ToList()) : true;
         }
 
         public override bool Update(IEnumerable<string> assets = null)
@@ -92,7 +87,7 @@ namespace VersionControl
             catch(VCLockedByOther e)
             {
                 D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a,b) => a + ", " + b) + "\n" + e.Message);
-                RequestStatus(assets, StatusLevel.Remote);
+                Status(assets, StatusLevel.Remote);
                 return false;
             }
         }

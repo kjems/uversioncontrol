@@ -36,15 +36,15 @@ namespace VersionControl
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = NonPending(InVersionedFolder(NonEmpty(assets)));
+            assets = NonPending(InVersionedFolder(NonEmpty(assets))).ToList();
             return assets.Any() ? base.Status(assets, statusLevel) : false;
         }
 
         public override bool RequestStatus(IEnumerable<string> assets)
         {
             if (assets == null) return true;
-            assets = NonEmpty(assets);
-            return assets.Any() ? base.RequestStatus(assets.ToList()) : true;
+            assets = NonPending(InVersionedFolder(NonEmpty(assets))).ToList();
+            return assets.Any() ? base.RequestStatus(assets) : true;
         }
 
         public override bool Update(IEnumerable<string> assets = null)

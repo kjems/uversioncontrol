@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using CommandLineExecution;
 
@@ -108,6 +109,7 @@ namespace VersionControl.Backend.SVN
         {
             List<string> localCopy = null;
             List<string> remoteCopy = null;
+
             lock (requestQueueLockToken)
             {
                 if (localRequestQueue.Count > 0)
@@ -171,7 +173,7 @@ namespace VersionControl.Backend.SVN
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteCommandLine(svnStatusTask);
+                commandLineOutput = ExecuteOperation(svnStatusTask, false);
             }
 
             if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
@@ -218,7 +220,7 @@ namespace VersionControl.Backend.SVN
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteCommandLine(svnStatusTask);
+                commandLineOutput = ExecuteOperation(svnStatusTask, false);
             }
             if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
@@ -260,7 +262,7 @@ namespace VersionControl.Backend.SVN
             {
                 commandLineOperation.OutputReceived += OnProgressInformation;
                 commandLineOperation.ErrorReceived += OnProgressInformation;
-                commandLineOutput = ExecuteCommandLine(commandLineOperation);
+                commandLineOutput = ExecuteOperation(commandLineOperation);
             }
             return !(commandLineOutput == null || commandLineOutput.Failed);
         }
@@ -268,24 +270,39 @@ namespace VersionControl.Backend.SVN
         private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)
         {
             CommandLineOutput commandLineOutput;
-            lock (operationActiveLockToken)
+            try
             {
-                try
+                D.Log(commandLine.ToString());
+                currentExecutingOperation = commandLine;
+                //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
+                commandLineOutput = commandLine.Execute();
+            }
+            catch (Exception e)
+            {
+                throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
+            }
+            finally
+            {
+                currentExecutingOperation = null;
+            }
+            return commandLineOutput;
+        }
+
+        private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
+        {
+            CommandLineOutput commandLineOutput;
+            if (useOperationLock)
+            {
+                lock (operationActiveLockToken)
                 {
-                    D.Log(commandLine.ToString());
-                    currentExecutingOperation = commandLine;
-                    //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
-                    commandLineOutput = commandLine.Execute();
-                }
-                catch (Exception e)
-                {
-                    throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
-                }
-                finally
-                {
-                    currentExecutingOperation = null;
+                    commandLineOutput = ExecuteCommandLine(commandLine);
                 }
             }
+            else
+            {
+                commandLineOutput = ExecuteCommandLine(commandLine);
+            }
+            
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
             {
                 throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());

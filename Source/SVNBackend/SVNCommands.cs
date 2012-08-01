@@ -206,7 +206,7 @@ namespace VersionControl.Backend.SVN
                 return Status(assets.Take(assetsPerStatus), statusLevel) && Status(assets.Skip(assetsPerStatus), statusLevel);
             }
 
-            string arguments = "status --xml -v ";
+            string arguments = "status --xml -q -v ";
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
@@ -302,7 +302,7 @@ namespace VersionControl.Backend.SVN
             {
                 commandLineOutput = ExecuteCommandLine(commandLine);
             }
-            
+
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
             {
                 throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
@@ -378,15 +378,14 @@ namespace VersionControl.Backend.SVN
             {
                 foreach (string assetIt in assets)
                 {
-                    //if (GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Pending) continue;
                     if (remoteRequestRuleList.Contains(assetIt))
                     {
-                        //D.Log(" Request Remote: " + assetIt + " : " + GetAssetStatus(assetIt).reflectionLevel);
+                        //D.Log(" Request Remote: " + asset + " : " + GetAssetStatus(asset).reflectionLevel);
                         remoteRequestQueue.Add(assetIt);
                     }
                     else
                     {
-                        //D.Log(" Request Local : " + assetIt + " : " + GetAssetStatus(assetIt).reflectionLevel);
+                        //D.Log(" Request Local : " + asset + " : " + GetAssetStatus(asset).reflectionLevel);
                         localRequestQueue.Add(assetIt);
                     }
                 }
@@ -512,6 +511,13 @@ namespace VersionControl.Backend.SVN
                     statusDatabase.Remove(assetIt);
                 }
             }
+        }
+
+        IEnumerable<string> RemoveFilesIfParentFolderInList(IEnumerable<string> assets)
+        {
+            var folders = assets.Where(a => Directory.Exists(a));
+            assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
+            return assets;
         }
 
         public event Action<string> ProgressInformation;

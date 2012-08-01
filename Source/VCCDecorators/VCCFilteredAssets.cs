@@ -43,7 +43,7 @@ namespace VersionControl
         public override bool RequestStatus(IEnumerable<string> assets)
         {
             if (assets == null) return true;
-            assets = NonPending(InVersionedFolder(NonEmpty(assets))).ToList();
+            assets = NonPending(NonEmpty(assets)).ToList();
             return assets.Any() ? base.RequestStatus(assets) : true;
         }
 

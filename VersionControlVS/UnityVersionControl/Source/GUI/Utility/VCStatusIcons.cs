@@ -115,13 +115,11 @@ namespace VersionControl.UserInterface
                 var statusLevel = (reflectionLevel == VCSettings.EReflectionLevel.Remote ? StatusLevel.Remote : StatusLevel.Local);
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
-                    VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, statusLevel);
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
                 }
                 else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
                 {
-                    VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, statusLevel);
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Previous);
                 }
             }
         }

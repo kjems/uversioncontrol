@@ -40,11 +40,11 @@ namespace VersionControl
             return assets.Any() ? base.Status(assets, statusLevel) : false;
         }
 
-        public override bool RequestStatus(IEnumerable<string> assets)
+        public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null) return true;
             assets = NonEmpty(assets).ToList();
-            return assets.Any() ? base.RequestStatus(assets) : true;
+            return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
         }
 
         public override bool Update(IEnumerable<string> assets = null)

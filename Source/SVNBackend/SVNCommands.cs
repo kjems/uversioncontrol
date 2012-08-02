@@ -28,7 +28,6 @@ namespace VersionControl.Backend.SVN
         private readonly object statusDatabaseLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
-        private readonly List<string> remoteRequestRuleList = new List<string>();
         private volatile bool active = false;
         private volatile bool requestRefreshLoopStop = false;
 
@@ -200,6 +199,14 @@ namespace VersionControl.Backend.SVN
         {
             if (!active) return false;
 
+            if(statusLevel == StatusLevel.Previous)
+            {
+                foreach (var assetIt in assets)
+                {
+                    statusLevel = GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Repository ? StatusLevel.Remote : StatusLevel.Local;
+                }
+            }
+
             const int assetsPerStatus = 20;
             if (assets.Count() > assetsPerStatus)
             {
@@ -217,6 +224,15 @@ namespace VersionControl.Backend.SVN
                     statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
                 }
             }
+            lock (requestQueueLockToken)
+            {
+                foreach (var assetIt in assets)
+                {
+                    if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
+                    if (statusLevel == StatusLevel.Local) localRequestQueue.Remove(assetIt);
+                }
+            }
+
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
@@ -330,7 +346,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets);
+            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
         }
 
         private static string FixAtChar(string asset)
@@ -351,31 +367,19 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
-        public virtual bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
+        private void AddToRemoteStatusQueue(string asset)
         {
-            foreach (var assetIt in assets)
-            {
-                if (statusLevel == StatusLevel.Remote)
-                {
-                    if (!remoteRequestRuleList.Contains(assetIt))
-                    {
-                        remoteRequestRuleList.Add(assetIt);
-                        D.Log("Setting remote rule for : " + assetIt);
-                    }
-                }
-                else
-                {
-                    if (remoteRequestRuleList.Contains(assetIt))
-                    {
-                        remoteRequestRuleList.Remove(assetIt);
-                        D.Log("Setting local rule for : " + assetIt);
-                    }
-                }
-            }
-            return true;
+            //D.Log("Remote Req : " + asset);
+            if(!remoteRequestQueue.Contains(asset)) remoteRequestQueue.Add(asset);
         }
 
-        public virtual bool RequestStatus(IEnumerable<string> assets)
+        private void AddToLocalStatusQueue(string asset)
+        {
+            //D.Log("Local Req : " + asset);
+            if(!localRequestQueue.Contains(asset)) localRequestQueue.Add(asset);
+        }
+
+        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null || assets.Count() == 0) return true;
 
@@ -383,16 +387,21 @@ namespace VersionControl.Backend.SVN
             {
                 foreach (string assetIt in assets)
                 {
-                    if (GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Pending) continue;
-                    if (remoteRequestRuleList.Contains(assetIt))
+                    var currentReflectionLevel = GetAssetStatus(assetIt).reflectionLevel;
+                    if (currentReflectionLevel == VCReflectionLevel.Pending) continue;
+                    if (statusLevel == StatusLevel.Remote)
                     {
-                        //D.Log(" Request Remote: " + asset + " : " + GetAssetStatus(asset).reflectionLevel);
-                        remoteRequestQueue.Add(assetIt);
+                        AddToRemoteStatusQueue(assetIt);
                     }
-                    else
+                    else if (statusLevel == StatusLevel.Local)
                     {
-                        //D.Log(" Request Local : " + asset + " : " + GetAssetStatus(asset).reflectionLevel);
-                        localRequestQueue.Add(assetIt);
+                        AddToLocalStatusQueue(assetIt);
+                    }
+                    else if(statusLevel == StatusLevel.Previous)
+                    {
+                        if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
+                        if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
+                        if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
                     }
                 }
             }
@@ -459,7 +468,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to });
+            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
         }
 
         public string GetBasePath(string assetPath)

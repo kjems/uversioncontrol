@@ -43,7 +43,7 @@ namespace VersionControl
         public override bool RequestStatus(IEnumerable<string> assets)
         {
             if (assets == null) return true;
-            assets = NonPending(NonEmpty(assets)).ToList();
+            assets = NonEmpty(assets).ToList();
             return assets.Any() ? base.RequestStatus(assets) : true;
         }
 
@@ -60,6 +60,7 @@ namespace VersionControl
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
                 base.Delete(Missing(filesInFolders), OperationMode.Normal) &&
                 base.Commit(ShortestFirst(toBeCommited), commitMessage) &&
+                Status(assets, StatusLevel.Local) &&
                 ReleaseLock(assets);
         }
 

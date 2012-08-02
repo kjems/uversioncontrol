@@ -101,7 +101,7 @@ namespace VersionControl.UserInterface
                     lockMessage += " (" + Terminology.getlock + " By: " + assetStatus.owner + " )";
                 }
             }
-            else if (assetStatus.fileStatus == VCFileStatus.Modified) lockMessage = "Modified";
+            if (assetStatus.fileStatus == VCFileStatus.Modified) lockMessage += "*";
             return lockMessage;
         }
         

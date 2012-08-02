@@ -54,7 +54,6 @@ namespace VersionControl.UserInterface
                                 vcStatus.lockStatus == VCLockStatus.LockedHere;
             
             bool show = interresting && (assetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase) || depedencyAssetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase));
-
             Profiler.EndSample();
             return show;
         }

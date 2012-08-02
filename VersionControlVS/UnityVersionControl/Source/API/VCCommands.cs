@@ -245,25 +245,16 @@ namespace VersionControl
                 return result;
             });
         }
-        public bool RequestStatus(string asset)
+        public bool RequestStatus(string asset, StatusLevel statusLevel)
         {
-            return RequestStatus(new[] { asset });
+            return RequestStatus(new[] { asset }, statusLevel);
         }
-        public bool RequestStatus(IEnumerable<string> assets)
+        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (ignoreStatusRequests) return false;
-            return vcc.RequestStatus(assets);
+            return vcc.RequestStatus(assets, statusLevel);
         }
-
-        public bool SetStatusRequestRule(string asset, StatusLevel statusLevel)
-        {
-            return SetStatusRequestRule(new[] { asset }, statusLevel);
-        }
-        public bool SetStatusRequestRule(IEnumerable<string> assets, StatusLevel statusLevel)
-        {
-            return vcc.SetStatusRequestRule(assets, statusLevel);
-        }
-
+        
         public bool Update(IEnumerable<string> assets)
         {
             return HandleExceptions(() =>
@@ -299,7 +290,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                Status(assets, StatusLevel.Local);
+                Status(assets.ToList(), StatusLevel.Local);
                 assets = AssetpathsFilters.AddMeta(assets);
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);

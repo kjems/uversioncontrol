@@ -173,7 +173,7 @@ namespace VersionControl.Backend.SVN
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteOperation(svnStatusTask, false);
+                commandLineOutput = ExecuteOperation(svnStatusTask);
             }
 
             if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
@@ -220,7 +220,7 @@ namespace VersionControl.Backend.SVN
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteOperation(svnStatusTask, false);
+                commandLineOutput = ExecuteOperation(svnStatusTask);
             }
             if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
@@ -360,11 +360,16 @@ namespace VersionControl.Backend.SVN
                     if (!remoteRequestRuleList.Contains(assetIt))
                     {
                         remoteRequestRuleList.Add(assetIt);
+                        D.Log("Setting remote rule for : " + assetIt);
                     }
                 }
                 else
                 {
-                    remoteRequestRuleList.Remove(assetIt);
+                    if (remoteRequestRuleList.Contains(assetIt))
+                    {
+                        remoteRequestRuleList.Remove(assetIt);
+                        D.Log("Setting local rule for : " + assetIt);
+                    }
                 }
             }
             return true;
@@ -378,6 +383,7 @@ namespace VersionControl.Backend.SVN
             {
                 foreach (string assetIt in assets)
                 {
+                    if (GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Pending) continue;
                     if (remoteRequestRuleList.Contains(assetIt))
                     {
                         //D.Log(" Request Remote: " + asset + " : " + GetAssetStatus(asset).reflectionLevel);

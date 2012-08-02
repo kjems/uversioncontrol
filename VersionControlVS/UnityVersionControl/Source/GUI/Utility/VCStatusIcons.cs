@@ -113,13 +113,14 @@ namespace VersionControl.UserInterface
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
                 var statusLevel = (reflectionLevel == VCSettings.EReflectionLevel.Remote ? StatusLevel.Remote : StatusLevel.Local);
-                VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, statusLevel);
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
+                    VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, statusLevel);
                     VCCommands.Instance.RequestStatus(assetStatus.assetPath);
                 }
                 else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
                 {
+                    VCCommands.Instance.SetStatusRequestRule(assetStatus.assetPath, statusLevel);
                     VCCommands.Instance.RequestStatus(assetStatus.assetPath);
                 }
             }

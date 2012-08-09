@@ -46,7 +46,7 @@ namespace VersionControl
 
         private static string FormatMessage(string message)
         {
-            return DateTime.Now.ToString("HH:mm:ss.ffff") + "(" + System.Threading.Thread.CurrentThread.ExecutionContext.GetHashCode() + "): " + message + "\n\n" + GetCallstack();
+            return DateTime.Now.ToString("HH:mm:ss.ffff") + "(" + System.Threading.Thread.CurrentThread.ManagedThreadId + "): " + message + "\n\n" + GetCallstack();
         }
 
         public static void Log(string message, Severity severity = Severity.Log)

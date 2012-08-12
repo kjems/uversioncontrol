@@ -79,7 +79,7 @@ namespace VersionControl.UserInterface
 
         public static GUIStyle GetLockStatusStyle()
         {
-            return new GUIStyle(EditorStyles.boldLabel) {normal = {textColor = Color.black}, alignment = TextAnchor.MiddleCenter};
+            return new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = Color.black }, alignment = TextAnchor.MiddleCenter };
         }
 
         public static string GetLockStatusMessage(VersionControlStatus assetStatus)
@@ -104,7 +104,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Modified) lockMessage += "*";
             return lockMessage;
         }
-        
+
         public static GenericMenu CreateVCContextMenu(IEnumerable<string> assetPaths)
         {
             var menu = new GenericMenu();
@@ -153,12 +153,12 @@ namespace VersionControl.UserInterface
                 bool showForceOpen = ready && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
                 bool showDisconnect = isPrefab && !isPrefabParent;
 
-                if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] {assetPath}));
-                if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => VCCommands.Instance.GetLock(new[] {assetPath}));
+                if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
+                if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => VCCommands.Instance.GetLock(new[] { assetPath }));
                 if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => VCCommands.Instance.BypassRevision(new[] { assetPath }));
                 if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => VCUtility.VCForceOpen(assetPath, assetStatus));
                 if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] {assetPath}, OperationMode.Force));
+                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }, OperationMode.Force));
                 if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
                 if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                 if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
@@ -190,9 +190,50 @@ namespace VersionControl.UserInterface
 
     internal static class TextureUtils
     {
+        private static Texture2D CreateTexture(System.Drawing.Bitmap resourceBitmap, Color color)
+        {
+            var width = resourceBitmap.Width;
+            var height = resourceBitmap.Height;
+            var colors = new Color[width * height];
+            
+            for (int x = 0; x < width; ++x)
+            {
+                for (int y = 0; y < height; ++y)
+                {
+                    var resourceColor = resourceBitmap.GetPixel(x, y);
+                    bool resourcePixelIsWhite = resourceColor.R == 255 && resourceColor.G == 255 && resourceColor.B == 255;
+                    var newColor = resourcePixelIsWhite
+                                       ? new Color(color.r, color.g, color.b, resourceColor.A / 255.0f)
+                                       : new Color(resourceColor.R / 255.0f, resourceColor.G / 255.0f, resourceColor.B / 255.0f, resourceColor.A / 255.0f);
+                    colors[(width - 1) - x + ((height - 1) - y) * width] = newColor;
+                }
+            }
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            texture.SetPixels(colors);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Point;
+            texture.Apply();
+            return texture;
+        }
+
+        public static Texture2D CreateRubyTexture(Color body)
+        {
+            return CreateTexture(UnityVersionControl.Properties.Resources.ruby, body);
+        }
+
+        public static Texture2D CreateSquareTexture(Color body)
+        {
+            return CreateTexture(UnityVersionControl.Properties.Resources.square, body);
+        }
+
+        public static Texture2D CreateTriangleTexture(Color body)
+        {
+            return CreateTexture(UnityVersionControl.Properties.Resources.triangle, body);
+        }
+
         public static Texture2D CreateBorderedTexture(Color border, Color body)
         {
-            var backgroundTexture = new Texture2D(3, 3, TextureFormat.ARGB32, false) {hideFlags = HideFlags.HideAndDontSave};
+            var backgroundTexture = new Texture2D(3, 3, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
 
             backgroundTexture.SetPixels(new[]
             {
@@ -213,7 +254,7 @@ namespace VersionControl.UserInterface
 
         public static Texture2D CreateSquareTextureWithBorder(int size, int borderSize, Color inner, Color border)
         {
-            var colors = new Color[size*size];
+            var colors = new Color[size * size];
             for (int x = 0; x < size; x++)
             {
                 for (int y = 0; y < size; y++)
@@ -223,7 +264,7 @@ namespace VersionControl.UserInterface
                 }
             }
 
-            var iconTexture = new Texture2D(size, size, TextureFormat.ARGB32, false) {hideFlags = HideFlags.HideAndDontSave};
+            var iconTexture = new Texture2D(size, size, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
             iconTexture.SetPixels(colors);
             iconTexture.wrapMode = TextureWrapMode.Clamp;
             iconTexture.filterMode = FilterMode.Point;
@@ -231,37 +272,5 @@ namespace VersionControl.UserInterface
             return iconTexture;
         }
     }
-
-    /*internal sealed class GeneratedTextures
-    {
-        private static GeneratedTextures instance;
-        public static GeneratedTextures Instance
-        {
-            get { return instance ?? (instance = new GeneratedTextures()); }
-        }
-
-        private GeneratedTextures()
-        {
-            const int size = 7;
-            const int border = 1;
-            noTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(0.55f, 0.55f, 0.55f));
-            lockedByOtherTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(0.85f, 0.4f, 0.4f));
-            lockedTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(0.4f, 0.7f, 0.4f));
-            noLockTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), Color.white);
-            bypassTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(0.8f, 0.6f, 0.3f));
-            addedTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(0.2f, 0.2f, 0.8f));
-            pendingTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(0.1f, 0.1f, 0.1f), new Color(1, 1, 0.6f, 0.8f));
-            conflictTexture = TextureUtils.CreateSquareTextureWithBorder(size, border, new Color(1f, 0f, 0f), new Color(1f, 0f, 0f, 1f));
-        }
-
-        public readonly Texture2D lockedTexture;
-        public readonly Texture2D noLockTexture;
-        public readonly Texture2D bypassTexture;
-        public readonly Texture2D noTexture;
-        public readonly Texture2D lockedByOtherTexture;
-        public readonly Texture2D addedTexture;
-        public readonly Texture2D pendingTexture;
-        public readonly Texture2D conflictTexture;
-    }*/
 }
 

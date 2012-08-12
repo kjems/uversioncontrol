@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Threading">
       <HintPath>..\..\Externals\System.Threading.dll</HintPath>
     </Reference>
@@ -51,6 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Source\API\ObjectExtension.cs" />
     <Compile Include="Source\API\TaskExtension.cs" />
     <Compile Include="Source\API\VCCommands.cs" />
@@ -98,6 +104,26 @@
       <Project>{99ABD2B2-792B-4ADD-8747-E6F9595691AB}</Project>
       <Name>SVNBackend</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Resources\ruby.png">
+      <Link>Properties\ruby.png</Link>
+    </Content>
+    <Content Include="..\..\Resources\square.png">
+      <Link>Properties\square.png</Link>
+    </Content>
+    <Content Include="..\..\Resources\triangle.png">
+      <Link>Properties\triangle.png</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

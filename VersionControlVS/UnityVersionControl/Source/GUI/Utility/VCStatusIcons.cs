@@ -16,8 +16,8 @@ namespace VersionControl.UserInterface
 
         private void Initilize(Color color, Color borderColor, int iconSize, int borderSize)
         {
-            FullIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, color, color);
-            HollowIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, new Color(1, 1, 1, 0), color);
+            FullIcon = TextureUtils.CreateSquareTexture(color);
+            HollowIcon = TextureUtils.CreateRubyTexture(color);
             BorderIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, color, borderColor);
         }
 
@@ -44,7 +44,7 @@ namespace VersionControl.UserInterface
 
         }
 
-        private const int iconSize = 8;
+        private const int iconSize = 12;
         private const int borderSize = 1;
 
         private static readonly Color orange = new Color(1.0f, 0.75f, 0.0f);
@@ -212,6 +212,7 @@ namespace VersionControl.UserInterface
         private static void DrawIcon(Rect rect, GUIContent content, Object obj)
         {
             if (content.image) GUI.DrawTexture(rect, content.image);
+            else Debug.Log("Texture: " + normalIcon.FullIcon + ", border width: " + normalIcon.BorderIcon.width);
             var clickRect = rect;
             clickRect.xMax += 5; clickRect.xMin -= 30;
             clickRect.yMax += 5; clickRect.yMin -= 5;

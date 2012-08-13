@@ -190,26 +190,26 @@ namespace VersionControl.UserInterface
 
     internal static class TextureUtils
     {
-        private static Texture2D CreateTexture(System.Drawing.Bitmap resourceBitmap, Color color)
+		
+		private static Texture2D CreateTexture(System.IO.Stream resourceBitmap, int size, Color color)
         {
-            var width = resourceBitmap.Width;
-            var height = resourceBitmap.Height;
-            var colors = new Color[width * height];
-            
-            for (int x = 0; x < width; ++x)
+			byte[] bytes = new byte[(int)resourceBitmap.Length];
+			resourceBitmap.Read(bytes, 0, (int)resourceBitmap.Length);
+			Debug.Log (bytes.Length);
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };			
+			texture.LoadImage(bytes);
+			for (int x = 0; x < size; ++x)
             {
-                for (int y = 0; y < height; ++y)
+                for (int y = 0; y < size; ++y)
                 {
-                    var resourceColor = resourceBitmap.GetPixel(x, y);
-                    bool resourcePixelIsWhite = resourceColor.R == 255 && resourceColor.G == 255 && resourceColor.B == 255;
+                    var resourceColor = texture.GetPixel(x, y);
+                    bool resourcePixelIsWhite = resourceColor.r == 1 && resourceColor.g == 1 && resourceColor.b == 1;
                     var newColor = resourcePixelIsWhite
-                                       ? new Color(color.r, color.g, color.b, resourceColor.A / 255.0f)
-                                       : new Color(resourceColor.R / 255.0f, resourceColor.G / 255.0f, resourceColor.B / 255.0f, resourceColor.A / 255.0f);
-                    colors[(width - 1) - x + ((height - 1) - y) * width] = newColor;
+                                       ? new Color(color.r, color.g, color.b, resourceColor.a)
+                                       : new Color(resourceColor.r, resourceColor.g, resourceColor.b, resourceColor.a);
+                    texture.SetPixel(x,  y, newColor);
                 }
             }
-            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
-            texture.SetPixels(colors);
             texture.wrapMode = TextureWrapMode.Clamp;
             texture.filterMode = FilterMode.Point;
             texture.Apply();
@@ -218,17 +218,18 @@ namespace VersionControl.UserInterface
 
         public static Texture2D CreateRubyTexture(Color body)
         {
-            return CreateTexture(UnityVersionControl.Properties.Resources.ruby, body);
+			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "ruby" ), 12, body);
         }
 
         public static Texture2D CreateSquareTexture(Color body)
         {
-            return CreateTexture(UnityVersionControl.Properties.Resources.square, body);
+			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "square" ), 12, body);
+			
         }
 
         public static Texture2D CreateTriangleTexture(Color body)
         {
-            return CreateTexture(UnityVersionControl.Properties.Resources.triangle, body);
+			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "triangle" ), 12, body);
         }
 
         public static Texture2D CreateBorderedTexture(Color border, Color body)

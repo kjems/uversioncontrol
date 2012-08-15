@@ -24,6 +24,7 @@ namespace VersionControl.UserInterface
         private MultiColumnState.Column columnMetaStatus;
         private MultiColumnState.Column columnFileType;
         private MultiColumnState.Column columnConflict;
+        private MultiColumnState.Column columnChangelist;
 
         private Func<string, VersionControlStatus, bool> guiFilter;
         private Func<string, VersionControlStatus, bool> baseFilter;
@@ -70,6 +71,7 @@ namespace VersionControl.UserInterface
             columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(GetMetaStatus(data)));
             columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data)));
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(GetAssetStatus(data).treeConflictStatus.ToString()));
+            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(GetAssetStatus(data).changelist));
 
             var editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
             multiColumnState = new MultiColumnState();
@@ -145,7 +147,10 @@ namespace VersionControl.UserInterface
             multiColumnState.AddColumn(columnOwner);
             options.widthTable.Add(columnOwner.GetHeader().text, 60);
 
-            //mMultiColumnState.AddColumn(mColumnConflict);
+            multiColumnState.AddColumn(columnChangelist);
+            options.widthTable.Add(columnChangelist.GetHeader().text, 120);
+
+            //columnConflictState.AddColumn(columnConflict);
             options.widthTable.Add(columnConflict.GetHeader().text, 80);
         }
 

@@ -6,15 +6,32 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
+    [Serializable]
     public class VCCDecorator : IVersionControlCommands
     {
         protected VCCDecorator(IVersionControlCommands vcc)
         {
             this.vcc = vcc;
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) ProgressInformation(progress); };
+            vcc.StatusCompleted += () => { if (StatusCompleted != null) StatusCompleted(); };
         }
 
         protected readonly IVersionControlCommands vcc;
+
+        public void Dispose()
+        {
+            vcc.Dispose();
+        }
+
+        public virtual void Start()
+        {
+            vcc.Start();
+        }
+
+        public virtual void Stop()
+        {
+            vcc.Stop();
+        }
 
         public virtual bool IsReady()
         {
@@ -41,19 +58,24 @@ namespace VersionControl
             return vcc.GetFilteredAssets(filter);
         }
 
-        public virtual bool Status(bool remote, bool full)
+        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return vcc.Status(remote, full);
+            return vcc.RequestStatus(assets, statusLevel);
+        }
+        
+        public virtual bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
+        {
+            return vcc.Status(statusLevel, detailLevel);
         }
 
-        public virtual bool Status(IEnumerable<string> assets, bool remote)
+        public virtual bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return vcc.Status(assets, remote);
+            return vcc.Status(assets, statusLevel);
         }
-
-        public virtual bool Update(IEnumerable<string> assets = null, bool force = true)
+        
+        public virtual bool Update(IEnumerable<string> assets = null)
         {
-            return vcc.Update(assets, force);
+            return vcc.Update(assets);
         }
 
         public virtual bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -71,14 +93,14 @@ namespace VersionControl
             return vcc.Revert(assets);
         }
 
-        public virtual bool Delete(IEnumerable<string> assets, bool force = false)
+        public virtual bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return vcc.Delete(assets, force);
+            return vcc.Delete(assets, mode);
         }
-        
-        public virtual bool GetLock(IEnumerable<string> assets, bool force = false)
+
+        public virtual bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return vcc.GetLock(assets, force);
+            return vcc.GetLock(assets, mode);
         }
 
         public virtual bool ReleaseLock(IEnumerable<string> assets)
@@ -126,6 +148,12 @@ namespace VersionControl
             vcc.ClearDatabase();
         }
 
+        public virtual void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            vcc.RemoveFromDatabase(assets);
+        }
+
         public event Action<string> ProgressInformation;
+        public event Action StatusCompleted;
     }
 }

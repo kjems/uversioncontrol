@@ -22,6 +22,10 @@ internal static class OnNextUpdate
         EditorApplication.update += Update;
     }
 
+    /// <summary>
+    /// Add an Action to be performed on next editor update. Actions er performed in a FIFO manner.
+    /// </summary>
+    /// <param name="work">Actual work to be performed as an Action</param>
     static public void Do(Action work)
     {
         lock (lockToken)

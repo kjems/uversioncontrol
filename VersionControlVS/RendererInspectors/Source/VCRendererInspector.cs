@@ -60,7 +60,7 @@ namespace VersionControl.UserInterface
                         {
                             sharedMaterials[index] = SaveMaterial(material, newMaterialName);
                             renderer.sharedMaterials = sharedMaterials;
-                            VCCommands.Instance.Status();
+                            VCCommands.Instance.RequestStatus(new[] { newMaterialName }, StatusLevel.Previous);
                         }
                     });
                 }
@@ -74,7 +74,7 @@ namespace VersionControl.UserInterface
 
         private static Material SaveMaterial(Material material, string materialPath)
         {
-            material = new Material(material) {name = Path.GetFileNameWithoutExtension(materialPath)};
+            material = new Material(material) { name = Path.GetFileNameWithoutExtension(materialPath) };
             AssetDatabase.CreateAsset(material, materialPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

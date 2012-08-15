@@ -37,10 +37,14 @@ namespace VersionControl
         private VCCommands()
         {
             vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
-            RequestStatus();
-            EditorApplication.playmodeStateChanged += () => RequestStatus();
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
-            EditorApplication.update += Update;
+            vcc.StatusCompleted += OnStatusCompleted;
+            OnNextUpdate.Do(Start);
+            EditorApplication.playmodeStateChanged += () =>
+            {
+                if (!Application.isPlaying) Start();
+                else Stop();
+            };
         }
 
         static VCCommands instance;
@@ -49,8 +53,8 @@ namespace VersionControl
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private List<string> lockedFileResources = new List<string>();
-        private int statusRequests;
-        private bool statusPending;
+        private bool ignoreStatusRequests = false;
+        private Action<Object> _saveSceneCallback = o => EditorApplication.SaveScene();
 
         public static bool Active
         {
@@ -61,23 +65,28 @@ namespace VersionControl
             }
         }
 
-        public bool Ready { get { return Active && vcc.IsReady() && statusRequests == 0; } }
+        public bool Ready { get { return Active && vcc.IsReady(); } }
 
-        public bool RequestStatus()
+        public void Dispose()
         {
-            statusRequests++;
-            //D.Log("RequestStatus : " + statusRequests);
-            return true;
+            vcc.Dispose();
         }
 
-        private void Update()
+        public void Start()
         {
-            if (!statusPending && statusRequests > 0 && vcc.IsReady() && !EditorApplication.isCompiling)
+            if (Active)
             {
-                statusPending = true;
-                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; });
+                StatusTask(StatusLevel.Local, DetailLevel.Normal);
+                vcc.Start();
             }
         }
+
+        public void Stop()
+        {
+            vcc.Stop();
+            vcc.ClearDatabase();
+        }
+
 
         #region Private methods
 
@@ -107,74 +116,23 @@ namespace VersionControl
             return false;
         }
 
+        private bool RefreshAssetDatabase()
+        {
+            OnNextUpdate.Do(AssetDatabase.Refresh);
+            return true;
+        }
+
         private void FlushFiles()
         {
             if (ThreadUtility.IsMainThread())
             {
+                ignoreStatusRequests = true;
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
+                ignoreStatusRequests = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
-
-
-        private IEnumerable<string> AddMeta(IEnumerable<string> assets, bool includeNormal = false)
-        {
-            if (!assets.Any()) return assets;
-            var metaFiles = new List<string>();
-            foreach (var assetPathIt in assets)
-            {
-                if (!assetPathIt.EndsWith(".meta"))
-                {
-                    var metaAssetPath = assetPathIt + ".meta";
-                    var metaStatus = GetAssetStatus(assetPathIt).MetaStatus();
-                    if (includeNormal || metaStatus.fileStatus != VCFileStatus.Normal)
-                    {
-                        metaFiles.Add(metaAssetPath);
-                    }
-                }
-            }
-            return assets.Concat(metaFiles).Distinct().OrderByDescending(a => a.EndsWith(".meta"));
-        }
-
-        private IEnumerable<string> RemoveMetaPostFix(IEnumerable<string> assets)
-        {
-            return assets.Select(a => a.EndsWith(".meta") ? a.Remove(a.Length - 5) : a).Distinct();
-        }
-
-        private IEnumerable<string> AddFolders(IEnumerable<string> assets)
-        {
-            return assets
-                .Select(a => Path.GetDirectoryName(a))
-                .Where(d => GetAssetStatus(d).fileStatus != VCFileStatus.Normal)
-                .Concat(assets)
-                .Distinct();
-        }
-
-        private IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets)
-        {
-            foreach (var assetIt in new List<string>(assets))
-            {
-                if (Directory.Exists(assetIt))
-                {
-                    assets = assets
-                        .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
-                        .Where(a => File.Exists(a) && !a.Contains(".meta") && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                        .Select(s => s.Replace("\\", "/")));
-                }
-            }
-            return assets;
-        }
-
-        private static IEnumerable<string> AddDeletedInFolders(IEnumerable<string> assetPaths)
-        {
-            var deletedInFolders = assetPaths
-                .Where(Directory.Exists)
-                .SelectMany(d => VCCommands.Instance.GetFilteredAssets((assetPath, status) =>
-                    (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && assetPath.StartsWith(d)));
-            return assetPaths.Concat(deletedInFolders);
-        }
-
 
         private static bool OpenCommitDialogWindow(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
@@ -184,13 +142,6 @@ namespace VersionControl
             commitWindow.SetAssetPaths(assets, dependencies);
             commitWindow.ShowUtility();
             return commitWindow.commitedFiles.Any();
-        }
-
-        private static IEnumerable<string> GetDependencies(IEnumerable<string> assetPaths)
-        {
-            return AssetDatabase.GetDependencies(assetPaths.ToArray())
-                .Where(dep => Instance.GetAssetStatus(dep).fileStatus != VCFileStatus.Normal)
-                .Except(assetPaths.Select(ap => ap.ToLowerInvariant()));
         }
 
         private bool RemoteHasUnloadableResourceChange()
@@ -205,26 +156,26 @@ namespace VersionControl
 
         private Task<bool> StartTask(Func<bool> work)
         {
-            var task = (Active && vcc.IsReady()) ? new Task<bool>(work) : new Task<bool>(() => false);
+            var task = Active ? new Task<bool>(work) : new Task<bool>(() => false);
             task.Start(); // Sync: task.RunSynchronously();
             return task;
         }
 
-        public Task<bool> StatusTask(bool remote = true, bool full = true)
+        public Task<bool> StatusTask(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return StartTask(() => Status(remote, full));
+            return StartTask(() => Status(statusLevel, detailLevel));
         }
 
-        public Task<bool> StatusTask(IEnumerable<string> assets, bool remote = true)
+        public Task<bool> StatusTask(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             assets = new List<string>(assets);
-            return StartTask(() => Status(assets, remote));
+            return StartTask(() => Status(assets, statusLevel));
         }
 
-        public Task<bool> UpdateTask(IEnumerable<string> assets = null, bool force = true)
+        public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
-            return StartTask(() => Update(assets, force));
+            return StartTask(() => Update(assets));
         }
 
         public Task<bool> AddTask(IEnumerable<string> assets)
@@ -240,10 +191,10 @@ namespace VersionControl
             return StartTask(() => Commit(assets, commitMessage));
         }
 
-        public Task<bool> GetLockTask(IEnumerable<string> assets, bool force = false)
+        public Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             assets = new List<string>(assets);
-            return StartTask(() => GetLock(assets, force));
+            return StartTask(() => GetLock(assets, mode));
         }
 
         public Task<bool> RevertTask(IEnumerable<string> assets)
@@ -274,48 +225,46 @@ namespace VersionControl
         }
         public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
+            return AssetpathsFilters.RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
         }
-        public bool Status(bool remote = true, bool full = true)
+        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
             return HandleExceptions(() =>
             {
-                bool result = vcc.Status(remote, full);
-                if (result)
-                {
-                    OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                    OnNextUpdate.Do(OnStatusComplete);
-                }
+                bool result = vcc.Status(statusLevel, detailLevel);
                 return result;
             });
         }
 
-        public bool Status(IEnumerable<string> assets, bool remote = false)
+        public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             return HandleExceptions(() =>
             {
-                var withMeta = AddMeta(assets, true);
-                bool result = vcc.Status(withMeta, remote);
-                if (result)
-                {
-                    OnNextUpdate.Do(() => AssetDatabase.Refresh());
-                    OnNextUpdate.Do(OnStatusComplete);
-                }
+                var withMeta = AssetpathsFilters.AddMeta(assets, true);
+                bool result = vcc.Status(withMeta, statusLevel);
                 return result;
             });
         }
-
-        public bool Update(IEnumerable<string> assets, bool force = true)
+        public bool RequestStatus(string asset, StatusLevel statusLevel)
+        {
+            return RequestStatus(new[] { asset }, statusLevel);
+        }
+        public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            if (ignoreStatusRequests) return false;
+            return vcc.RequestStatus(assets, statusLevel);
+        }
+        
+        public bool Update(IEnumerable<string> assets)
         {
             return HandleExceptions(() =>
             {
-                //Status();
-                if(RemoteHasUnloadableResourceChange())
+                if (RemoteHasUnloadableResourceChange())
                 {
-                    OnNextUpdate.Do(()=> EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
+                    OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets, force) && RequestStatus();
+                return vcc.Update(assets) && RefreshAssetDatabase();
             });
         }
 
@@ -324,16 +273,16 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                assets = AddMeta(assets);
-                return Status(assets) && vcc.Commit(assets, commitMessage) && RequestStatus();
+                assets = AssetpathsFilters.AddMeta(assets);
+                return Status(assets, StatusLevel.Local) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
             });
         }
         public bool Add(IEnumerable<string> assets)
         {
             return HandleExceptions(() =>
             {
-                assets = AddMeta(assets, true);
-                return vcc.Add(assets) && RequestStatus();
+                assets = AssetpathsFilters.AddMeta(assets, true);
+                return vcc.Add(assets);
             });
         }
         public bool Revert(IEnumerable<string> assets)
@@ -341,16 +290,16 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                Status(assets);
-                assets = AddMeta(assets);
+                Status(assets.ToList(), StatusLevel.Local);
+                assets = AssetpathsFilters.AddMeta(assets);
                 bool revertResult = vcc.Revert(assets);
                 vcc.ChangeListRemove(assets);
                 if (revertResult) vcc.ReleaseLock(assets);
-                RequestStatus();
+                RefreshAssetDatabase();
                 return revertResult;
             });
         }
-        public bool Delete(IEnumerable<string> assets, bool force = false)
+        public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             return HandleExceptions(() =>
             {
@@ -386,40 +335,40 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, force) && RequestStatus();
+                return vcc.Delete(deleteAssets, mode) && RefreshAssetDatabase();
             });
         }
-        public bool GetLock(IEnumerable<string> assets, bool force = false)
+        public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
-            return HandleExceptions(() => vcc.GetLock(assets, force) && vcc.ChangeListRemove(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.GetLock(assets, mode) && vcc.ChangeListRemove(assets));
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.ReleaseLock(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.ReleaseLock(assets));
         }
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return HandleExceptions(() => vcc.ChangeListAdd(assets, changelist) && RequestStatus());
+            return HandleExceptions(() => vcc.ChangeListAdd(assets, changelist));
         }
         public bool ChangeListRemove(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.ChangeListRemove(assets) && RequestStatus());
+            return HandleExceptions(() => vcc.ChangeListRemove(assets));
         }
         public bool Checkout(string url, string path = "")
         {
-            return HandleExceptions(() => vcc.Checkout(url, path) && RequestStatus());
+            return HandleExceptions(() => vcc.Checkout(url, path));
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution) && RequestStatus());
+            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution)) && RefreshAssetDatabase();
         }
         public bool Move(string from, string to)
         {
             return HandleExceptions(() =>
                 {
                     FlushFiles();
-                    return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta") && RequestStatus();
-                });
+                    return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
+                }) && RefreshAssetDatabase();
         }
         public string GetBasePath(string assetPath)
         {
@@ -427,28 +376,37 @@ namespace VersionControl
         }
         public bool CleanUp()
         {
-            return HandleExceptions(() => vcc.CleanUp() && RequestStatus());
+            return HandleExceptions(() => vcc.CleanUp());
         }
         public void ClearDatabase()
         {
             vcc.ClearDatabase();
         }
+        public void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            vcc.RemoveFromDatabase(assets);
+        }
+
+        private void OnStatusCompleted()
+        {
+            //D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
+            if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
+        }
+
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
-
-        private void OnStatusComplete() { if (StatusCompleted != null) StatusCompleted(); }
 
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();
             if (initialAssetCount == 0) return true;
 
-            assets = AddFilesInFolders(assets);
-            assets = AddFolders(assets);
-            var dependencies = GetDependencies(assets);
-            dependencies = AddFilesInFolders(dependencies);
-            dependencies = AddFolders(dependencies);
-            dependencies = dependencies.Concat(AddDeletedInFolders(assets));
+            assets = AssetpathsFilters.AddFilesInFolders(assets);
+            assets = AssetpathsFilters.AddFolders(assets);
+            var dependencies = AssetpathsFilters.GetDependencies(assets);
+            dependencies = AssetpathsFilters.AddFilesInFolders(dependencies);
+            dependencies = AssetpathsFilters.AddFolders(dependencies);
+            dependencies = dependencies.Concat(AssetpathsFilters.AddDeletedInFolders(assets));
 
             if (assets.Contains(EditorApplication.currentScene))
             {
@@ -465,7 +423,6 @@ namespace VersionControl
         public void BypassRevision(IEnumerable<string> assets)
         {
             vcc.ChangeListAdd(assets, "bypass");
-            RequestStatus();
         }
 
         #endregion
@@ -478,6 +435,17 @@ namespace VersionControl
         {
             lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
         }
-
+        public void SetSceneObjectToAssetPathCallback(Func<Object, string> sceneObjectToAssetPath)
+        {
+            ObjectExtension.SetSceneObjectToAssetPath(sceneObjectToAssetPath);
+        }
+        public void SetSaveSceneCallback(Action<Object> saveSceneCallback)
+        {
+            _saveSceneCallback = saveSceneCallback;
+        }
+        public void SaveScene(Object obj)
+        {
+            _saveSceneCallback(obj);
+        }
     }
 }

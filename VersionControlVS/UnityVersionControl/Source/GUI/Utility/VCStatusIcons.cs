@@ -16,8 +16,8 @@ namespace VersionControl.UserInterface
 
         private void Initilize(Color color, Color borderColor, int iconSize, int borderSize)
         {
-            FullIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, color, color);
-            HollowIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, new Color(1, 1, 1, 0), color);
+            FullIcon = TextureUtils.CreateSquareTexture(color);
+            HollowIcon = TextureUtils.CreateRubyTexture(color);
             BorderIcon = TextureUtils.CreateSquareTextureWithBorder(iconSize, borderSize, color, borderColor);
         }
 
@@ -44,7 +44,7 @@ namespace VersionControl.UserInterface
 
         }
 
-        private const int iconSize = 8;
+        private const int iconSize = 12;
         private const int borderSize = 1;
 
         private static readonly Color orange = new Color(1.0f, 0.75f, 0.0f);
@@ -90,7 +90,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Missing) return missingIcon;
             if (assetStatus.bypassRevisionControl) return modifiedIcon;
             if (assetStatus.fileStatus == VCFileStatus.Added) return addedIcon;
-            
+
             if (includeLockStatus)
             {
                 if (assetStatus.lockStatus == VCLockStatus.LockedHere) return lockedIcon;
@@ -107,18 +107,36 @@ namespace VersionControl.UserInterface
             return defaultIcon;
         }
 
+        private static void RequestStatus(Object asset, VCSettings.EReflectionLevel reflectionLevel)
+        {
+            if (VCSettings.VCEnabled)
+            {
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
+                var statusLevel = (reflectionLevel == VCSettings.EReflectionLevel.Remote ? StatusLevel.Remote : StatusLevel.Local);
+                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
+                }
+                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Previous);
+                }
+            }
+        }
+
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
-
-            DrawVersionControlStatusIcon(AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid)), selectionRect);
+            var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+            RequestStatus(obj, VCSettings.ProjectReflectionMode);
+            DrawVersionControlStatusIcon(obj, selectionRect);
         }
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
-
             var obj = EditorUtility.InstanceIDToObject(instanceID);
+            RequestStatus(obj, VCSettings.HierarchyReflectionMode);
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
 
@@ -137,6 +155,7 @@ namespace VersionControl.UserInterface
 
         private static void RefreshGUI()
         {
+            //D.Log("GUI Refresh");
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
         }
@@ -193,6 +212,7 @@ namespace VersionControl.UserInterface
         private static void DrawIcon(Rect rect, GUIContent content, Object obj)
         {
             if (content.image) GUI.DrawTexture(rect, content.image);
+            else Debug.Log("Texture: " + normalIcon.FullIcon + ", border width: " + normalIcon.BorderIcon.width);
             var clickRect = rect;
             clickRect.xMax += 5; clickRect.xMin -= 30;
             clickRect.yMax += 5; clickRect.yMin -= 5;

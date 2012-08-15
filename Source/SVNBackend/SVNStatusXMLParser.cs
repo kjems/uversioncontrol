@@ -58,6 +58,8 @@ namespace VersionControl.Backend.SVN
             var statusDatabase = new StatusDatabase();
 
             XmlNodeList entries = xmlDoc.GetElementsByTagName("entry");
+            var target = xmlDoc.GetElementsByTagName("status")[0]["target"];
+            bool repositoryReflection = target != null && target["against"] != null;
             foreach (XmlNode entryIt in entries)
             {
                 string assetPath = (entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim();
@@ -65,6 +67,10 @@ namespace VersionControl.Backend.SVN
                 status.assetPath = assetPath;
                 if (status.reflectionLevel != VCReflectionLevel.None)
                 {
+                    if (repositoryReflection)
+                    {
+                        status.reflectionLevel = VCReflectionLevel.Repository;
+                    }
                     statusDatabase[assetPath] = status;
                 }
             }
@@ -135,7 +141,7 @@ namespace VersionControl.Backend.SVN
                 if (wcStatus.Attributes["item"] == null || !SVNToVersionControlStatusMap.fileStatusMap.TryGetValue(wcStatus.Attributes["item"].InnerText, out versionControlStatus.fileStatus)) D.Log("SVN: Unknown file status: " + wcStatus.Attributes["item"].InnerText);
                 if (wcStatus.Attributes["props"] == null || !SVNToVersionControlStatusMap.propertyMap.TryGetValue(wcStatus.Attributes["props"].InnerText, out versionControlStatus.property)) D.Log("SVN: Unknown property: " + wcStatus.Attributes["props"].InnerText);
 
-                if (versionControlStatus.reflectionLevel == VCReflectionLevel.None) versionControlStatus.reflectionLevel = VCReflectionLevel.Local;
+                if (versionControlStatus.reflectionLevel != VCReflectionLevel.Repository) versionControlStatus.reflectionLevel = VCReflectionLevel.Local;
                 if (wcStatus.Attributes["revision"] != null) versionControlStatus.revision = Int32.Parse(wcStatus.Attributes["revision"].InnerText);
                 if (wcStatus.Attributes["wc-locked"] != null && wcStatus.Attributes["wc-locked"].InnerText == "true") versionControlStatus.repositoryStatus = VCRepositoryStatus.Locked;
                 if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;

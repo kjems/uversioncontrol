@@ -5,24 +5,132 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using CommandLineExecution;
 
 namespace VersionControl.Backend.SVN
 {
-    public class SVNCommands : IVersionControlCommands
+
+    public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         private string workingDirectory = ".";
         private string userName;
         private string password;
         private string versionNumber;
-        private StatusDatabase statusDatabase = new StatusDatabase();
-        private bool operationActive = false;
+        private readonly StatusDatabase statusDatabase = new StatusDatabase();
+        private bool OperationActive { get { return currentExecutingOperation != null; } }
+        private CommandLine currentExecutingOperation = null;
+        private Thread refreshThread = null;
         private readonly object operationActiveLockToken = new object();
+        private readonly object requestQueueLockToken = new object();
+        private readonly object statusDatabaseLockToken = new object();
+        private readonly List<string> localRequestQueue = new List<string>();
+        private readonly List<string> remoteRequestQueue = new List<string>();
+        private volatile bool active = false;
+        private volatile bool requestRefreshLoopStop = false;
+
+        public SVNCommands()
+        {
+            StartRefreshLoop();
+            AppDomain.CurrentDomain.DomainUnload += Unload;
+            AppDomain.CurrentDomain.ProcessExit += Unload;
+        }
+
+        private void Unload(object sender, EventArgs args)
+        {
+            TerminateRefreshLoop();
+        }
+
+        public void Dispose()
+        {
+            AppDomain.CurrentDomain.DomainUnload -= Unload;
+            AppDomain.CurrentDomain.ProcessExit -= Unload;
+            TerminateRefreshLoop();
+        }
+
+        private void RefreshLoop()
+        {
+            try
+            {
+                while (!requestRefreshLoopStop)
+                {
+                    Thread.Sleep(200);
+                    if (active) RefreshStatusDatabase();
+                }
+            }
+            catch (ThreadAbortException) { }
+            catch (AppDomainUnloadedException) { }
+            catch (Exception e)
+            {
+                D.ThrowException(e);
+            }
+        }
+
+        private void StartRefreshLoop()
+        {
+            if (refreshThread == null)
+            {
+                refreshThread = new Thread(RefreshLoop);
+                refreshThread.Start();
+            }
+        }
+
+        // This should only be used during termination of the host AppDomain or Process
+        private void TerminateRefreshLoop()
+        {
+            active = false;
+            requestRefreshLoopStop = true;
+            if (currentExecutingOperation != null)
+            {
+                currentExecutingOperation.Dispose();
+                currentExecutingOperation = null;
+            }
+            if (refreshThread != null)
+            {
+                refreshThread.Abort();
+                refreshThread = null;
+            }
+        }
+
+        public void Start()
+        {
+            active = true;
+        }
+
+        public void Stop()
+        {
+            active = false;
+        }
+
+        private void RefreshStatusDatabase()
+        {
+            List<string> localCopy = null;
+            List<string> remoteCopy = null;
+
+            lock (requestQueueLockToken)
+            {
+                if (localRequestQueue.Count > 0)
+                {
+                    localCopy = new List<string>(localRequestQueue.Except(remoteRequestQueue).Distinct());
+                    localRequestQueue.Clear();
+                }
+                if (remoteRequestQueue.Count > 0)
+                {
+                    remoteCopy = new List<string>(remoteRequestQueue.Distinct());
+                    remoteRequestQueue.Clear();
+                }
+            }
+            //if (localCopy != null && localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
+            //if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
+            if (localCopy != null && localCopy.Count > 0) Status(localCopy, StatusLevel.Local);
+            if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
+        }
 
         public bool IsReady()
         {
-            return !operationActive;
+            return !OperationActive && active;
         }
 
         public void SetWorkingDirectory(string workingDirectory)
@@ -38,31 +146,47 @@ namespace VersionControl.Backend.SVN
 
         public VersionControlStatus GetAssetStatus(string assetPath)
         {
-            assetPath = assetPath.Replace("\\", "/");
-            return statusDatabase[assetPath];
+            lock (statusDatabaseLockToken)
+            {
+                assetPath = assetPath.Replace("\\", "/");
+                return statusDatabase[assetPath];
+            }
         }
 
         public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+            lock (statusDatabaseLockToken)
+            {
+                return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+            }
         }
 
-        public bool Status(bool remote, bool full)
+        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
+            if (!active) return false;
+
             string arguments = "status --xml";
-            if (remote) arguments += " -u";
-            if (full) arguments += " -v";
+            if (statusLevel == StatusLevel.Remote) arguments += " -u";
+            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
 
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteCommandLine(svnStatusTask);
+                commandLineOutput = ExecuteOperation(svnStatusTask);
             }
 
-            if (commandLineOutput.Failed) return false;
+            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
             {
-                statusDatabase = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                lock (statusDatabaseLockToken)
+                {
+                    foreach (var statusIt in db)
+                    {
+                        statusDatabase[statusIt.Key] = statusIt.Value;
+                    }
+                }
+                OnStatusCompleted();
             }
             catch (XmlException)
             {
@@ -71,31 +195,65 @@ namespace VersionControl.Backend.SVN
             return true;
         }
 
-        public bool Status(IEnumerable<string> assets, bool remote)
+        public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            string arguments = "status --xml -v --depth=empty ";
-            if (remote) arguments += "-u ";
-            arguments += ConcatAssetPaths(assets);
-            foreach (var assetIt in assets)
+            if (!active) return false;
+
+            if(statusLevel == StatusLevel.Previous)
             {
-                statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
+                foreach (var assetIt in assets)
+                {
+                    statusLevel = GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Repository ? StatusLevel.Remote : StatusLevel.Local;
+                }
             }
+
+            const int assetsPerStatus = 20;
+            if (assets.Count() > assetsPerStatus)
+            {
+                return Status(assets.Take(assetsPerStatus), statusLevel) && Status(assets.Skip(assetsPerStatus), statusLevel);
+            }
+
+            string arguments = "status --xml -q -v ";
+            if (statusLevel == StatusLevel.Remote) arguments += "-u ";
+            else arguments += " --depth=empty ";
+            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
+            lock (statusDatabaseLockToken)
+            {
+                foreach (var assetIt in assets)
+                {
+                    statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
+                }
+            }
+            lock (requestQueueLockToken)
+            {
+                foreach (var assetIt in assets)
+                {
+                    if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
+                    if (statusLevel == StatusLevel.Local) localRequestQueue.Remove(assetIt);
+                }
+            }
+
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
-                commandLineOutput = ExecuteCommandLine(svnStatusTask);
+                commandLineOutput = ExecuteOperation(svnStatusTask);
             }
-
-            if (commandLineOutput.Failed) return false;
+            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
             try
             {
-                foreach (var statusIt in SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr))
+                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                lock (statusDatabaseLockToken)
                 {
-                    statusDatabase[statusIt.Key] = statusIt.Value;
+                    foreach (var statusIt in db)
+                    {
+                        statusDatabase[statusIt.Key] = statusIt.Value;
+                    }
                 }
+                OnStatusCompleted();
             }
-            catch (XmlException)
+            catch (XmlException e)
             {
+                D.ThrowException(e);
                 return false;
             }
             return true;
@@ -113,39 +271,54 @@ namespace VersionControl.Backend.SVN
 
         private bool CreateOperation(string arguments)
         {
+            if (!active) return false;
+
             CommandLineOutput commandLineOutput;
             using (var commandLineOperation = CreateSVNCommandLine(arguments))
             {
                 commandLineOperation.OutputReceived += OnProgressInformation;
                 commandLineOperation.ErrorReceived += OnProgressInformation;
-                commandLineOutput = ExecuteCommandLine(commandLineOperation);
+                commandLineOutput = ExecuteOperation(commandLineOperation);
             }
-            return !commandLineOutput.Failed;
+            return !(commandLineOutput == null || commandLineOutput.Failed);
         }
 
         private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)
         {
             CommandLineOutput commandLineOutput;
-            lock (operationActiveLockToken)
+            try
             {
-                //D.Log(">>>> Locked >>>>");
-                try
+                D.Log(commandLine.ToString());
+                currentExecutingOperation = commandLine;
+                //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
+                commandLineOutput = commandLine.Execute();
+            }
+            catch (Exception e)
+            {
+                throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
+            }
+            finally
+            {
+                currentExecutingOperation = null;
+            }
+            return commandLineOutput;
+        }
+
+        private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
+        {
+            CommandLineOutput commandLineOutput;
+            if (useOperationLock)
+            {
+                lock (operationActiveLockToken)
                 {
-                    operationActive = true;
-                    D.Log(commandLine.ToString());
-                    //System.Threading.Thread.Sleep(100); // emulate latency to SVN server
-                    commandLineOutput = commandLine.Execute();
-                }
-                catch (Exception e)
-                {
-                    throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
-                }
-                finally
-                {
-                    operationActive = false;
-                    //D.Log("<<<< UnLocked <<<<");
+                    commandLineOutput = ExecuteCommandLine(commandLine);
                 }
             }
+            else
+            {
+                commandLineOutput = ExecuteCommandLine(commandLine);
+            }
+
             if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
             {
                 throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
@@ -163,6 +336,8 @@ namespace VersionControl.Backend.SVN
                     throw new VCOutOfDate(errStr, commandLine.ToString());
                 if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
+                if (errStr.Contains("W160035") || errStr.Contains("run 'svn cleanup'"))
+                    throw new VCLockedByOther(errStr, commandLine.ToString());
                 throw new VCException(errStr, commandLine.ToString());
             }
             return commandLineOutput;
@@ -171,12 +346,17 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets));
+            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
         }
 
         private static string FixAtChar(string asset)
         {
             return asset.Contains("@") ? asset + "@" : asset;
+        }
+
+        private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)
+        {
+            return assets.Select(a => a.Replace(workingDirectory, ""));
         }
 
         private static string ConcatAssetPaths(IEnumerable<string> assets)
@@ -187,10 +367,51 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
-        public bool Update(IEnumerable<string> assets = null, bool force = true)
+        private void AddToRemoteStatusQueue(string asset)
+        {
+            //D.Log("Remote Req : " + asset);
+            if(!remoteRequestQueue.Contains(asset)) remoteRequestQueue.Add(asset);
+        }
+
+        private void AddToLocalStatusQueue(string asset)
+        {
+            //D.Log("Local Req : " + asset);
+            if(!localRequestQueue.Contains(asset)) localRequestQueue.Add(asset);
+        }
+
+        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            if (assets == null || assets.Count() == 0) return true;
+
+            lock (requestQueueLockToken)
+            {
+                foreach (string assetIt in assets)
+                {
+                    var currentReflectionLevel = GetAssetStatus(assetIt).reflectionLevel;
+                    if (currentReflectionLevel == VCReflectionLevel.Pending) continue;
+                    if (statusLevel == StatusLevel.Remote)
+                    {
+                        AddToRemoteStatusQueue(assetIt);
+                    }
+                    else if (statusLevel == StatusLevel.Local)
+                    {
+                        AddToLocalStatusQueue(assetIt);
+                    }
+                    else if(statusLevel == StatusLevel.Previous)
+                    {
+                        if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
+                        if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
+                        if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
+                    }
+                }
+            }
+            return true;
+        }
+
+        public bool Update(IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
-            return CreateAssetOperation("update" + (force ? " --force" : ""), assets);
+            return CreateAssetOperation("update --force", assets);
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -208,14 +429,14 @@ namespace VersionControl.Backend.SVN
             return CreateAssetOperation("revert --depth=infinity", assets);
         }
 
-        public bool Delete(IEnumerable<string> assets, bool force = false)
+        public bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return CreateAssetOperation("delete" + (force ? " --force" : ""), assets);
+            return CreateAssetOperation("delete" + (mode == OperationMode.Force ? " --force" : ""), assets);
         }
 
-        public bool GetLock(IEnumerable<string> assets, bool force)
+        public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return CreateAssetOperation("lock" + (force ? " --force" : ""), assets);
+            return CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
         }
 
         public bool ReleaseLock(IEnumerable<string> assets)
@@ -247,7 +468,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"");
+            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
         }
 
         public string GetBasePath(string assetPath)
@@ -290,14 +511,40 @@ namespace VersionControl.Backend.SVN
 
         public void ClearDatabase()
         {
-            statusDatabase.Clear();
+            lock (statusDatabaseLockToken)
+            {
+                statusDatabase.Clear();
+            }
+        }
+
+        public void RemoveFromDatabase(IEnumerable<string> assets)
+        {
+            lock (statusDatabaseLockToken)
+            {
+                foreach (var assetIt in assets)
+                {
+                    statusDatabase.Remove(assetIt);
+                }
+            }
+        }
+
+        IEnumerable<string> RemoveFilesIfParentFolderInList(IEnumerable<string> assets)
+        {
+            var folders = assets.Where(a => Directory.Exists(a));
+            assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
+            return assets;
         }
 
         public event Action<string> ProgressInformation;
-
         private void OnProgressInformation(string info)
         {
             if (ProgressInformation != null) ProgressInformation(info);
+        }
+
+        public event Action StatusCompleted;
+        private void OnStatusCompleted()
+        {
+            if (StatusCompleted != null) StatusCompleted();
         }
     }
 }

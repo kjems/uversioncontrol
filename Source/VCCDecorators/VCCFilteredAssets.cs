@@ -15,6 +15,7 @@ namespace VersionControl
     /// * Commit an unversioned file without adding it first
     /// * Unlock a file that is not locked
     /// </summary>
+    [System.Serializable]
     public class VCCFilteredAssets : VCCDecorator
     {
         public VCCFilteredAssets(IVersionControlCommands vcc)
@@ -22,9 +23,9 @@ namespace VersionControl
         {
         }
 
-        public override bool Status(bool remote, bool full)
+        public override bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return base.Status(remote, full);
+            return base.Status(statusLevel, detailLevel);
         }
 
         public override VersionControlStatus GetAssetStatus(string assetPath)
@@ -33,15 +34,22 @@ namespace VersionControl
             return vcc.GetAssetStatus(assetPath);
         }
 
-        public override bool Status(IEnumerable<string> assets, bool remote)
+        public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = NonPending(InVersionedFolder(NonEmpty(assets)));
-            return assets.Any() ? base.Status(assets, remote) : false;
+            assets = NonPending(InVersionedFolder(NonEmpty(assets))).ToList();
+            return assets.Any() ? base.Status(assets, statusLevel) : false;
         }
 
-        public override bool Update(IEnumerable<string> assets = null, bool force = true)
+        public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return base.Update((assets != null ? Versioned(assets) : null), force);
+            if (assets == null) return true;
+            assets = NonEmpty(assets).ToList();
+            return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
+        }
+
+        public override bool Update(IEnumerable<string> assets = null)
+        {
+            return base.Update((assets != null ? Versioned(assets) : null));
         }
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
@@ -50,9 +58,9 @@ namespace VersionControl
             var toBeCommited = filesInFolders.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal || Directory.Exists(a));
             return
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
-                base.Delete(Missing(filesInFolders)) &&
+                base.Delete(Missing(filesInFolders), OperationMode.Normal) &&
                 base.Commit(ShortestFirst(toBeCommited), commitMessage) &&
-                base.Status(false, false) &&
+                Status(assets, StatusLevel.Local) &&
                 ReleaseLock(assets);
         }
 
@@ -66,14 +74,28 @@ namespace VersionControl
             return base.Revert(NonNormal(assets));
         }
 
-        public override bool Delete(IEnumerable<string> assets, bool force = false)
+        public override bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.Delete(Versioned(assets), force);
+            return base.Delete(Versioned(assets), mode);
         }
 
-        public override bool GetLock(IEnumerable<string> assets, bool force = false)
+        public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.GetLock(force ? Versioned(assets) : NotLocked(assets), force);
+            try
+            {
+                return base.GetLock(mode == OperationMode.Force ? Versioned(assets) : NotLocked(assets), mode);
+            }
+            catch(VCLockedByOther e)
+            {
+                D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a,b) => a + ", " + b) + "\n" + e.Message);
+                Status(assets, StatusLevel.Remote);
+                return false;
+            }
+        }
+        
+        public override bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
+        {
+            return base.Resolve(FilesExist(assets), conflictResolution);
         }
 
         public override bool ReleaseLock(IEnumerable<string> assets)
@@ -83,12 +105,14 @@ namespace VersionControl
 
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return base.ChangeListAdd(Versioned(assets), changelist);
+            assets = Versioned(NonEmpty(assets));
+            return assets.Any() ? base.ChangeListAdd(assets, changelist) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            return base.ChangeListRemove(Versioned(OnChangeList(assets)));
+            assets = Versioned(OnChangeList(NonEmpty(assets)));
+            return assets.Any() ? base.ChangeListRemove(Versioned(OnChangeList(assets))) : false;
         }
 
         public override bool Move(string from, string to)
@@ -162,11 +186,15 @@ namespace VersionControl
                 assets.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Unversioned &&
                 vcc.GetAssetStatus(a).lockStatus == VCLockStatus.NoLock);
         }
-        private static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
+        IEnumerable<string> FilesExist(IEnumerable<string> assets)
+        {
+            return assets.Where(File.Exists);
+        }
+        static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
         {
             return assets.OrderBy(s => s.Length);
         }
-        private IEnumerable<string> AddFolders(IEnumerable<string> assets)
+        IEnumerable<string> AddFolders(IEnumerable<string> assets)
         {
             return assets
                 .Select(a => Path.GetDirectoryName(a))
@@ -175,12 +203,12 @@ namespace VersionControl
                 .Distinct();
         }
 
-        private bool InUnversionedParentFolder(string asset)
+        bool InUnversionedParentFolder(string asset)
         {
             return ParentFolders(asset).Any(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
         }
 
-        private static IEnumerable<string> ParentFolders(string asset)
+        static IEnumerable<string> ParentFolders(string asset)
         {
             const char pathSeparator = '/';
             var parentFolders = new List<string>();
@@ -196,7 +224,7 @@ namespace VersionControl
             return parentFolders;
         }
 
-        private IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets, bool versionedFoldersOnly = false)
+        IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets, bool versionedFoldersOnly = false)
         {
             foreach (var assetIt in new List<string>(assets))
             {
@@ -211,12 +239,12 @@ namespace VersionControl
             return assets;
         }
 
-        private IEnumerable<string> RemoveFolders(IEnumerable<string> assets)
+        IEnumerable<string> RemoveFolders(IEnumerable<string> assets)
         {
             return assets.Where(a => !Directory.Exists(a));
         }
 
-        private IEnumerable<string> RemoveFilesUnderUnversionedFolders(IEnumerable<string> assets)
+        IEnumerable<string> RemoveFilesUnderUnversionedFolders(IEnumerable<string> assets)
         {
             var folders = assets.Where(a => Directory.Exists(a) && GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
             assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));

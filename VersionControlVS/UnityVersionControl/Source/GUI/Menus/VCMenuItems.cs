@@ -28,8 +28,6 @@ namespace VersionControl
         [MenuItem("CONTEXT/GameObject/" + Terminology.unlock, true)]
         [MenuItem("CONTEXT/GameObject/Force " + Terminology.getlock, true)]
         [MenuItem("CONTEXT/GameObject/" + Terminology.getlock, true)]
-        [MenuItem("UVC/Update", true, -12)]
-        [MenuItem("UVC/Refresh", true, -11)]
         public static bool VCActive()
         {
             return VCCommands.Instance.IsReady();
@@ -50,7 +48,7 @@ namespace VersionControl
             {
                 if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + assetStatus.owner + "]", "Yes", "Cancel"))
                 {
-                    VCCommands.Instance.GetLock(new[] {assetPath}, true);
+                    VCCommands.Instance.GetLock(new[] {assetPath}, OperationMode.Force);
                 }
             }
         }
@@ -100,32 +98,11 @@ namespace VersionControl
         {
             VCCommands.Instance.Add(GetAssetPathsOfSelected().ToArray());
         }
-
-        [MenuItem("UVC/Refresh", false, -12)]
-        public static void VCRefresh()
-        {
-            VCCommands.Instance.RequestStatus();
-        }
-
+        
         [MenuItem("Assets/UVC/" + Terminology.update)]
         public static void VCUpdateSelection()
         {
             VCCommands.Instance.Update(GetAssetPathsOfSelected().ToArray());
         }
-
-        [MenuItem("UVC/Update", false, -11)]
-        public static void VCUpdate()
-        {
-            bool result = VCCommands.Instance.Update(null);
-            if(result) Debug.Log("Version Control Update finished successfully");
-            else Debug.LogWarning("Version Control Update failed");
-        }
-
-        //[MenuItem("UVC/Submit Bug Report")]
-        //public static void SubmitBugToGithub()
-        //{
-            // Make dialog box and submit to fogbugz
-        //}
-        
     }
 }

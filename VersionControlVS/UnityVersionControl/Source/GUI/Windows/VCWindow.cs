@@ -25,9 +25,9 @@ namespace VersionControl.UserInterface
             GetWindow<VCWindow>(false, "VersionControl");
         }
 
-        [SerializeField] private bool showUnversioned = true;
-        [SerializeField] private bool showMeta = true;
-        [SerializeField] private float statusHeight = 1000;
+        private bool showUnversioned = true;
+        private bool showMeta = true;
+        private float statusHeight = 1000;
 
         const float toolbarHeight = 18.0f;
         const float inStatusHeight = 18.0f;
@@ -63,9 +63,14 @@ namespace VersionControl.UserInterface
         {
             return vcMultiColumnAssetList.GetSelectedAssets().ToList();
         }
-        
+
         virtual protected void OnEnable()
         {
+            showUnversioned = EditorPrefs.GetBool("VCWindow/showUnversioned", true);
+            showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
+            statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 1000.0f);
+
+
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
 
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
@@ -84,16 +89,20 @@ namespace VersionControl.UserInterface
 
         virtual protected void OnDisable()
         {
+            EditorPrefs.SetBool("VCWindow/showUnversioned", showUnversioned);
+            EditorPrefs.SetBool("VCWindow/showMeta", showMeta);
+            EditorPrefs.SetFloat("VCWindow/statusHeight", statusHeight);
+
             VCCommands.Instance.StatusCompleted -= RefreshGUI;
             VCSettings.SettingChanged -= Repaint;
             vcMultiColumnAssetList.Dispose();
         }
-        
+
         private void RefreshGUI()
         {
             Repaint();
         }
-        
+
         private void OnGUI()
         {
             HandleInput();
@@ -124,7 +133,7 @@ namespace VersionControl.UserInterface
             {
                 if (Event.current.keyCode == KeyCode.F5)
                 {
-                    VCCommands.Instance.Status();
+                    VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Verbose);
                     Event.current.Use();
                 }
                 if (Event.current.keyCode == KeyCode.Delete)
@@ -137,7 +146,7 @@ namespace VersionControl.UserInterface
 
         private void DrawToolbar()
         {
-            GUILayoutOption[] buttonLayout = {GUILayout.MaxWidth(50)};
+            GUILayoutOption[] buttonLayout = { GUILayout.MaxWidth(50) };
             {
                 // Buttons at top        
                 EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -146,11 +155,12 @@ namespace VersionControl.UserInterface
                 {
                     if (GUILayout.Button(Terminology.status, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.StatusTask();
+                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose);
                     }
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.UpdateTask();
+                        updateInProgress = true;
+                        VCCommands.Instance.UpdateTask().ContinueWithOnNextUpdate(t => updateInProgress = false);
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))
                     {
@@ -175,15 +185,15 @@ namespace VersionControl.UserInterface
                 }
 
                 GUILayout.FlexibleSpace();
-                
-                bool newShowUnversioned = GUILayout.Toggle(showUnversioned, "Unversioned", EditorStyles.toolbarButton, new[] {GUILayout.MaxWidth(80)});
+
+                bool newShowUnversioned = GUILayout.Toggle(showUnversioned, "Unversioned", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(80) });
                 if (newShowUnversioned != showUnversioned)
                 {
                     showUnversioned = newShowUnversioned;
                     UpdateFilteringOfKeys();
                 }
 
-                bool newShowMeta = GUILayout.Toggle(showMeta, "Meta", EditorStyles.toolbarButton, new[] {GUILayout.MaxWidth(50)});
+                bool newShowMeta = GUILayout.Toggle(showMeta, "Meta", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(50) });
                 if (newShowMeta != showMeta)
                 {
                     showMeta = newShowMeta;
@@ -211,7 +221,7 @@ namespace VersionControl.UserInterface
                 bool vcsOn = VCSettings.VCEnabled;
                 using (GUIColor(vcsOn ? Color.green : Color.red))
                 {
-                    if (GUILayout.Button(new GUIContent(vcsOn ? "On" : "Off", "Toggle Version Control"), EditorStyles.toolbarButton, new[] {GUILayout.MaxWidth(25)}))
+                    if (GUILayout.Button(new GUIContent(vcsOn ? "On" : "Off", "Toggle Version Control"), EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(25) }))
                     {
                         VCSettings.VCEnabled = !VCSettings.VCEnabled;
                     }
@@ -221,13 +231,17 @@ namespace VersionControl.UserInterface
                 EditorGUILayout.Separator();
             }
         }
-        
-        private Vector2 statusScroll = Vector2.zero;
 
+        private Vector2 statusScroll = Vector2.zero;
+        private readonly Color activeColor = new Color(0.8f, 0.8f, 1.0f);
+        private bool updateInProgress = false;
         private void DrawStatus()
         {
             statusScroll = EditorGUILayout.BeginScrollView(statusScroll, false, false);
+            var originalColor = GUI.backgroundColor;
+            if (updateInProgress) GUI.backgroundColor = activeColor;
             GUILayout.TextArea(commandInProgress, GUILayout.ExpandHeight(true));
+            GUI.backgroundColor = originalColor;
             EditorGUILayout.EndScrollView();
         }
 

@@ -195,7 +195,6 @@ namespace VersionControl.UserInterface
         {
 			byte[] bytes = new byte[(int)resourceBitmap.Length];
 			resourceBitmap.Read(bytes, 0, (int)resourceBitmap.Length);
-			Debug.Log (bytes.Length);
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };			
 			texture.LoadImage(bytes);
 			for (int x = 0; x < size; ++x)

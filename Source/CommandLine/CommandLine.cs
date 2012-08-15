@@ -8,7 +8,7 @@ using System.Text;
 
 namespace CommandLineExecution
 {
-    public class CommandLineOutput
+    public sealed class CommandLineOutput
     {
         public CommandLineOutput(string command, string arguments, string outputStr, string errorStr, int exitcode)
         {
@@ -24,12 +24,12 @@ namespace CommandLineExecution
         public string OutputStr { get; private set; }
         public string ErrorStr { get; private set; }
         public int Exitcode { get; private set; }
-        public bool Failed { get { return (Exitcode != 0 || ErrorStr.Length > 0); } }
+        public bool Failed { get { return (Exitcode != 0 || !string.IsNullOrEmpty(ErrorStr)); } }
     }
 
 
 
-    public class CommandLine : IDisposable
+    public sealed class CommandLine : IDisposable
     {
         public CommandLine(string command, string arguments, string workingDirectory)
         {

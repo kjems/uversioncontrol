@@ -63,6 +63,7 @@ namespace VersionControl
         public static void ApplyAndCommit(Object obj, string commitMessage, bool showCommitDialog = false)
         {
             var gameObject = obj as GameObject;
+            if (ObjectExtension.ChangesStoredInScene(obj)) VCCommands.Instance.SaveScene(obj);
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
             VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
         }
@@ -82,7 +83,7 @@ namespace VersionControl
         {
             if (!showConfirmation || VCDialog(Terminology.delete, assetPaths))
             {
-                VCCommands.Instance.Delete(assetPaths, false);
+                VCCommands.Instance.Delete(assetPaths);
             }
         }
 
@@ -95,7 +96,7 @@ namespace VersionControl
         {
             if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
             {
-                VCCommands.Instance.GetLock(new[] { assetPath }, true);
+                VCCommands.Instance.GetLock(new[] { assetPath }, OperationMode.Force);
             }
         }
 
@@ -146,9 +147,29 @@ namespace VersionControl
             return HaveVCLock(assetStatus) || assetStatus.bypassRevisionControl || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying;
         }
 
+        public static bool HaveAssetControl(string assetPath)
+        {
+            return HaveAssetControl(VCCommands.Instance.GetAssetStatus(assetPath));
+        }
+
+        public static bool HaveAssetControl(Object obj)
+        {
+            return HaveAssetControl(obj.GetAssetPath());
+        }
+        
         public static bool ManagedByRepository(VersionControlStatus assetStatus)
         {
             return assetStatus.fileStatus != VCFileStatus.Unversioned && !System.String.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;
+        }
+
+        public static bool ManagedByRepository(string assetPath)
+        {
+            return ManagedByRepository(VCCommands.Instance.GetAssetStatus(assetPath));
+        }
+
+        public static bool ManagedByRepository(Object obj)
+        {
+            return ManagedByRepository(obj.GetAssetPath());
         }
     }
 }

@@ -70,7 +70,7 @@ namespace VersionControl
                         if (result == 0)
                         {
                             VCCommands.Instance.Add(new[] { topUnversionedFolder });
-                            VCCommands.Instance.Status(new[] { topUnversionedFolder }, false);
+                            VCCommands.Instance.Status(new[] { topUnversionedFolder }, StatusLevel.Local);
                         }
                         if (result == 2) return AssetMoveResult.FailedMove;
                     }

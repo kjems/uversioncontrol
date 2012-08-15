@@ -82,7 +82,7 @@ namespace VersionControl
     #endregion
     
     [Serializable]
-    public class VersionControlStatus
+    public sealed class VersionControlStatus
     {
         public VCReflectionLevel reflectionLevel = VCReflectionLevel.None;
         public VCFileStatus fileStatus = VCFileStatus.Normal;
@@ -101,6 +101,6 @@ namespace VersionControl
         public int revision;
         public int lastModifiedRevision;
         public bool bypassRevisionControl;
-        public bool Reflected { get { return reflectionLevel != VCReflectionLevel.None && reflectionLevel != VCReflectionLevel.Pending; } }
+        public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local || reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

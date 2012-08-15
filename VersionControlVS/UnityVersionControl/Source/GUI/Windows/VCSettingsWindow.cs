@@ -69,13 +69,28 @@ namespace VersionControl.UserInterface
                     VCSettings.LockMaterialsFilter = EditorGUILayout.TextField(VCSettings.LockMaterialsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
             }
-            GUILayout.Label("GUI Settings", EditorStyles.boldLabel);
+            
+            using (GUILayoutHelper.Horizontal())
+            {
+                GUILayout.Label("GUI Settings", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(new GUIContent("Reflection Level(?)", "Select Remote to retrieve extra information from the server in an exchange for speed."), EditorStyles.boldLabel);
+                GUILayout.Space(63);
+            }
             using (GUILayoutHelper.VerticalIdented(14))
             {
                 VCSettings.SceneviewGUI = GUILayout.Toggle(VCSettings.SceneviewGUI, new GUIContent("Scene GUI(?)", "Show Version Control GUI in Scene view\nDefault: On"));
                 VCSettings.MaterialGUI = GUILayout.Toggle(VCSettings.MaterialGUI, new GUIContent("Material GUI(?)", "Show Version Control GUI for material interaction on the Renderer inspector\nDefault: On"));
-                VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons(?)", "Show Version Control controls in hierachy view\nDefault: On"));
-                VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons(?)", "Show Version Control controls in hierachy view\nDefault: On"));
+                    VCSettings.HierarchyReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.HierarchyReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
+                    //VCSettings.ProjectReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.ProjectReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
             }
             GUILayout.Label("Debug", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))
@@ -83,7 +98,7 @@ namespace VersionControl.UserInterface
                 using (GUILayoutHelper.Horizontal())
                 {
                     VCSettings.BugReport = GUILayout.Toggle(VCSettings.BugReport, new GUIContent("Bug Reports(?)", "Send a bug report to Fogbugz when an error occurs\nDefault: On"));
-                    VCSettings.BugReportMode = (VCSettings.EBugReportMode) EditorGUILayout.EnumPopup(VCSettings.BugReportMode);
+                    VCSettings.BugReportMode = (VCSettings.EBugReportMode)EditorGUILayout.EnumPopup(VCSettings.BugReportMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
                 VCSettings.Logging = GUILayout.Toggle(VCSettings.Logging, new GUIContent("Logging(?)", "Output logs from Version Control to Unity console\nDefault: Off"));
             }

@@ -1,6 +1,8 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
+
+using System.IO;
 using CommandLineExecution;
 using NUnit.Framework;
 using VersionControl.Backend.SVN;
@@ -11,7 +13,7 @@ namespace VersionControl.UnitTests
     public class TestCommandLine
     {
         private CommandLine commandLine;
-        private const string workingDirectoryForSVNTests = "d:\\develop\\Test";
+        private const string workingDirectoryForSVNTests = @"d:\develop\VCUnitTest";
 
         [SetUp]
         public void Init()
@@ -39,7 +41,7 @@ namespace VersionControl.UnitTests
     public class TestSVNCommands
     {
         private CommandLine commandLine;
-        private const string workingDirectoryForSVNTests = "d:\\develop\\Test";
+        private const string workingDirectoryForSVNTests = @"d:\develop\VCUnitTest";
 
         [SetUp]
         public void Init()

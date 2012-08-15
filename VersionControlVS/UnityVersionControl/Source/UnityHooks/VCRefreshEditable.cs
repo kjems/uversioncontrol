@@ -24,10 +24,25 @@ namespace VersionControl
             RefreshEditable();
         }
 
+        private static void MakeEditable(Object obj)
+        {
+            EditableManager.SetEditable(obj, true);
+            GameObject go = obj as GameObject;
+            if(go)
+            {
+                foreach (var componentIt in go.GetComponents<Component>())
+                {
+                    EditableManager.SetEditable(componentIt, true);
+                }
+            }
+        }
+
         private static void RefreshEditable()
         {
             if (selectedObject != Selection.activeObject)
             {
+                // Make previous selection editable so objects are never left in readonly state
+                MakeEditable(selectedObject);
                 selectedObject = Selection.activeObject;
                 if (selectedObject is Material)
                 {

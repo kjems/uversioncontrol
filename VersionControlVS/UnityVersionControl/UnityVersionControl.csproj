@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\Assemblies\debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;ENABLE_PROFILER; ENABLE_GENERICS</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;ENABLE_GENERICS;ENABLE_PROFILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -26,7 +26,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Assemblies\release\</OutputPath>
-    <DefineConstants>TRACE;ENABLE_GENERICS</DefineConstants>
+    <DefineConstants>TRACE;ENABLE_GENERICS;ENABLE_PROFILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Threading">
       <HintPath>..\..\Externals\System.Threading.dll</HintPath>
     </Reference>
@@ -74,6 +75,7 @@
     <Compile Include="Source\MultiColumnListView\MultiColumnView.cs" />
     <Compile Include="Source\UnityHooks\VCRefreshEditable.cs" />
     <Compile Include="Source\UnityHooks\VCRefreshOnNewAsset.cs" />
+    <Compile Include="Source\Utility\AssetpathsFilters.cs" />
     <Compile Include="Source\Utility\BugReportUtilities.cs" />
     <Compile Include="Source\Utility\ContinuationManager.cs" />
     <Compile Include="Source\Utility\EditableManager.cs" />
@@ -114,4 +116,18 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\Resources\ruby.png">
+      <Link>Properties\ruby.png</Link>
+      <LogicalName>ruby</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Resources\square.png">
+      <Link>Properties\square.png</Link>
+      <LogicalName>square</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Resources\triangle.png">
+      <Link>Properties\triangle.png</Link>
+      <LogicalName>triangle</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

@@ -4,9 +4,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using VersionControl;
 
 public class RendererInspectorManager : Editor
 {
+    void OnEnable()
+    {
+        VCCommands.Instance.StatusCompleted += Repaint;
+    }
+
+    void OnDisable()
+    {
+        VCCommands.Instance.StatusCompleted -= Repaint;
+    }
+
     private struct PrioritizedInspectorCallback
     {
         public PrioritizedInspectorCallback(System.Action<Object[]> inspectorcallback, int priority)

@@ -12,27 +12,47 @@ namespace VersionControl
         Theirs,
         Ignore
     }
+    public enum StatusLevel
+    {
+        Local,
+        Remote,
+        Previous
+    }
+    public enum DetailLevel
+    {
+        Normal,
+        Verbose
+    }
+    public enum OperationMode
+    {
+        Normal,
+        Force
+    }
+
     /// <summary>
     /// IVersionControlCommands is the centerpoint for the Version Control. This interface represents all actions that
     /// can be performed on the underlying version control system. 
     /// * All version control backends implement this interface.
     /// * All VCCDecorator's decorates this interface
     /// </summary>
-    public interface IVersionControlCommands
+    public interface IVersionControlCommands : IDisposable
     {
+        void Start();
+        void Stop();
         bool IsReady();
         void SetWorkingDirectory(string workingDirectory);
         void SetUserCredentials(string userName, string password);
         VersionControlStatus GetAssetStatus(string assetPath);
         IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter);
-        bool Status(bool remote, bool full);
-        bool Status(IEnumerable<string> assets, bool remote);
-        bool Update(IEnumerable<string> assets = null, bool force = true);
+        bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel);
+        bool Status(StatusLevel statusLevel, DetailLevel detailLevel);
+        bool Status(IEnumerable<string> assets, StatusLevel statusLevel);
+        bool Update(IEnumerable<string> assets = null);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
         bool Add(IEnumerable<string> assets);
         bool Revert(IEnumerable<string> assets);
-        bool Delete(IEnumerable<string> assets, bool force = false);
-        bool GetLock(IEnumerable<string> assets, bool force = false);
+        bool Delete(IEnumerable<string> assets, OperationMode mode);
+        bool GetLock(IEnumerable<string> assets, OperationMode mode);
         bool ReleaseLock(IEnumerable<string> assets);
         bool ChangeListAdd(IEnumerable<string> assets, string changelist);
         bool ChangeListRemove(IEnumerable<string> assets);
@@ -42,6 +62,9 @@ namespace VersionControl
         string GetBasePath(string assetPath);
         bool CleanUp();
         void ClearDatabase();
+        void RemoveFromDatabase(IEnumerable<string> assets);
+        
         event Action<string> ProgressInformation;
+        event Action StatusCompleted;
     }
 }

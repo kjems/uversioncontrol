@@ -51,7 +51,6 @@ namespace VersionControl
         private List<string> lockedFileResources = new List<string>();
         private int statusRequests;
         private bool statusPending;
-        private bool ignoreStatusRequest;
 
         public static bool Active
         {
@@ -66,13 +65,9 @@ namespace VersionControl
 
         public bool RequestStatus()
         {
-            if (!ignoreStatusRequest)
-            {
-                statusRequests++;
-                /*D.Log("Status Request: " + statusRequests);*/
-                return true;
-            }
-            return false;
+            statusRequests++;
+            //D.Log("RequestStatus : " + statusRequests);
+            return true;
         }
 
         private void Update()
@@ -80,8 +75,7 @@ namespace VersionControl
             if (!statusPending && statusRequests > 0 && vcc.IsReady() && !EditorApplication.isCompiling)
             {
                 statusPending = true;
-                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; /*D.Log("Status Complete");*/ });
-                /*D.Log("Status Pending");*/
+                StatusTask().ContinueWithOnNextUpdate(t => { statusRequests = 0; statusPending = false; });
             }
         }
 
@@ -117,10 +111,8 @@ namespace VersionControl
         {
             if (ThreadUtility.IsMainThread())
             {
-                ignoreStatusRequest = true;
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
-                ignoreStatusRequest = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }

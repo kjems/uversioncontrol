@@ -24,6 +24,7 @@ namespace VersionControl.UserInterface
             get { return commitMessage ?? (commitMessage = EditorPrefs.GetString("VCCommitWindow/CommitMessage", "")); }
             set { commitMessage = value; EditorPrefs.SetString("VCCommitWindow/CommitMessage", commitMessage); }
         }
+
         bool firstTime = true;
         bool commitInProgress = false;
         bool commitCompleted = false;
@@ -37,10 +38,10 @@ namespace VersionControl.UserInterface
         public void SetAssetPaths(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
             Profiler.BeginSample("CommitWindow::SetAssetPaths");
-            assetPaths = assets;
-            depedencyAssetPaths = dependencies;
+            assetPaths = assets.ToList();
+            depedencyAssetPaths = dependencies.ToList();
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = true);
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
             Profiler.EndSample();
         }
 
@@ -63,18 +64,18 @@ namespace VersionControl.UserInterface
             vcMultiColumnAssetList.RefreshGUIFilter();
         }
 
+        private void StatusCompleted()
+        {
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
+            Repaint();
+        }
+
         private void OnEnable()
         {
             minSize = new Vector2(250,100);
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
             UpdateFilteringOfKeys();
             VCCommands.Instance.StatusCompleted += StatusCompleted;
-        }
-
-        private void StatusCompleted()
-        {
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = true);
-            Repaint();
         }
         
         private void OnDisable()
@@ -146,6 +147,7 @@ namespace VersionControl.UserInterface
                             {
                                 commitedFiles = vcMultiColumnAssetList.GetSelectedAssets();
                                 CommitMessage = "";
+                                if(VCSettings.AutoCloseAfterSuccess) Close();
                             }
                             commitCompleted = true;
                         });

@@ -14,7 +14,7 @@ namespace VersionControl.UserInterface
         [MenuItem("UVC/Settings", false, 2)]
         public static void Init()
         {
-            GetWindow(typeof (VCSettingsWindow), false, "Version Control Settings");
+            GetWindow(typeof(VCSettingsWindow), false, "Version Control Settings");
         }
 
         [SerializeField] private readonly VCSettingsGUI settingsGUI = new VCSettingsGUI();
@@ -30,7 +30,7 @@ namespace VersionControl.UserInterface
         }
 
     }
-    
+
     [Serializable]
     internal class VCSettingsGUI
     {
@@ -69,7 +69,7 @@ namespace VersionControl.UserInterface
                     VCSettings.LockMaterialsFilter = EditorGUILayout.TextField(VCSettings.LockMaterialsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
             }
-            
+
             using (GUILayoutHelper.Horizontal())
             {
                 GUILayout.Label("GUI Settings", EditorStyles.boldLabel);
@@ -91,6 +91,12 @@ namespace VersionControl.UserInterface
                     VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
                     //VCSettings.ProjectReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.ProjectReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
+            }
+            GUILayout.Label("Commit Window", EditorStyles.boldLabel);
+            using (GUILayoutHelper.VerticalIdented(14))
+            {
+                VCSettings.AutoCloseAfterSuccess = GUILayout.Toggle(VCSettings.AutoCloseAfterSuccess, new GUIContent("Auto Close(?)", "Auto close commit window on successful commit\nDefault: Off"));
+                VCSettings.IncludeDepedenciesAsDefault = GUILayout.Toggle(VCSettings.IncludeDepedenciesAsDefault, new GUIContent("Select Dependencies(?)", "Should dependencies automatically be selected when opening the commit window\nDefault: On"));
             }
             GUILayout.Label("Debug", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))

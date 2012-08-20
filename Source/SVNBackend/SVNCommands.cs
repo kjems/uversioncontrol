@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using CommandLineExecution;
 
@@ -400,8 +399,9 @@ namespace VersionControl.Backend.SVN
                     else if(statusLevel == StatusLevel.Previous)
                     {
                         if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
-                        if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
-                        if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
+                        else if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
+                        else if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
+                        else D.LogWarning("Unhandled previous state");
                     }
                 }
             }

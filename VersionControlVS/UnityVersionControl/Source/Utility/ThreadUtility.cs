@@ -4,16 +4,21 @@
 using System.Threading;
 using UnityEditor;
 
-[InitializeOnLoad]
-internal class ThreadUtility
+namespace VersionControl
 {
-    static ThreadUtility()
+    [InitializeOnLoad]
+    public class ThreadUtility
     {
-        unityExecutionContext = Thread.CurrentThread.ExecutionContext;
+        static ThreadUtility()
+        {
+            unityExecutionContext = Thread.CurrentThread.ExecutionContext;
+        }
+
+        public static bool IsMainThread()
+        {
+            return unityExecutionContext == Thread.CurrentThread.ExecutionContext;
+        }
+
+        private static readonly ExecutionContext unityExecutionContext;
     }
-    public static bool IsMainThread()
-    {
-        return unityExecutionContext == Thread.CurrentThread.ExecutionContext;
-    }
-    private static readonly ExecutionContext unityExecutionContext;
 }

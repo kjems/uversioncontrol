@@ -14,20 +14,24 @@ namespace VersionControl
         private static List<string> removedAssets = new List<string>();
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
+            //D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
             changedAssets.AddRange(importedAssets);
             changedAssets.AddRange(movedAssets);
-            changedAssets = AssetpathsFilters.AddMeta(changedAssets.Distinct(), true).ToList();
+            changedAssets = AssetpathsFilters.AddMeta(changedAssets, true).ToList();
             if (changedAssets.Count > 0)
             {
+                changedAssets = changedAssets.Distinct().ToList();
+                VCCommands.Instance.RemoveFromDatabase(changedAssets);
                 VCCommands.Instance.RequestStatus(changedAssets, StatusLevel.Previous);
                 changedAssets.Clear();
             }
 
             removedAssets.AddRange(deletedAssets);
             removedAssets.AddRange(movedFromAssetPaths);
-            removedAssets = AssetpathsFilters.AddMeta(removedAssets.Distinct(), true).ToList();
+            removedAssets = AssetpathsFilters.AddMeta(removedAssets, true).ToList();
             if (removedAssets.Count > 0)
             {
+                removedAssets = removedAssets.Distinct().ToList();
                 VCCommands.Instance.RemoveFromDatabase(removedAssets);
                 VCCommands.Instance.RequestStatus(removedAssets, StatusLevel.Previous);
                 removedAssets.Clear();

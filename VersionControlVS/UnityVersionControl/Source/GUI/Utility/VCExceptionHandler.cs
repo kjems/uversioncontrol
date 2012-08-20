@@ -33,7 +33,7 @@ namespace VersionControl
         
         private static void HandleConnectionTimeOut(VCConnectionTimeoutException e)
         {
-            Debug.LogWarning(e.ErrorMessage);
+            D.LogWarning(e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Connection Timeout", "Connection to the server timed out.\n\nTurn Off Version Control?", "Yes", "No"))
             {
                 VCSettings.VCEnabled = false;
@@ -48,7 +48,7 @@ namespace VersionControl
 
         private static void HandleNewerVersion(VCNewerVersionException e)
         {
-            Debug.Log(e.ErrorMessage);
+            D.Log(e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Newer Version", "There is a newer version of the file and need to update first and then try again.\n\nUpdate Version Control?", "Yes", "No"))
             {
                 VCCommands.Instance.UpdateTask();
@@ -57,7 +57,7 @@ namespace VersionControl
 
         private static void HandleOutOfDate(VCOutOfDate e)
         {
-            Debug.Log(e.ErrorMessage);
+            D.Log(e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Repository out of date", "The repository is out of date and you need to update first and then try again.\n\nUpdate Version Control?", "Yes", "No"))
             {
                 VCCommands.Instance.UpdateTask();
@@ -66,7 +66,7 @@ namespace VersionControl
 
         private static void HandleCritical(VCCriticalException e)
         {
-            Debug.LogWarning("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
+            D.LogError("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage + "\n\nTurn Off Version Control?", "Yes", "No"))
             {
                 VCSettings.VCEnabled = false;
@@ -75,7 +75,7 @@ namespace VersionControl
 
         private static void HandleBase(VCException e)
         {
-            Debug.LogWarning("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
+            D.LogError("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
             if (VCSettings.BugReport)
             {
                 var report = EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage, "Report", "Close");

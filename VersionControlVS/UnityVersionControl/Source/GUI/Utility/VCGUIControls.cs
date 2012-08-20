@@ -119,7 +119,7 @@ namespace VersionControl.UserInterface
         public static GenericMenu CreateVCContextMenu(string assetPath, Object instance = null)
         {
             var menu = new GenericMenu();
-            if (!string.IsNullOrEmpty(assetPath))
+            if (VCUtility.ValidAssetPath(assetPath))
             {
                 var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 if (ObjectExtension.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;

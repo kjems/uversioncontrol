@@ -105,7 +105,7 @@ namespace VersionControl
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError("Unhandled exception: " + e.Message + "\n" + D.GetCallstack());
+                    D.LogError("Unhandled exception: " + e.Message + "\n" + D.GetCallstack());
                     throw;
                 }
             }

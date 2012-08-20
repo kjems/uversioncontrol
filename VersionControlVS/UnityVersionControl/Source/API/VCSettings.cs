@@ -154,9 +154,18 @@ namespace VersionControl
             {
                 if (logging != value)
                 {
+                    // D.writeErrorCallback is always shown from VCExceptionHandler
                     logging = value;
-                    if (logging) D.writeLogCallback += Debug.Log;
-                    else if (D.writeLogCallback != null) D.writeLogCallback -= Debug.Log;
+                    if (logging)
+                    {
+                        D.writeLogCallback += Debug.Log;
+                        D.writeWarningCallback += Debug.LogWarning;
+                    }
+                    else 
+                    {
+                        if (D.writeLogCallback != null) D.writeLogCallback -= Debug.Log;
+                        if (D.writeWarningCallback != null) D.writeWarningCallback -= Debug.LogWarning;
+                    }
                 }
             }
         }

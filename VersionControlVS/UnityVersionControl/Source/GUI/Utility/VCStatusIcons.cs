@@ -112,7 +112,6 @@ namespace VersionControl.UserInterface
             if (VCSettings.VCEnabled)
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
-                var statusLevel = (reflectionLevel == VCSettings.EReflectionLevel.Remote ? StatusLevel.Remote : StatusLevel.Local);
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
                     VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);

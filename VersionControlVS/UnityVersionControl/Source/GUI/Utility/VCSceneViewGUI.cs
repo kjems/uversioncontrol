@@ -21,7 +21,7 @@ namespace VersionControl.UserInterface
 
         static void SceneViewUpdate(SceneView sceneView)
         {
-            if (!VCSettings.SceneviewGUI || !VCCommands.Active || string.IsNullOrEmpty(EditorApplication.currentScene) || !System.IO.File.Exists(EditorApplication.currentScene)) return;
+            if (!VCSettings.SceneviewGUI || !VCCommands.Active || !VCUtility.ValidAssetPath(EditorApplication.currentScene)) return;
 
             var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
             buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 70};

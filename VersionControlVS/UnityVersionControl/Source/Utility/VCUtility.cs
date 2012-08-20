@@ -4,6 +4,7 @@
 
 // This script includes common SVN related operations
 
+using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -170,6 +171,11 @@ namespace VersionControl
         public static bool ManagedByRepository(Object obj)
         {
             return ManagedByRepository(obj.GetAssetPath());
+        }
+
+        public static bool ValidAssetPath(string assetPath)
+        {
+            return !string.IsNullOrEmpty(assetPath) && (File.Exists(assetPath) || Directory.Exists(assetPath));
         }
     }
 }

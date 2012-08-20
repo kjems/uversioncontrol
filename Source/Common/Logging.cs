@@ -23,14 +23,8 @@ namespace VersionControl
             return callstack;
         }
 
-
-        public enum Severity
-        {
-            Log,
-            Error
-        }
-
         public static Action<string> writeLogCallback;
+        public static Action<string> writeWarningCallback;
         public static Action<string> writeErrorCallback;
         public static Action<VCException> exceptionCallback;
 
@@ -41,7 +35,7 @@ namespace VersionControl
                 if (exception is VCException) exceptionCallback((VCException)exception);
                 else exceptionCallback(new VCException(exception.Message, exception.StackTrace, exception));
             }
-            else Log("Unhandled exception : " + exception.Message, Severity.Error);
+            else LogError("Unhandled exception : " + exception.Message);
         }
 
         private static string FormatMessage(string message)
@@ -49,10 +43,35 @@ namespace VersionControl
             return DateTime.Now.ToString("HH:mm:ss.ffff") + "(" + System.Threading.Thread.CurrentThread.ManagedThreadId + "): " + message + "\n\n" + GetCallstack();
         }
 
-        public static void Log(string message, Severity severity = Severity.Log)
+        public static void Log(string message)
         {
-            if (severity == Severity.Log && writeLogCallback != null) writeLogCallback(FormatMessage(message));
-            if (severity == Severity.Error && writeErrorCallback != null) writeErrorCallback(FormatMessage(message));
+            if (writeLogCallback != null) writeLogCallback(FormatMessage(message));
+        }
+
+        public static void LogError(string message)
+        {
+            if (writeErrorCallback != null) writeErrorCallback(FormatMessage(message));
+        }
+
+        public static void LogWarning(string message)
+        {
+            if (writeWarningCallback != null) writeWarningCallback(FormatMessage(message));
+        }
+
+        /// <summary>
+        /// An important condition is not met and the program is unable to continue in a reasonable state
+        /// </summary>
+        public static void Assert(bool condition, string message)
+        {
+            if(!condition) LogError(message);
+        }
+
+        /// <summary>
+        /// A recommended condition is not met but the program is able to continue
+        /// </summary>
+        public static void Check(bool condition, string message)
+        {
+            if (!condition) LogWarning(message);
         }
     }
 }

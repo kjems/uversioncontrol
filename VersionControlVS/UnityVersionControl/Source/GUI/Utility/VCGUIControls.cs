@@ -39,7 +39,14 @@ namespace VersionControl.UserInterface
 
                 if (!VCUtility.HaveVCLock(assetStatus) && VCUtility.ManagedByRepository(assetStatus) && showLockBypass)
                 {
-                    if (assetStatus.lockStatus != VCLockStatus.LockedOther)
+                    if (assetStatus.fileStatus == VCFileStatus.Added)
+                    {
+                        if (GUILayout.Button(Terminology.commit, GetPrefabToolbarStyle(style, true)))
+                        {
+                            VCUtility.ApplyAndCommit(obj, Terminology.commit + " from Inspector");
+                        }
+                    }
+                    else if (assetStatus.lockStatus != VCLockStatus.LockedOther)
                     {
                         if (GUILayout.Button(Terminology.getlock, GetPrefabToolbarStyle(style, true)))
                         {

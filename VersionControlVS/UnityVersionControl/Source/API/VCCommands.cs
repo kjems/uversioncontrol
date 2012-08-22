@@ -273,7 +273,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                assets = AssetpathsFilters.AddMeta(assets);
+                assets = AssetpathsFilters.AddMeta(assets, true);
                 return Status(assets, StatusLevel.Local) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
             });
         }
@@ -299,7 +299,7 @@ namespace VersionControl
                 return revertResult;
             });
         }
-        public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
+        public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Force)
         {
             return HandleExceptions(() =>
             {

@@ -15,6 +15,9 @@ namespace VersionControl
 {
     public static class VCUtility
     {
+        public static System.Action<Object> onHierarchyReverted;
+        public static System.Action<Object> onHierarchyCommit;
+
         public static string GetCurrentVersion()
         {
             return System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
@@ -27,6 +30,7 @@ namespace VersionControl
             {
                 return RevertPrefab(gameObject);
             }
+            if (onHierarchyReverted != null) onHierarchyReverted(obj);
             return RevertObject(obj);
         }
 
@@ -66,6 +70,7 @@ namespace VersionControl
             var gameObject = obj as GameObject;
             if (ObjectExtension.ChangesStoredInScene(obj)) VCCommands.Instance.SaveScene(obj);
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
+            if (onHierarchyCommit != null) onHierarchyCommit(obj);
             VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
         }
 

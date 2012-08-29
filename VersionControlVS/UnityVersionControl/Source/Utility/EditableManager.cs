@@ -61,7 +61,8 @@ namespace VersionControl
             if (AvoidGUILock(gameObject)) return;
 
             bool editable = ShouleBeEditable(gameObject);
-            SetEditable(gameObject, editable || PrefabHelper.IsPrefabRoot(gameObject));
+            bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(EditorApplication.currentScene);
+            SetEditable(gameObject, editable || (PrefabHelper.IsPrefabRoot(gameObject) && parentEditable));
             foreach (var componentIt in gameObject.GetComponents<Component>())
             {
                 RefreshEditableComponent(gameObject, componentIt);

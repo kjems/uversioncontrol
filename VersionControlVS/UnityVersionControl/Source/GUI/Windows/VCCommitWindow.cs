@@ -147,6 +147,7 @@ namespace VersionControl.UserInterface
                             {
                                 commitedFiles = vcMultiColumnAssetList.GetSelectedAssets();
                                 CommitMessage = "";
+                                Repaint();
                                 if(VCSettings.AutoCloseAfterSuccess) Close();
                             }
                             commitCompleted = true;

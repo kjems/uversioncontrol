@@ -56,8 +56,8 @@ namespace VersionControl.UserInterface
         private static GUIContent GetFileStatusContent(VersionControlStatus assetStatus)
         {
             if (assetStatus.treeConflictStatus != VCTreeConflictStatus.Normal)
-                return new GUIContent(assetStatus.treeConflictStatus.ToString(), VCStatusIcons.GetStatusIcon(assetStatus, false).BorderIcon);
-            return new GUIContent(assetStatus.fileStatus.ToString(), VCStatusIcons.GetStatusIcon(assetStatus, false).BorderIcon);
+                return new GUIContent(assetStatus.treeConflictStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
+            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
         }
 
         private void Initialize()
@@ -130,7 +130,7 @@ namespace VersionControl.UserInterface
             };
 
             options.headerStyle.fixedHeight = 20.0f;
-            options.rowStyle.onNormal.background = TextureUtils.CreateSquareTexture(4, 1, new Color(0.24f, 0.5f, 0.87f, 0.75f));
+            options.rowStyle.onNormal.background = IconUtils.CreateSquareTexture(4, 1, new Color(0.24f, 0.5f, 0.87f, 0.75f));
 
             multiColumnState.AddColumn(columnAssetPath);
             options.widthTable.Add(columnAssetPath.GetHeader().text, 500);

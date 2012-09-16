@@ -19,22 +19,31 @@ namespace VersionControl.UserInterface
 {
     internal class VCWindow : EditorWindow
     {
+        // Const
+        const float toolbarHeight = 18.0f;
+        const float inStatusHeight = 18.0f;
+        private readonly Color activeColor = new Color(0.8f, 0.8f, 1.0f);
+        
+        // State
+        private bool showUnversioned = true;
+        private bool showMeta = true;
+        private float statusHeight = 1000;
+        private bool updateInProgress = false;
+        private bool refreshInProgress = false;
+        private string commandInProgress = "";
+        private VCMultiColumnAssetList vcMultiColumnAssetList;
+        private VCSettingsWindow settingsWindow;
+        private Rect rect;
+
+        // Cache
+        private Vector2 statusScroll = Vector2.zero;
+        
+
         [MenuItem("UVC/Overview Window", false, 1)]
         public static void Init()
         {
             GetWindow<VCWindow>(false, "VersionControl");
         }
-
-        private bool showUnversioned = true;
-        private bool showMeta = true;
-        private float statusHeight = 1000;
-
-        const float toolbarHeight = 18.0f;
-        const float inStatusHeight = 18.0f;
-        string commandInProgress = "";
-        VCMultiColumnAssetList vcMultiColumnAssetList;
-        VCSettingsWindow settingsWindow;
-        Rect rect;
 
         private bool GUIFilter(string key, VersionControlStatus vcStatus)
         {
@@ -151,11 +160,13 @@ namespace VersionControl.UserInterface
                 // Buttons at top        
                 EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-                using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
+                using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready && !refreshInProgress, v => GUI.enabled = v))
                 {
                     if (GUILayout.Button(Terminology.status, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose);
+                        refreshInProgress = true;
+                        VCCommands.Instance.ClearDatabase();
+                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose).ContinueWithOnNextUpdate(t => refreshInProgress = false);
                     }
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
@@ -232,9 +243,6 @@ namespace VersionControl.UserInterface
             }
         }
 
-        private Vector2 statusScroll = Vector2.zero;
-        private readonly Color activeColor = new Color(0.8f, 0.8f, 1.0f);
-        private bool updateInProgress = false;
         private void DrawStatus()
         {
             statusScroll = EditorGUILayout.BeginScrollView(statusScroll, false, false);

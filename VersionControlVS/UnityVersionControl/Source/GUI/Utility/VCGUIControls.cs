@@ -2,17 +2,19 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
+using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using Object = UnityEngine.Object;
 
 namespace VersionControl.UserInterface
 {
-    internal static class VCGUIControls
+    public static class VCGUIControls
     {
-        public static GUIStyle GetPrefabToolbarStyle(GUIStyle style, bool vcRelated)
+        private static GUIStyle GetPrefabToolbarStyle(GUIStyle style, bool vcRelated)
         {
             var vcStyle = new GUIStyle(style);
             if (vcRelated)
@@ -81,37 +83,19 @@ namespace VersionControl.UserInterface
 
         public static GUIStyle GetVCBox(VersionControlStatus assetStatus)
         {
-            return new GUIStyle(GUI.skin.box) { border = new RectOffset(2, 2, 2, 2), padding = new RectOffset(1, 1, 1, 1), normal = { background = VCStatusIcons.GetStatusIcon(assetStatus, true).BorderIcon } };
+            return new GUIStyle(GUI.skin.box)
+            {
+                border = new RectOffset(2, 2, 2, 2),
+                padding = new RectOffset(1, 1, 1, 1),
+                normal = { background = IconUtils.boxIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)) }
+            };
         }
 
         public static GUIStyle GetLockStatusStyle()
         {
             return new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = Color.black }, alignment = TextAnchor.MiddleCenter };
         }
-
-        public static string GetLockStatusMessage(VersionControlStatus assetStatus)
-        {
-            string lockMessage = assetStatus.lockStatus.ToString();
-            if (assetStatus.lockStatus == VCLockStatus.LockedOther) lockMessage = Terminology.getlock + " by: " + assetStatus.owner;
-            if (assetStatus.lockStatus == VCLockStatus.LockedHere) lockMessage = Terminology.getlock + " Here: " + assetStatus.owner;
-            if (assetStatus.lockStatus == VCLockStatus.NoLock)
-            {
-                if (string.IsNullOrEmpty(assetStatus.assetPath)) lockMessage = "Not saved";
-                else if (assetStatus.fileStatus == VCFileStatus.Added) lockMessage = "Added";
-                else lockMessage = VCUtility.ManagedByRepository(assetStatus) ? "Not " + Terminology.getlock : "Not on Version Control";
-            }
-            if (assetStatus.bypassRevisionControl)
-            {
-                lockMessage = Terminology.bypass;
-                if ((assetStatus.lockStatus == VCLockStatus.LockedOther))
-                {
-                    lockMessage += " (" + Terminology.getlock + " By: " + assetStatus.owner + " )";
-                }
-            }
-            if (assetStatus.fileStatus == VCFileStatus.Modified) lockMessage += "*";
-            return lockMessage;
-        }
-
+        
         public static GenericMenu CreateVCContextMenu(IEnumerable<string> assetPaths)
         {
             var menu = new GenericMenu();
@@ -147,17 +131,18 @@ namespace VersionControl.UserInterface
                 bool haveControl = VCUtility.HaveAssetControl(assetStatus);
                 bool haveLock = VCUtility.HaveVCLock(assetStatus);
                 bool bypass = assetStatus.bypassRevisionControl;
+                bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
 
-                bool showAdd = ready && !ignored && unversioned;
-                bool showOpen = ready && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
-                bool showDiff = ready && !ignored && modifiedTextAsset && managedByRep;
-                bool showCommit = ready && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
-                bool showRevert = ready && !ignored && !unversioned && (haveControl || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
-                bool showDelete = ready && !ignored && !deleted && !lockedByOther;
-                bool showOpenLocal = ready && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
-                bool showUnlock = ready && !ignored && !bypass && haveLock;
-                bool showUpdate = ready && !ignored && !added && managedByRep && instance != null;
-                bool showForceOpen = ready && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
+                bool showAdd = ready && !pending && !ignored && unversioned;
+                bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
+                bool showDiff = ready && !pending && !ignored && modifiedTextAsset && managedByRep;
+                bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
+                bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
+                bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
+                bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
+                bool showUnlock = ready && !pending && !ignored && !bypass && haveLock;
+                bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
+                bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
                 bool showDisconnect = isPrefab && !isPrefabParent;
 
                 if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
@@ -191,92 +176,6 @@ namespace VersionControl.UserInterface
         {
             CreateVCContextMenu(instance.GetAssetPath(), instance).ShowAsContext();
             Event.current.Use();
-        }
-    }
-
-
-    internal static class TextureUtils
-    {
-		
-		private static Texture2D CreateTexture(System.IO.Stream resourceBitmap, int size, Color color)
-        {
-			byte[] bytes = new byte[(int)resourceBitmap.Length];
-			resourceBitmap.Read(bytes, 0, (int)resourceBitmap.Length);
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };			
-			texture.LoadImage(bytes);
-			for (int x = 0; x < size; ++x)
-            {
-                for (int y = 0; y < size; ++y)
-                {
-                    var resourceColor = texture.GetPixel(x, y);
-                    bool resourcePixelIsWhite = resourceColor.r == 1 && resourceColor.g == 1 && resourceColor.b == 1;
-                    var newColor = resourcePixelIsWhite
-                                       ? new Color(color.r, color.g, color.b, resourceColor.a)
-                                       : new Color(resourceColor.r, resourceColor.g, resourceColor.b, resourceColor.a);
-                    texture.SetPixel(x,  y, newColor);
-                }
-            }
-            texture.wrapMode = TextureWrapMode.Clamp;
-            texture.filterMode = FilterMode.Point;
-            texture.Apply();
-            return texture;
-        }
-
-        public static Texture2D CreateRubyTexture(Color body)
-        {
-			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "ruby" ), 12, body);
-        }
-
-        public static Texture2D CreateSquareTexture(Color body)
-        {
-			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "square" ), 12, body);
-			
-        }
-
-        public static Texture2D CreateTriangleTexture(Color body)
-        {
-			return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream( "triangle" ), 12, body);
-        }
-
-        public static Texture2D CreateBorderedTexture(Color border, Color body)
-        {
-            var backgroundTexture = new Texture2D(3, 3, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
-
-            backgroundTexture.SetPixels(new[]
-            {
-                border, border, border,
-                border, body, border,
-                border, border, border,
-            });
-            backgroundTexture.wrapMode = TextureWrapMode.Clamp;
-            backgroundTexture.filterMode = FilterMode.Point;
-            backgroundTexture.Apply();
-            return backgroundTexture;
-        }
-
-        public static Texture2D CreateSquareTexture(int size, int borderSize, Color color)
-        {
-            return CreateSquareTextureWithBorder(size, borderSize, color, color);
-        }
-
-        public static Texture2D CreateSquareTextureWithBorder(int size, int borderSize, Color inner, Color border)
-        {
-            var colors = new Color[size * size];
-            for (int x = 0; x < size; x++)
-            {
-                for (int y = 0; y < size; y++)
-                {
-                    bool onborder = (x < borderSize || x >= size - borderSize || y < borderSize || y >= size - borderSize);
-                    colors[x + y * size] = onborder ? border : inner;
-                }
-            }
-
-            var iconTexture = new Texture2D(size, size, TextureFormat.ARGB32, false) { hideFlags = HideFlags.HideAndDontSave };
-            iconTexture.SetPixels(colors);
-            iconTexture.wrapMode = TextureWrapMode.Clamp;
-            iconTexture.filterMode = FilterMode.Point;
-            iconTexture.Apply();
-            return iconTexture;
         }
     }
 }

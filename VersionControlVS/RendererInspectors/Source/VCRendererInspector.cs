@@ -32,7 +32,7 @@ namespace VersionControl.UserInterface
                 var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
 
                 EditorGUILayout.BeginVertical(VCGUIControls.GetVCBox(assetStatus));
-                string lockDescription = builtinMaterial ? "" : VCGUIControls.GetLockStatusMessage(assetStatus);
+                string lockDescription = builtinMaterial ? "" : AssetStatusUtils.GetLockStatusMessage(assetStatus);
                 string materialDescription = "[" + (builtinMaterial ? "Unity Default" : material.name) + "] " + lockDescription;
                 GUILayout.Label(new GUIContent(materialDescription, assetPath), VCGUIControls.GetLockStatusStyle());
 

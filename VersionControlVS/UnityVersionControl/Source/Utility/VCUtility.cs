@@ -30,14 +30,14 @@ namespace VersionControl
             {
                 return RevertPrefab(gameObject);
             }
-            if (onHierarchyReverted != null) onHierarchyReverted(obj);
             return RevertObject(obj);
         }
 
         private static Object RevertObject(Object obj)
         {
             if (ObjectExtension.ChangesStoredInScene(obj)) EditorApplication.SaveScene(EditorApplication.currentScene);
-            VCCommands.Instance.Revert(obj.ToAssetPaths());
+            bool success = VCCommands.Instance.Revert(obj.ToAssetPaths());
+            if (success && onHierarchyReverted != null) onHierarchyReverted(obj);
             return obj;
         }
 
@@ -45,19 +45,19 @@ namespace VersionControl
         {
             PrefabHelper.ReconnectToLastPrefab(gameObject);
             PrefabUtility.RevertPrefabInstance(gameObject);
-
-            var prefabRoot = PrefabHelper.FindPrefabRoot(gameObject);
-            var prefabParent = PrefabHelper.GetPrefabParent(prefabRoot) as GameObject;
-
-            if (ShouldVCRevert(prefabParent)) VCCommands.Instance.Revert(prefabParent.ToAssetPaths());
+            
+            if (ShouldVCRevert(gameObject))
+            {
+                bool success = VCCommands.Instance.Revert(gameObject.ToAssetPaths());
+                if (success && onHierarchyReverted != null) onHierarchyReverted(gameObject);
+            }
 
             return gameObject;
         }
 
         public static bool ShouldVCRevert(Object obj)
         {
-            var assetpath = obj.GetAssetPath();
-            var assetStatus = VCCommands.Instance.GetAssetStatus(assetpath);
+            var assetStatus = obj.GetAssetStatus();
             var material = obj as Material;
             return
                 material && ManagedByRepository(assetStatus) ||

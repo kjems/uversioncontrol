@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using VersionControl.UserInterface;
 
 namespace VersionControl
 {
@@ -82,7 +83,7 @@ namespace VersionControl
             }
             else // Treat as scene object
             {
-                string scenePath = ObjectExtension.SceneObjectToAssetPath(gameObject);
+                string scenePath = VCStatusIcons.GetPersistentObject(gameObject).GetAssetPath();
                 var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
                 bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
                 bool lockScene = LockScene(scenePath);

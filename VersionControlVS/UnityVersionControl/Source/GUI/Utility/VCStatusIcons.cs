@@ -25,6 +25,17 @@ namespace VersionControl.UserInterface
 
         }
 
+        public static void SetPersistentObjectCallback(System.Func<Object, Object> persistensObjectCallback)
+        {
+            VCStatusIcons.persistensObjectCallback = persistensObjectCallback;
+        }
+        public static Object GetPersistentObject(Object obj)
+        {
+            return persistensObjectCallback(obj);
+        }
+        private static System.Func<Object, Object> persistensObjectCallback = o => o;
+
+
         private static void RequestStatus(Object asset, VCSettings.EReflectionLevel reflectionLevel)
         {
             if (VCSettings.VCEnabled)
@@ -53,15 +64,18 @@ namespace VersionControl.UserInterface
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
-            RequestStatus(obj, VCSettings.HierarchyReflectionMode);
-            DrawVersionControlStatusIcon(obj, selectionRect);
+            var persistentObj = GetPersistentObject(obj);
+            if (persistentObj.GetAssetPath() != EditorApplication.currentScene)
+            {
+                RequestStatus(persistentObj, VCSettings.HierarchyReflectionMode);
+                DrawVersionControlStatusIcon(obj, selectionRect);
+            }
         }
 
         private static void DrawVersionControlStatusIcon(Object obj, Rect rect)
         {
             if (VCSettings.VCEnabled)
             {
-                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(obj.GetAssetPath());
                 bool isPrefab = PrefabHelper.IsPrefab(obj);
                 bool isPrefabRoot = PrefabHelper.IsPrefabRoot(obj);
                 bool halfsize = isPrefab && !isPrefabRoot;
@@ -76,7 +90,7 @@ namespace VersionControl.UserInterface
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
         }
-       
+
 
         private static Rect GetRightAligned(Rect rect, float size)
         {
@@ -89,17 +103,32 @@ namespace VersionControl.UserInterface
             return rect;
         }
 
+        private static bool IsChildNode(Object obj)
+        {
+            var persistentObj = GetPersistentObject(obj);
+            GameObject go = obj as GameObject;
+            if (go != null)
+            {
+                var persistentAssetPath = persistentObj.GetAssetPath();
+                var persistentParentAssetPath = go.transform.parent != null ? GetPersistentObject(go.transform.parent.gameObject).GetAssetPath() : "";
+                return persistentAssetPath == persistentParentAssetPath;
+            }
+            return false;
+        }
+
         private static void DrawIcon(Rect rect, Object obj)
         {
-            var assetStatus = obj.GetAssetStatus();
+            var persistentObj = GetPersistentObject(obj);
+            var assetStatus = persistentObj.GetAssetStatus();
+            if (string.IsNullOrEmpty(assetStatus.assetPath)) D.Log("assetpath empty or null, obj: '" + obj + ":" + obj.GetAssetPath() + "', persistent: " + persistentObj);
             string statusText = AssetStatusUtils.GetStatusText(assetStatus);
             float size = IconUtils.iconSize;
             IconUtils.Icon iconType = IconUtils.rubyIcon;
-            if(PrefabHelper.IsPrefab(obj, true, false, false))
+            if (ObjectExtension.ChangesStoredInPrefab(persistentObj))
             {
                 iconType = IconUtils.squareIcon;
-                if (!PrefabHelper.IsPrefabRoot(obj)) size *= 0.5f;
             }
+            if (IsChildNode(obj)) size *= 0.5f;
             Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
             Rect placement = GetRightAligned(rect, size);
             if (texture) GUI.DrawTexture(placement, texture);
@@ -108,9 +137,9 @@ namespace VersionControl.UserInterface
             clickRect.yMax += 5; clickRect.yMin -= 5;
             if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
             {
-                VCGUIControls.DiaplayVCContextMenu(obj);
+                VCGUIControls.DiaplayVCContextMenu(GetPersistentObject(obj));
             }
-            
+
         }
     }
 }

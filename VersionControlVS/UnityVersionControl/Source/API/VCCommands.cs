@@ -435,9 +435,9 @@ namespace VersionControl
         {
             lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
         }
-        public void SetSceneObjectToAssetPathCallback(Func<Object, string> sceneObjectToAssetPath)
+        public void SetPersistentObjectCallback(Func<Object, Object> persistentObjectCallback)
         {
-            ObjectExtension.SetSceneObjectToAssetPath(sceneObjectToAssetPath);
+            VCStatusIcons.SetPersistentObjectCallback(persistentObjectCallback);
         }
         public void SetSaveSceneCallback(Action<Object> saveSceneCallback)
         {

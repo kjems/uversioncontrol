@@ -33,30 +33,18 @@ namespace VersionControl
     {
         public static bool ChangesStoredInScene(Object obj)
         {
-            return ((obj is GameObject) && !PrefabHelper.IsPrefabParent(obj) && !PrefabHelper.IsPrefab(obj, true, false, true));
+            return obj.GetAssetPath() == EditorApplication.currentScene;
         }
-
-        public static void SetSceneObjectToAssetPath(System.Func<Object, string> sceneObjectToAssetPath)
+        public static bool ChangesStoredInPrefab(Object obj)
         {
-            _sceneObjectToAssetPath = sceneObjectToAssetPath;
+            return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
         }
-        public static string SceneObjectToAssetPath(Object obj)
-        {
-            return _sceneObjectToAssetPath(obj);
-        }
-        private static System.Func<Object, string> _sceneObjectToAssetPath = o => EditorApplication.currentScene;
 
         private static string ObjectToAssetPath(Object obj)
         {
-            if (obj is Material) return AssetDatabase.GetAssetPath(obj);
-            if (obj is TextAsset) return AssetDatabase.GetAssetPath(obj);
-            if (ChangesStoredInScene(obj)) return SceneObjectToAssetPath(obj);
-            if (PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(obj);
-            if (PrefabHelper.IsPrefab(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
-            return AssetDatabase.GetAssetPath(obj);
+            if (PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
+            return AssetDatabase.GetAssetOrScenePath(obj);
         }
-
-        
 
         public static VersionControlStatus GetAssetStatus(this Object obj)
         {

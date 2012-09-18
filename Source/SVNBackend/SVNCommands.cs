@@ -245,7 +245,10 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var statusIt in db)
                     {
-                        statusDatabase[statusIt.Key] = statusIt.Value;
+                        var status = statusIt.Value;
+                        if (statusLevel == StatusLevel.Remote) status.reflectionLevel = VCReflectionLevel.Repository;
+                        if (statusLevel == StatusLevel.Local) status.reflectionLevel = VCReflectionLevel.Local;
+                        statusDatabase[statusIt.Key] = status;
                     }
                 }
                 OnStatusCompleted();

@@ -48,14 +48,15 @@ namespace VersionControl
         }
         public static bool ChangesStoredInPrefab(Object obj)
         {
+            obj = AssetDatabase.LoadMainAssetAtPath(obj.GetAssetPath());
             return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
-        public static string ObjectToAssetPath(Object obj)
+        public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
         {
             var redirectedAssetPath = SceneObjectToAssetPath(obj);
             if (!string.IsNullOrEmpty(redirectedAssetPath)) return redirectedAssetPath;
-            if (PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
+            if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
             return AssetDatabase.GetAssetOrScenePath(obj);
         }
     }

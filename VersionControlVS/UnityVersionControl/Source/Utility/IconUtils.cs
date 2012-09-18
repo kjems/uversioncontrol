@@ -6,9 +6,10 @@ namespace VersionControl.UserInterface
     public static class IconUtils
     {
         // Const
-        public const int iconSize = 12;
         public const int borderSize = 1;
         public static readonly RubyIcon rubyIcon = new RubyIcon();
+        public static readonly ChildIcon childIcon = new ChildIcon();
+        public static readonly CircleIcon circleIcon = new CircleIcon();
         public static readonly SquareIcon squareIcon = new SquareIcon();
         public static readonly TriangleIcon triangleIcon = new TriangleIcon();
         public static readonly BoxIcon boxIcon = new BoxIcon();
@@ -27,40 +28,62 @@ namespace VersionControl.UserInterface
                 }
                 return texture;
             }
+            public abstract int Size { get; }
             protected abstract Texture2D LoadTexture(Color color);
         }
         public class RubyIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("ruby"), iconSize, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("ruby"), Size, color);
             }
+            public override int Size { get { return 16; } }
+        }
+        public class ChildIcon : Icon
+        {
+            protected override Texture2D LoadTexture(Color color)
+            {
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("child"), Size, color);
+            }
+            public override int Size { get { return 20; } }
+        }
+        public class CircleIcon : Icon
+        {
+            protected override Texture2D LoadTexture(Color color)
+            {
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("circle"), Size, color);
+            }
+            public override int Size { get { return 16; } }
         }
         public class SquareIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("square"), iconSize, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("square"), Size, color);
             }
+            public override int Size { get { return 16; } }
         }
         public class TriangleIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("triangle"), iconSize, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("triangle"), Size, color);
             }
+            public override int Size { get { return 12; } }
         }
         public class BoxIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateSquareTextureWithBorder(iconSize, borderSize, color, Color.black);
+                return CreateSquareTextureWithBorder(Size, borderSize, color, Color.black);
             }
+            public override int Size { get { return 12; } }
         }
 
 
         private static Texture2D CreateTexture(System.IO.Stream resourceBitmap, int size, Color color)
         {
+            D.Assert(resourceBitmap != null, "Assuming the resource file is valid");
             byte[] bytes = new byte[(int)resourceBitmap.Length];
             resourceBitmap.Read(bytes, 0, (int)resourceBitmap.Length);
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };

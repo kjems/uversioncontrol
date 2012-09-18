@@ -5,7 +5,7 @@ namespace VersionControl.UserInterface
 {
     public static class AssetStatusUtils
     {
-        private static readonly Color orange = new Color(1.0f, 0.75f, 0.0f);
+        private static readonly Color orange = new Color(1.0f, 0.65f, 0.0f);
         private static readonly Color pastelRed = new Color(0.85f, 0.4f, 0.4f);
         private static readonly Color pastelBlue = new Color(0.3f, 0.55f, 0.85f);
         private static readonly Color lightgrey = new Color(0.55f, 0.55f, 0.55f);
@@ -16,15 +16,15 @@ namespace VersionControl.UserInterface
         private static readonly Color addedColor = Color.blue;
         private static readonly Color conflictedColor = Color.red;
         private static readonly Color missingColor = new Color(1.0f, 0.2f, 1.0f);
-        private static readonly Color normalColor = Color.white;
+        private static readonly Color normalColor = new Color(0.9f, 0.9f, 0.9f, 0.05f);
         private static readonly Color lockedColor = new Color(0.2f, 0.8f, 0.2f);
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = orange;
-        private static readonly Color unversionedColor = lightgrey;
-        private static readonly Color remoteModifiedColor = new Color(0.7f, 0.7f, 1f);
-        private static readonly Color pendingColor = new Color(1, 1, 0.6f, 0.8f);
+        private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 1.0f);
+        private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
+        private static readonly Color pendingColor = new Color(0.9f, 0.9f, 0.6f, 0.3f);
         private static readonly Color ignoreColor = new Color(0.7f, 0.7f, 0.7f, 0.1f);
-        private static readonly Color deletedColor = new Color(1, 1, 1, 0.1f);
+        private static readonly Color deletedColor = new Color(0.3f, 0.3f, 0.3f, 0.1f);
 
         public static Color GetStatusColor(VersionControlStatus assetStatus, bool includeLockStatus)
         {

@@ -18,6 +18,7 @@ namespace VersionControl
         public static System.Action<Object> onHierarchyReverted;
         public static System.Action<Object> onHierarchyCommit;
         public static System.Action<Object> onHierarchyGetLock;
+        public static System.Func<Object, bool> onHierarchyAllowGetLock;
         public static System.Action<Object> onHierarchyBypass;
 
         public static string GetCurrentVersion()
@@ -78,9 +79,15 @@ namespace VersionControl
 
         public static bool GetLock(Object obj, OperationMode operationMode = OperationMode.Normal)
         {
-            bool success = GetLock(obj.GetAssetPath(), operationMode);
-            if (success && onHierarchyGetLock != null) onHierarchyGetLock(obj);
-            return success;
+            bool shouldGetLock = true;
+            if (onHierarchyAllowGetLock != null) shouldGetLock = onHierarchyAllowGetLock(obj);
+            if (shouldGetLock)
+            {
+                bool success = GetLock(obj.GetAssetPath(), operationMode);
+                if (success && onHierarchyGetLock != null) onHierarchyGetLock(obj);
+                return success;
+            }
+            return false;
         }
         public static bool GetLock(string assetpath, OperationMode operationMode = OperationMode.Normal)
         {

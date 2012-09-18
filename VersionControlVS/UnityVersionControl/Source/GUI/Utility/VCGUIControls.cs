@@ -113,7 +113,7 @@ namespace VersionControl.UserInterface
             if (VCUtility.ValidAssetPath(assetPath))
             {
                 var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                if (ObjectExtension.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
+                if (ObjectUtilities.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
 
                 bool ready = VCCommands.Instance.Ready;
                 bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
@@ -135,7 +135,7 @@ namespace VersionControl.UserInterface
 
                 bool showAdd = ready && !pending && !ignored && unversioned;
                 bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
-                bool showDiff = ready && !pending && !ignored && modifiedTextAsset && managedByRep;
+                bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
                 bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
                 bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
                 bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
@@ -146,11 +146,11 @@ namespace VersionControl.UserInterface
                 bool showDisconnect = isPrefab && !isPrefabParent;
 
                 if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
-                if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => VCCommands.Instance.GetLock(new[] { assetPath }));
-                if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => VCCommands.Instance.BypassRevision(new[] { assetPath }));
-                if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => VCUtility.VCForceOpen(assetPath, assetStatus));
+                if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance ));
+                if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
+                if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
                 if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }, OperationMode.Force));
+                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));
                 if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
                 if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                 if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
@@ -160,9 +160,21 @@ namespace VersionControl.UserInterface
             return menu;
         }
 
+        private static void GetLock(string assetPath, Object instance, OperationMode operationMode = OperationMode.Normal)
+        {
+            if (instance != null) VCUtility.GetLock(instance, operationMode);
+            else VCCommands.Instance.GetLock(new[] { assetPath }, operationMode);
+        }
+
+        private static void BypassRevision(string assetPath, Object instance)
+        {
+            if (instance != null) VCUtility.BypassRevision(instance);
+            else VCCommands.Instance.BypassRevision(new[] { assetPath });
+        }
+
         private static void Commit(string assetPath, Object instance)
         {
-            if (instance != null) VCUtility.ApplyAndCommit(instance, "");
+            if (instance != null) VCUtility.ApplyAndCommit(instance);
             else VCCommands.Instance.CommitDialog(new[] { assetPath });
         }
 

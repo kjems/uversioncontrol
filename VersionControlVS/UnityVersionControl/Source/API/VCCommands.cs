@@ -54,7 +54,7 @@ namespace VersionControl
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private List<string> lockedFileResources = new List<string>();
         private bool ignoreStatusRequests = false;
-        private Action<Object> _saveSceneCallback = o => EditorApplication.SaveScene();
+        private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
 
         public static bool Active
         {
@@ -229,11 +229,7 @@ namespace VersionControl
         }
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return HandleExceptions(() =>
-            {
-                bool result = vcc.Status(statusLevel, detailLevel);
-                return result;
-            });
+            return HandleExceptions(() => vcc.Status(statusLevel, detailLevel));
         }
 
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
@@ -274,7 +270,10 @@ namespace VersionControl
             {
                 FlushFiles();
                 assets = AssetpathsFilters.AddMeta(assets, true);
-                return Status(assets, StatusLevel.Local) && vcc.Commit(assets, commitMessage) && RefreshAssetDatabase();
+                Status(assets, StatusLevel.Local);
+                bool commitSuccess = vcc.Commit(assets, commitMessage);
+                RefreshAssetDatabase();
+                return commitSuccess;
             });
         }
         public bool Add(IEnumerable<string> assets)
@@ -292,11 +291,12 @@ namespace VersionControl
                 FlushFiles();
                 Status(assets.ToList(), StatusLevel.Local);
                 assets = AssetpathsFilters.AddMeta(assets);
-                bool revertResult = vcc.Revert(assets);
-                vcc.ChangeListRemove(assets);
-                if (revertResult) vcc.ReleaseLock(assets);
+                bool revertSuccess = vcc.Revert(assets);
+                bool changeListRemoveSuccess =  vcc.ChangeListRemove(assets);
+                bool releaseSuccess = true;
+                if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
                 RefreshAssetDatabase();
-                return revertResult;
+                return (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
             });
         }
         public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Force)
@@ -340,7 +340,12 @@ namespace VersionControl
         }
         public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
-            return HandleExceptions(() => vcc.GetLock(assets, mode) && vcc.ChangeListRemove(assets));
+            return HandleExceptions(() =>
+            {
+                bool getlockSuccess = vcc.GetLock(assets, mode);
+                bool removeChangeListSuccess = vcc.ChangeListRemove(assets);
+                return getlockSuccess;
+            });
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {
@@ -360,15 +365,22 @@ namespace VersionControl
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return HandleExceptions(() => vcc.Resolve(assets, conflictResolution)) && RefreshAssetDatabase();
+            return HandleExceptions(() =>
+            {
+                bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
+                RefreshAssetDatabase();
+                return resolveSuccess;
+            });
         }
         public bool Move(string from, string to)
         {
             return HandleExceptions(() =>
-                {
-                    FlushFiles();
-                    return vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
-                }) && RefreshAssetDatabase();
+            {
+                FlushFiles();
+                bool moveSuccess = vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
+                RefreshAssetDatabase();
+                return moveSuccess;
+            });
         }
         public string GetBasePath(string assetPath)
         {
@@ -381,10 +393,12 @@ namespace VersionControl
         public void ClearDatabase()
         {
             vcc.ClearDatabase();
+            OnStatusCompleted();
         }
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
             vcc.RemoveFromDatabase(assets);
+            OnStatusCompleted();
         }
 
         private void OnStatusCompleted()
@@ -417,12 +431,11 @@ namespace VersionControl
                 return OpenCommitDialogWindow(assets, dependencies);
             }
             return Commit(assets, commitMessage);
-
         }
 
-        public void BypassRevision(IEnumerable<string> assets)
+        public bool BypassRevision(IEnumerable<string> assets)
         {
-            vcc.ChangeListAdd(assets, "bypass");
+            return vcc.ChangeListAdd(assets, "bypass");
         }
 
         #endregion
@@ -435,17 +448,17 @@ namespace VersionControl
         {
             lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
         }
-        public void SetPersistentObjectCallback(Func<Object, Object> persistentObjectCallback)
+        public void SetPersistentObjectCallback(Func<Object, string> persistentObjectCallback)
         {
-            VCStatusIcons.SetPersistentObjectCallback(persistentObjectCallback);
+            ObjectUtilities.SetSceneObjectToAssetPathCallback(persistentObjectCallback);
         }
         public void SetSaveSceneCallback(Action<Object> saveSceneCallback)
         {
-            _saveSceneCallback = saveSceneCallback;
+            this.saveSceneCallback = saveSceneCallback;
         }
         public void SaveScene(Object obj)
         {
-            _saveSceneCallback(obj);
+            saveSceneCallback(obj);
         }
     }
 }

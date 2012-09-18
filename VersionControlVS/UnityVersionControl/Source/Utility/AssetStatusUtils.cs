@@ -9,7 +9,7 @@ namespace VersionControl.UserInterface
         private static readonly Color pastelRed = new Color(0.85f, 0.4f, 0.4f);
         private static readonly Color pastelBlue = new Color(0.3f, 0.55f, 0.85f);
         private static readonly Color lightgrey = new Color(0.55f, 0.55f, 0.55f);
-        private static readonly Color pink = new Color(1f, 0.1f, 1f);
+        private static readonly Color pink = new Color(1f, 0.6f, 1f);
         private static readonly Color black = Color.black;
         private static readonly Color border = new Color(0.1f, 0.1f, 0.1f);
 
@@ -21,7 +21,7 @@ namespace VersionControl.UserInterface
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = orange;
         private static readonly Color unversionedColor = lightgrey;
-        private static readonly Color remoteModifiedColor = new Color(0.8f, 0.8f, 1f);
+        private static readonly Color remoteModifiedColor = new Color(0.7f, 0.7f, 1f);
         private static readonly Color pendingColor = new Color(1, 1, 0.6f, 0.8f);
         private static readonly Color ignoreColor = new Color(0.7f, 0.7f, 0.7f, 0.1f);
         private static readonly Color deletedColor = new Color(1, 1, 1, 0.1f);
@@ -48,7 +48,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return remoteModifiedColor;
             if (assetStatus.fileStatus == VCFileStatus.Normal) return normalColor;
 
-            return black;
+            return pink;
         }
 
         public static string GetStatusText(VersionControlStatus assetStatus)
@@ -77,6 +77,7 @@ namespace VersionControl.UserInterface
             {
                 if (String.IsNullOrEmpty(assetStatus.assetPath)) lockMessage = "Not saved";
                 else if (assetStatus.fileStatus == VCFileStatus.Added) lockMessage = "Added";
+                else if (assetStatus.fileStatus == VCFileStatus.Replaced) lockMessage = "Replaced";
                 else lockMessage = VCUtility.ManagedByRepository(assetStatus) ? "Not " + Terminology.getlock : "Not on Version Control";
             }
             if (assetStatus.bypassRevisionControl)

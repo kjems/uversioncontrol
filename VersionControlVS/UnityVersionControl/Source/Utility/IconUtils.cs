@@ -33,28 +33,28 @@ namespace VersionControl.UserInterface
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("ruby"), 12, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("ruby"), iconSize, color);
             }
         }
         public class SquareIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("square"), 12, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("square"), iconSize, color);
             }
         }
         public class TriangleIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("triangle"), 12, color);
+                return CreateTexture(System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("triangle"), iconSize, color);
             }
         }
         public class BoxIcon : Icon
         {
             protected override Texture2D LoadTexture(Color color)
             {
-                return CreateSquareTextureWithBorder(12, 1, color, Color.black);
+                return CreateSquareTextureWithBorder(iconSize, borderSize, color, Color.black);
             }
         }
 

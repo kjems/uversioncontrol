@@ -71,7 +71,7 @@ namespace VersionControl
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            return base.Revert(NonNormal(assets));
+            return base.Revert(NonNormal(ShortestFirst(assets)));
         }
 
         public override bool Delete(IEnumerable<string> assets, OperationMode mode)

@@ -46,31 +46,36 @@ namespace VersionControl.UserInterface
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
             var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
             RequestStatus(AssetDatabase.GUIDToAssetPath(guid), VCSettings.ProjectReflectionMode);
-            DrawVersionControlStatusIcon(obj, selectionRect);
+            DrawIcon(selectionRect, obj, IconUtils.circleIcon);
         }
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
-            
-            if (obj.GetAssetPath() != EditorApplication.currentScene)
+
+            bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
+            bool guiLockForPrefabs = EditableManager.LockPrefab(obj.GetAssetPath());
+
+            if (obj.GetAssetPath() != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs) ) )
             {
                 RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
-                DrawVersionControlStatusIcon(obj, selectionRect);
+                DrawIcon(selectionRect, obj, GetHierarchyIcon(obj));
             }
         }
 
-        private static void DrawVersionControlStatusIcon(Object obj, Rect rect)
+        private static IconUtils.Icon GetHierarchyIcon(Object obj)
         {
-            if (VCSettings.VCEnabled)
+            IconUtils.Icon iconType = IconUtils.rubyIcon;
+            if (ObjectUtilities.ChangesStoredInPrefab(obj))
             {
-                bool isPrefab = PrefabHelper.IsPrefab(obj);
-                bool isPrefabRoot = PrefabHelper.IsPrefabRoot(obj);
-                bool halfsize = isPrefab && !isPrefabRoot;
-                Rect iconRect = GetRightAligned(rect, IconUtils.iconSize * (halfsize ? 0.5f : 1.0f));
-                DrawIcon(iconRect, obj);
+                iconType = IconUtils.squareIcon;
             }
+            if (IsChildNode(obj))
+            {
+                iconType = IconUtils.childIcon;
+            }
+            return iconType;
         }
 
         private static void RefreshGUI()
@@ -92,6 +97,8 @@ namespace VersionControl.UserInterface
             return rect;
         }
 
+        
+
         private static bool IsChildNode(Object obj)
         {
             GameObject go = obj as GameObject;
@@ -104,28 +111,25 @@ namespace VersionControl.UserInterface
             return false;
         }
 
-        private static void DrawIcon(Rect rect, Object obj)
+        private static void DrawIcon(Rect rect, Object obj, IconUtils.Icon iconType)
         {
-            var assetStatus = obj.GetAssetStatus();
-            string statusText = AssetStatusUtils.GetStatusText(assetStatus);
-            float size = IconUtils.iconSize;
-            IconUtils.Icon iconType = IconUtils.rubyIcon;
-            if (ObjectUtilities.ChangesStoredInPrefab(AssetDatabase.LoadMainAssetAtPath(obj.GetAssetPath())))
+            if (VCSettings.VCEnabled)
             {
-                iconType = IconUtils.squareIcon;
+                var assetStatus = obj.GetAssetStatus();
+                string statusText = AssetStatusUtils.GetStatusText(assetStatus);
+                Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
+                Rect placement = GetRightAligned(rect, iconType.Size);
+                if (texture) GUI.DrawTexture(placement, texture);
+                var clickRect = placement;
+                clickRect.xMax += 5;
+                clickRect.xMin -= 15;
+                clickRect.yMax += 5;
+                clickRect.yMin -= 5;
+                if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
+                {
+                    VCGUIControls.DiaplayVCContextMenu(obj);
+                }
             }
-            if (IsChildNode(obj)) size *= 0.6f;
-            Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
-            Rect placement = GetRightAligned(rect, size);
-            if (texture) GUI.DrawTexture(placement, texture);
-            var clickRect = placement;
-            clickRect.xMax += 5; clickRect.xMin -= 15;
-            clickRect.yMax += 5; clickRect.yMin -= 5;
-            if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
-            {
-                VCGUIControls.DiaplayVCContextMenu(obj);
-            }
-
         }
     }
 }

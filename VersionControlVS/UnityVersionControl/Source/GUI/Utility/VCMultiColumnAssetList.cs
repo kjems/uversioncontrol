@@ -57,7 +57,7 @@ namespace VersionControl.UserInterface
         {
             if (assetStatus.treeConflictStatus != VCTreeConflictStatus.Normal)
                 return new GUIContent(assetStatus.treeConflictStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
-            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
+            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
         }
 
         private void Initialize()

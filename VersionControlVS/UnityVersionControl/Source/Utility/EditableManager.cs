@@ -36,17 +36,17 @@ namespace VersionControl
             return avoidGUILockConditions.Any(c => c(obj));
         }
 
-        private static bool LockPrefab(string assetPath)
+        public static bool LockPrefab(string assetPath)
         {
             return VCSettings.LockPrefabs && assetPath.ToLowerInvariant().Contains(VCSettings.LockPrefabsFilter.ToLowerInvariant());
         }
 
-        private static bool LockScene(string assetPath)
+        public static bool LockScene(string assetPath)
         {
             return VCSettings.LockScenes && assetPath.ToLowerInvariant().Contains(VCSettings.LockScenesFilter.ToLowerInvariant());
         }
 
-        private static bool LockMaterial(string assetPath)
+        public static bool LockMaterial(string assetPath)
         {
             return VCSettings.LockMaterials && assetPath.ToLowerInvariant().Contains(VCSettings.LockMaterialsFilter.ToLowerInvariant());
         }
@@ -76,14 +76,14 @@ namespace VersionControl
             if (assetPath == "") return true;
             var assetStatus = gameObject.GetAssetStatus();
             if(!VCUtility.ManagedByRepository(assetStatus)) return true;
-            bool isPrefab = PrefabHelper.IsPrefab(gameObject, true, false, true);
+            bool isPrefab = ObjectUtilities.ChangesStoredInPrefab(gameObject);
             if (isPrefab && LockPrefab(assetPath))
             {
                 return VCUtility.HaveAssetControl(assetStatus);
             }
             else // Treat as scene object
             {
-                string scenePath = gameObject.GetAssetPath();
+                string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
                 var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
                 bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
                 bool lockScene = LockScene(scenePath);

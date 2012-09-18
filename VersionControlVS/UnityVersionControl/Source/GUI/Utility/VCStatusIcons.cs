@@ -25,22 +25,11 @@ namespace VersionControl.UserInterface
 
         }
 
-        public static void SetPersistentObjectCallback(System.Func<Object, Object> persistensObjectCallback)
-        {
-            VCStatusIcons.persistensObjectCallback = persistensObjectCallback;
-        }
-        public static Object GetPersistentObject(Object obj)
-        {
-            return persistensObjectCallback(obj);
-        }
-        private static System.Func<Object, Object> persistensObjectCallback = o => o;
-
-
-        private static void RequestStatus(Object asset, VCSettings.EReflectionLevel reflectionLevel)
+        private static void RequestStatus(string assetPath, VCSettings.EReflectionLevel reflectionLevel)
         {
             if (VCSettings.VCEnabled)
             {
-                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(asset.GetAssetPath());
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
                     VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
@@ -56,7 +45,7 @@ namespace VersionControl.UserInterface
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
             var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
-            RequestStatus(obj, VCSettings.ProjectReflectionMode);
+            RequestStatus(AssetDatabase.GUIDToAssetPath(guid), VCSettings.ProjectReflectionMode);
             DrawVersionControlStatusIcon(obj, selectionRect);
         }
 
@@ -64,10 +53,10 @@ namespace VersionControl.UserInterface
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
-            var persistentObj = GetPersistentObject(obj);
-            if (persistentObj.GetAssetPath() != EditorApplication.currentScene)
+            
+            if (obj.GetAssetPath() != EditorApplication.currentScene)
             {
-                RequestStatus(persistentObj, VCSettings.HierarchyReflectionMode);
+                RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
                 DrawVersionControlStatusIcon(obj, selectionRect);
             }
         }
@@ -105,12 +94,11 @@ namespace VersionControl.UserInterface
 
         private static bool IsChildNode(Object obj)
         {
-            var persistentObj = GetPersistentObject(obj);
             GameObject go = obj as GameObject;
             if (go != null)
             {
-                var persistentAssetPath = persistentObj.GetAssetPath();
-                var persistentParentAssetPath = go.transform.parent != null ? GetPersistentObject(go.transform.parent.gameObject).GetAssetPath() : "";
+                var persistentAssetPath = obj.GetAssetPath();
+                var persistentParentAssetPath = go.transform.parent != null ? go.transform.parent.gameObject.GetAssetPath() : "";
                 return persistentAssetPath == persistentParentAssetPath;
             }
             return false;
@@ -118,17 +106,15 @@ namespace VersionControl.UserInterface
 
         private static void DrawIcon(Rect rect, Object obj)
         {
-            var persistentObj = GetPersistentObject(obj);
-            var assetStatus = persistentObj.GetAssetStatus();
-            if (string.IsNullOrEmpty(assetStatus.assetPath)) D.Log("assetpath empty or null, obj: '" + obj + ":" + obj.GetAssetPath() + "', persistent: " + persistentObj);
+            var assetStatus = obj.GetAssetStatus();
             string statusText = AssetStatusUtils.GetStatusText(assetStatus);
             float size = IconUtils.iconSize;
             IconUtils.Icon iconType = IconUtils.rubyIcon;
-            if (ObjectExtension.ChangesStoredInPrefab(persistentObj))
+            if (ObjectUtilities.ChangesStoredInPrefab(AssetDatabase.LoadMainAssetAtPath(obj.GetAssetPath())))
             {
                 iconType = IconUtils.squareIcon;
             }
-            if (IsChildNode(obj)) size *= 0.5f;
+            if (IsChildNode(obj)) size *= 0.6f;
             Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
             Rect placement = GetRightAligned(rect, size);
             if (texture) GUI.DrawTexture(placement, texture);
@@ -137,7 +123,7 @@ namespace VersionControl.UserInterface
             clickRect.yMax += 5; clickRect.yMin -= 5;
             if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
             {
-                VCGUIControls.DiaplayVCContextMenu(GetPersistentObject(obj));
+                VCGUIControls.DiaplayVCContextMenu(obj);
             }
 
         }

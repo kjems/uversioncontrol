@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
+using VersionControl.UserInterface;
 
 
 namespace VersionControl
@@ -29,8 +30,18 @@ namespace VersionControl
         }
     }*/
 
-    internal static class ObjectExtension
+    public static class ObjectUtilities
     {
+        public static void SetSceneObjectToAssetPathCallback(System.Func<Object, string> sceneObjectToAssetPath)
+        {
+            ObjectUtilities.sceneObjectToAssetPath = sceneObjectToAssetPath;
+        }
+        public static string SceneObjectToAssetPath(Object obj)
+        {
+            return sceneObjectToAssetPath(obj);
+        }
+        private static System.Func<Object, string> sceneObjectToAssetPath = o => o.GetAssetPath();
+
         public static bool ChangesStoredInScene(Object obj)
         {
             return obj.GetAssetPath() == EditorApplication.currentScene;
@@ -40,12 +51,17 @@ namespace VersionControl
             return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
-        private static string ObjectToAssetPath(Object obj)
+        public static string ObjectToAssetPath(Object obj)
         {
+            var redirectedAssetPath = SceneObjectToAssetPath(obj);
+            if (!string.IsNullOrEmpty(redirectedAssetPath)) return redirectedAssetPath;
             if (PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
             return AssetDatabase.GetAssetOrScenePath(obj);
         }
+    }
 
+    internal static class ObjectExtension
+    {
         public static VersionControlStatus GetAssetStatus(this Object obj)
         {
             return VCCommands.Instance.GetAssetStatus(GetAssetPath(obj));
@@ -65,7 +81,7 @@ namespace VersionControl
         // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
         public static string GetAssetPath(this Object obj)
         {
-            return ObjectToAssetPath(obj);
+            return ObjectUtilities.ObjectToAssetPath(obj);
             /*
             if (obj == null) return "";
             string assetPath;

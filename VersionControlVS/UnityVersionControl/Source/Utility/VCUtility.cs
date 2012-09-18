@@ -17,6 +17,8 @@ namespace VersionControl
     {
         public static System.Action<Object> onHierarchyReverted;
         public static System.Action<Object> onHierarchyCommit;
+        public static System.Action<Object> onHierarchyGetLock;
+        public static System.Action<Object> onHierarchyBypass;
 
         public static string GetCurrentVersion()
         {
@@ -35,7 +37,7 @@ namespace VersionControl
 
         private static Object RevertObject(Object obj)
         {
-            if (ObjectExtension.ChangesStoredInScene(obj)) EditorApplication.SaveScene(EditorApplication.currentScene);
+            if (ObjectUtilities.ChangesStoredInScene(obj)) EditorApplication.SaveScene(EditorApplication.currentScene);
             bool success = VCCommands.Instance.Revert(obj.ToAssetPaths());
             if (success && onHierarchyReverted != null) onHierarchyReverted(obj);
             return obj;
@@ -65,13 +67,35 @@ namespace VersionControl
                 PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
-        public static void ApplyAndCommit(Object obj, string commitMessage, bool showCommitDialog = false)
+        public static void ApplyAndCommit(Object obj, string commitMessage = "", bool showCommitDialog = false)
         {
             var gameObject = obj as GameObject;
-            if (ObjectExtension.ChangesStoredInScene(obj)) VCCommands.Instance.SaveScene(obj);
+            if (ObjectUtilities.ChangesStoredInScene(obj)) VCCommands.Instance.SaveScene(obj);
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
             if (onHierarchyCommit != null) onHierarchyCommit(obj);
             VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
+        }
+
+        public static bool GetLock(Object obj, OperationMode operationMode = OperationMode.Normal)
+        {
+            bool success = GetLock(obj.GetAssetPath(), operationMode);
+            if (success && onHierarchyGetLock != null) onHierarchyGetLock(obj);
+            return success;
+        }
+        public static bool GetLock(string assetpath, OperationMode operationMode = OperationMode.Normal)
+        {
+            var status = VCCommands.Instance.GetAssetStatus(assetpath);
+            if (operationMode == OperationMode.Normal || EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
+            {
+                return VCCommands.Instance.GetLock(new[] {assetpath}, operationMode);
+            }
+            return false;
+        }
+
+        public static void BypassRevision(Object obj)
+        {
+            VCCommands.Instance.BypassRevision(obj.ToAssetPaths());
+            if (onHierarchyBypass != null) onHierarchyBypass(obj);
         }
 
         public static bool VCDialog(string command, Object obj)
@@ -96,14 +120,6 @@ namespace VersionControl
         public static void VCDeleteWithConfirmation(Object obj, bool showConfirmation = true)
         {
             VCDeleteWithConfirmation(obj.ToAssetPaths(), showConfirmation);
-        }
-
-        public static void VCForceOpen(string assetPath, VersionControlStatus status)
-        {
-            if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
-            {
-                VCCommands.Instance.GetLock(new[] { assetPath }, OperationMode.Force);
-            }
         }
 
         public static string GetObjectTypeName(Object obj)
@@ -180,7 +196,7 @@ namespace VersionControl
 
         public static bool ValidAssetPath(string assetPath)
         {
-            return !string.IsNullOrEmpty(assetPath) && (File.Exists(assetPath) || Directory.Exists(assetPath));
+            return !string.IsNullOrEmpty(assetPath) && (File.Exists(assetPath) || Directory.Exists(assetPath) || VCCommands.Instance.GetAssetStatus(assetPath).fileStatus == VCFileStatus.Deleted);
         }
     }
 }

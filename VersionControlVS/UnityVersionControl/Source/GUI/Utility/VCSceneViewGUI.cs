@@ -53,7 +53,7 @@ namespace VersionControl.UserInterface
                             {
                                 if (Event.current.shift)
                                 {
-                                    VCUtility.VCForceOpen(EditorApplication.currentScene, vcSceneStatus);
+                                    VCUtility.GetLock(EditorApplication.currentScene, OperationMode.Force);
                                 }
                                 else VCCommands.Instance.BypassRevision(new[] {EditorApplication.currentScene});
                             }

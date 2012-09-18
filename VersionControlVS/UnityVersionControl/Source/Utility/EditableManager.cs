@@ -83,7 +83,7 @@ namespace VersionControl
             }
             else // Treat as scene object
             {
-                string scenePath = VCStatusIcons.GetPersistentObject(gameObject).GetAssetPath();
+                string scenePath = gameObject.GetAssetPath();
                 var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
                 bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
                 bool lockScene = LockScene(scenePath);

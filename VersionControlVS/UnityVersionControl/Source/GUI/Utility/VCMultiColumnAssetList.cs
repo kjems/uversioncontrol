@@ -90,7 +90,9 @@ namespace VersionControl.UserInterface
             {
                 var selected = multiColumnState.GetSelected();
                 if (!selected.Any()) return new GenericMenu();
-                var menu = selected.Count() == 1 ? VCGUIControls.CreateVCContextMenu(selected.First()) : VCGUIControls.CreateVCContextMenu(selected);
+                GenericMenu menu = new GenericMenu();
+                if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First());
+                else VCGUIControls.CreateVCContextMenu(ref menu, selected);
                 var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a));
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Show in Project"), false, () =>

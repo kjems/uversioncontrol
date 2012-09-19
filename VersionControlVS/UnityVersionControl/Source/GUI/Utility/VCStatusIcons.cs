@@ -127,7 +127,7 @@ namespace VersionControl.UserInterface
                 clickRect.yMin -= 5;
                 if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
                 {
-                    VCGUIControls.DiaplayVCContextMenu(obj);
+                    VCGUIControls.DiaplayVCContextMenu(obj, 10.0f, -40.0f, true);
                 }
             }
         }

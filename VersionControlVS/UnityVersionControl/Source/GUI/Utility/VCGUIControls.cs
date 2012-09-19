@@ -96,31 +96,29 @@ namespace VersionControl.UserInterface
             return new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = Color.black }, alignment = TextAnchor.MiddleCenter };
         }
         
-        public static GenericMenu CreateVCContextMenu(IEnumerable<string> assetPaths)
+        public static void CreateVCContextMenu(ref GenericMenu menu, IEnumerable<string> assetPaths)
         {
-            var menu = new GenericMenu();
             menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(assetPaths));
             menu.AddItem(new GUIContent(Terminology.getlock), false, () => VCCommands.Instance.GetLock(assetPaths));
             menu.AddItem(new GUIContent(Terminology.commit), false, () => VCCommands.Instance.CommitDialog(assetPaths));
             menu.AddItem(new GUIContent(Terminology.revert), false, () => VCCommands.Instance.Revert(assetPaths));
             menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(assetPaths));
-            return menu;
         }
 
-        public static GenericMenu CreateVCContextMenu(string assetPath, Object instance = null)
+        public static void CreateVCContextMenu(ref GenericMenu menu, string assetPath, Object instance = null)
         {
-            var menu = new GenericMenu();
             if (VCUtility.ValidAssetPath(assetPath))
             {
                 var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 if (ObjectUtilities.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
-
+                
                 bool ready = VCCommands.Instance.Ready;
                 bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                 bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
                 bool isFolder = System.IO.Directory.Exists(assetPath);
                 bool modifiedTextAsset = VCUtility.IsTextAsset(assetPath) && assetStatus.fileStatus != VCFileStatus.Normal;
                 bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
+                bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
                 bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
                 bool added = assetStatus.fileStatus == VCFileStatus.Added;
                 bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
@@ -137,7 +135,7 @@ namespace VersionControl.UserInterface
                 bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
                 bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
                 bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
-                bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
+                bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
                 bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
                 bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
                 bool showUnlock = ready && !pending && !ignored && !bypass && haveLock;
@@ -157,7 +155,6 @@ namespace VersionControl.UserInterface
                 if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));
                 if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
             }
-            return menu;
         }
 
         private static void GetLock(string assetPath, Object instance, OperationMode operationMode = OperationMode.Normal)
@@ -184,9 +181,16 @@ namespace VersionControl.UserInterface
             else VCCommands.Instance.Revert(new[] { assetPath });
         }
 
-        public static void DiaplayVCContextMenu(Object instance)
+        public static void DiaplayVCContextMenu(Object instance, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
         {
-            CreateVCContextMenu(instance.GetAssetPath(), instance).ShowAsContext();
+            var menu = new GenericMenu();
+            if(showAssetName)
+            {
+                menu.AddDisabledItem(new GUIContent(Path.GetFileName(instance.GetAssetPath())));
+                menu.AddSeparator("");
+            }
+            CreateVCContextMenu(ref menu, instance.GetAssetPath(), instance);
+            menu.DropDown(new Rect(Event.current.mousePosition.x + xoffset, Event.current.mousePosition.y + yoffset, 0.0f, 0.0f));
             Event.current.Use();
         }
     }

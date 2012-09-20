@@ -49,7 +49,7 @@ namespace VersionControl.UserInterface
         {
             using (PushStateUtility.Profiler("CommitWindow::BaseFilter"))
             {
-                //key = key.EndsWith(VCCAddMetaFiles.meta) ? key.Remove(key.Length - VCCAddMetaFiles.meta.Length) : key;
+                key = key.EndsWith(VCCAddMetaFiles.meta) ? key.Remove(key.Length - VCCAddMetaFiles.meta.Length) : key;
                 var metaStatus = vcStatus.MetaStatus();
                 bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
                                     (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||

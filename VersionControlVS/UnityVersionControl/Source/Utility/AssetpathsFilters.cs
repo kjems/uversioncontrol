@@ -24,7 +24,7 @@ namespace VersionControl
                 {
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
-                                    .Where(a => File.Exists(a) && /*!a.Contains(VCCAddMetaFiles.meta) &&*/ !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
+                                    .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.meta) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
                                     .Select(s => s.Replace("\\", "/")));
                 }
             }

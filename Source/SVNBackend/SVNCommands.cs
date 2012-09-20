@@ -65,6 +65,7 @@ namespace VersionControl.Backend.SVN
             {
                 D.ThrowException(e);
             }
+            if(!requestRefreshLoopStop) RefreshLoop();
         }
 
         private void StartRefreshLoop()

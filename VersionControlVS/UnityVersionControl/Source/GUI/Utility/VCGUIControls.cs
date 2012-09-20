@@ -143,6 +143,7 @@ namespace VersionControl.UserInterface
                 bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
                 bool showDisconnect = isPrefab && !isPrefabParent;
 
+                if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
                 if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
                 if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance ));
                 if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
@@ -153,7 +154,6 @@ namespace VersionControl.UserInterface
                 if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                 if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
                 if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));
-                if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
             }
         }
 

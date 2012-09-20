@@ -47,16 +47,17 @@ namespace VersionControl.UserInterface
 
         private bool BaseFilter(string key, VersionControlStatus vcStatus)
         {
-            Profiler.BeginSample("CommitWindow::BaseFilter");
-            key = key.EndsWith(".meta") ? key.Remove(key.Length - 5) : key;
-            var metaStatus = vcStatus.MetaStatus();
-            bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
-                                (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
-                                vcStatus.lockStatus == VCLockStatus.LockedHere;
-            
-            bool show = interresting && (assetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase) || depedencyAssetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase));
-            Profiler.EndSample();
-            return show;
+            using (PushStateUtility.Profiler("CommitWindow::BaseFilter"))
+            {
+                //key = key.EndsWith(VCCAddMetaFiles.meta) ? key.Remove(key.Length - VCCAddMetaFiles.meta.Length) : key;
+                var metaStatus = vcStatus.MetaStatus();
+                bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
+                                    (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
+                                    vcStatus.lockStatus == VCLockStatus.LockedHere;
+
+                if (!interresting) return false;
+                return (assetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase) || depedencyAssetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase));
+            }
         }
 
         private void UpdateFilteringOfKeys()

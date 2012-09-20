@@ -23,7 +23,7 @@ namespace VersionControl
     {
         public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
         {
-            return VCCommands.Instance.GetAssetStatus(vcs.assetPath + ".meta");
+            return VCCommands.Instance.GetAssetStatus(vcs.assetPath + VCCAddMetaFiles.meta);
         }
     }
 
@@ -225,7 +225,7 @@ namespace VersionControl
         }
         public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return AssetpathsFilters.RemoveMetaPostFix(vcc.GetFilteredAssets(filter));
+            return vcc.GetFilteredAssets(filter);
         }
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
@@ -236,8 +236,7 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                var withMeta = AssetpathsFilters.AddMeta(assets, true);
-                bool result = vcc.Status(withMeta, statusLevel);
+                bool result = vcc.Status(assets, statusLevel);
                 return result;
             });
         }
@@ -269,7 +268,6 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                assets = AssetpathsFilters.AddMeta(assets, true);
                 Status(assets, StatusLevel.Local);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 RefreshAssetDatabase();
@@ -278,11 +276,7 @@ namespace VersionControl
         }
         public bool Add(IEnumerable<string> assets)
         {
-            return HandleExceptions(() =>
-            {
-                assets = AssetpathsFilters.AddMeta(assets, true);
-                return vcc.Add(assets);
-            });
+            return HandleExceptions(() => vcc.Add(assets));
         }
         public bool Revert(IEnumerable<string> assets)
         {
@@ -290,7 +284,6 @@ namespace VersionControl
             {
                 FlushFiles();
                 Status(assets.ToList(), StatusLevel.Local);
-                assets = AssetpathsFilters.AddMeta(assets);
                 bool revertSuccess = vcc.Revert(assets);
                 bool changeListRemoveSuccess =  vcc.ChangeListRemove(assets);
                 bool releaseSuccess = true;
@@ -306,7 +299,7 @@ namespace VersionControl
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
                 {
-                    var metaAsset = assetIt + ".meta";
+                    var metaAsset = assetIt + VCCAddMetaFiles.meta;
                     if (GetAssetStatus(assetIt).fileStatus != VCFileStatus.Unversioned)
                     {
                         deleteAssets.Add(metaAsset);
@@ -377,7 +370,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                bool moveSuccess = vcc.Move(from, to) && vcc.Move(from + ".meta", to + ".meta");
+                bool moveSuccess = vcc.Move(from, to);
                 RefreshAssetDatabase();
                 return moveSuccess;
             });
@@ -451,14 +444,6 @@ namespace VersionControl
         public void SetPersistentObjectCallback(Func<Object, string> persistentObjectCallback)
         {
             ObjectUtilities.SetSceneObjectToAssetPathCallback(persistentObjectCallback);
-        }
-        public void SetSaveSceneCallback(Action<Object> saveSceneCallback)
-        {
-            this.saveSceneCallback = saveSceneCallback;
-        }
-        public void SaveScene(Object obj)
-        {
-            saveSceneCallback(obj);
         }
     }
 }

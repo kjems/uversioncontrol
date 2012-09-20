@@ -17,7 +17,6 @@ namespace VersionControl
             //D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
             changedAssets.AddRange(importedAssets);
             changedAssets.AddRange(movedAssets);
-            changedAssets = AssetpathsFilters.AddMeta(changedAssets, true).ToList();
             if (changedAssets.Count > 0)
             {
                 changedAssets = changedAssets.Distinct().ToList();
@@ -28,7 +27,6 @@ namespace VersionControl
 
             removedAssets.AddRange(deletedAssets);
             removedAssets.AddRange(movedFromAssetPaths);
-            removedAssets = AssetpathsFilters.AddMeta(removedAssets, true).ToList();
             if (removedAssets.Count > 0)
             {
                 removedAssets = removedAssets.Distinct().ToList();

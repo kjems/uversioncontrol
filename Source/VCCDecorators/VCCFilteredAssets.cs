@@ -54,8 +54,8 @@ namespace VersionControl
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            var filesInFolders = AddFilesInFolders(assets, true);
-            var toBeCommited = filesInFolders.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal || Directory.Exists(a));
+            var filesInFolders = AddedOrUnversionedParentFolders(AddFilesInFolders(assets, true));
+            var toBeCommited = filesInFolders;// filesInFolders.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal || Directory.Exists(a));
             return
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
                 base.Delete(Missing(filesInFolders), OperationMode.Normal) &&
@@ -203,6 +203,12 @@ namespace VersionControl
                 .Distinct();
         }
 
+        
+        IEnumerable<string> AddedOrUnversionedParentFolders(IEnumerable<string> assets)
+        {
+            return assets.Concat(assets.SelectMany(ParentFolders).Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned || vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Added)).Distinct();
+        }
+
         bool InUnversionedParentFolder(string asset)
         {
             return ParentFolders(asset).Any(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
@@ -223,7 +229,7 @@ namespace VersionControl
             }
             return parentFolders;
         }
-
+        
         IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets, bool versionedFoldersOnly = false)
         {
             foreach (var assetIt in new List<string>(assets))

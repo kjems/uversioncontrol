@@ -16,7 +16,7 @@ namespace VersionControl
 
         private static IVersionControlCommands CreateSVNCommands()
         {
-            return new VCCFilteredAssets(new SVNCommands());
+            return new VCCFilteredAssets(new VCCAddMetaFiles(new SVNCommands()));
         }
 
         /*private static IVersionControlCommands CreateAppDomainSVNCommands()

@@ -30,6 +30,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
@@ -54,6 +55,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\API\ObjectExtension.cs" />
     <Compile Include="Source\API\TaskExtension.cs" />
+    <Compile Include="Source\API\VCCAddMetaFiles.cs" />
     <Compile Include="Source\API\VCCommands.cs" />
     <Compile Include="Source\API\VCSettings.cs" />
     <Compile Include="Source\Backends\VersionControlFactory.cs" />

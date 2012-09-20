@@ -23,7 +23,7 @@ namespace VersionControl
             }
             return false;
         }
-
+        
         private static IEnumerable<string> ParentFolders(string asset)
         {
             const char pathSeparator = '/';

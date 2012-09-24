@@ -54,12 +54,11 @@ namespace VersionControl
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            var filesInFolders = AddedOrUnversionedParentFolders(AddFilesInFolders(assets, true));
-            var toBeCommited = filesInFolders;// filesInFolders.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal || Directory.Exists(a));
+            var filesInFolders = AddedOrUnversionedParentFolders(AddFilesInFolders(assets, true)).ToArray();
             return
                 base.Add(UnversionedInVersionedFolder(filesInFolders)) &&
                 base.Delete(Missing(filesInFolders), OperationMode.Normal) &&
-                base.Commit(ShortestFirst(toBeCommited), commitMessage) &&
+                base.Commit(ShortestFirst(filesInFolders), commitMessage) &&
                 Status(assets, StatusLevel.Local) &&
                 ReleaseLock(assets);
         }

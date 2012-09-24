@@ -34,7 +34,6 @@ namespace VersionControl
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            D.Log(assets.Aggregate((a, b) => a + ", " + b));
             return base.Commit(AddMeta(assets), commitMessage);
         }
 

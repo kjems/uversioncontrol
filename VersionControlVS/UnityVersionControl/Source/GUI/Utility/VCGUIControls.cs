@@ -109,51 +109,58 @@ namespace VersionControl.UserInterface
         {
             if (VCUtility.ValidAssetPath(assetPath))
             {
-                var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                if (ObjectUtilities.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
-                
                 bool ready = VCCommands.Instance.Ready;
-                bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
-                bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
-                bool isFolder = System.IO.Directory.Exists(assetPath);
-                bool modifiedTextAsset = VCUtility.IsTextAsset(assetPath) && assetStatus.fileStatus != VCFileStatus.Normal;
-                bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
-                bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
-                bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
-                bool added = assetStatus.fileStatus == VCFileStatus.Added;
-                bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
-                bool ignored = assetStatus.fileStatus == VCFileStatus.Ignored;
-                bool replaced = assetStatus.fileStatus == VCFileStatus.Replaced;
-                bool lockedByOther = assetStatus.lockStatus == VCLockStatus.LockedOther;
-                bool managedByRep = VCUtility.ManagedByRepository(assetStatus);
-                bool haveControl = VCUtility.HaveAssetControl(assetStatus);
-                bool haveLock = VCUtility.HaveVCLock(assetStatus);
-                bool bypass = assetStatus.bypassRevisionControl;
-                bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
+                if (ready)
+                {
+                    var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+                    if (ObjectUtilities.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
+                    
+                    bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
+                    bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
+                    bool isFolder = System.IO.Directory.Exists(assetPath);
+                    bool modifiedTextAsset = VCUtility.IsTextAsset(assetPath) && assetStatus.fileStatus != VCFileStatus.Normal;
+                    bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
+                    bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
+                    bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
+                    bool added = assetStatus.fileStatus == VCFileStatus.Added;
+                    bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
+                    bool ignored = assetStatus.fileStatus == VCFileStatus.Ignored;
+                    bool replaced = assetStatus.fileStatus == VCFileStatus.Replaced;
+                    bool lockedByOther = assetStatus.lockStatus == VCLockStatus.LockedOther;
+                    bool managedByRep = VCUtility.ManagedByRepository(assetStatus);
+                    bool haveControl = VCUtility.HaveAssetControl(assetStatus);
+                    bool haveLock = VCUtility.HaveVCLock(assetStatus);
+                    bool bypass = assetStatus.bypassRevisionControl;
+                    bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
 
-                bool showAdd = ready && !pending && !ignored && unversioned;
-                bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
-                bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
-                bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
-                bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
-                bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
-                bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
-                bool showUnlock = ready && !pending && !ignored && !bypass && haveLock;
-                bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
-                bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
-                bool showDisconnect = isPrefab && !isPrefabParent;
+                    bool showAdd = ready && !pending && !ignored && unversioned;
+                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && (!lockedByOther || bypass);
+                    bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
+                    bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
+                    bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
+                    bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
+                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock;
+                    bool showUnlock = ready && !pending && !ignored && !bypass && haveLock;
+                    bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
+                    bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
+                    bool showDisconnect = isPrefab && !isPrefabParent;
 
-                if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
-                if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
-                if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance ));
-                if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
-                if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
-                if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));
-                if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
-                if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
-                if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
-                if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));
+                    if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
+                    if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] {assetPath}));
+                    if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance));
+                    if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
+                    if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
+                    if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
+                    if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] {assetPath}));
+                    if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
+                    if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] {assetPath}));
+                    if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
+                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] {assetPath}));
+                }
+                else
+                {
+                    menu.AddDisabledItem(new GUIContent("..Busy.."));
+                }
             }
         }
 

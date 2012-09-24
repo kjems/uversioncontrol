@@ -166,12 +166,20 @@ namespace VersionControl.UserInterface
                     {
                         refreshInProgress = true;
                         VCCommands.Instance.ClearDatabase();
-                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose).ContinueWithOnNextUpdate(t => refreshInProgress = false);
+                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose).ContinueWithOnNextUpdate(t =>
+                        {
+                            refreshInProgress = false;
+                            RefreshGUI();
+                        });
                     }
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
                         updateInProgress = true;
-                        VCCommands.Instance.UpdateTask().ContinueWithOnNextUpdate(t => updateInProgress = false);
+                        VCCommands.Instance.UpdateTask().ContinueWithOnNextUpdate(t =>
+                        {
+                            updateInProgress = false;
+                            RefreshGUI();
+                        });
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))
                     {

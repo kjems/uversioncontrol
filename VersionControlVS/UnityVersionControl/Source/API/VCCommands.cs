@@ -127,6 +127,7 @@ namespace VersionControl
             if (ThreadUtility.IsMainThread())
             {
                 ignoreStatusRequests = true;
+                D.Log("Flusing files");
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
                 ignoreStatusRequests = false;

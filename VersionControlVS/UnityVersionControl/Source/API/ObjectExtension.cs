@@ -40,7 +40,7 @@ namespace VersionControl
         {
             return sceneObjectToAssetPath(obj);
         }
-        private static System.Func<Object, string> sceneObjectToAssetPath = o => o.GetAssetPath();
+        private static System.Func<Object, string> sceneObjectToAssetPath = o => null;
 
         public static bool ChangesStoredInScene(Object obj)
         {

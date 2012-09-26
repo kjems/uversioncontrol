@@ -28,7 +28,7 @@ namespace VersionControl.UserInterface
 
         private Func<string, VersionControlStatus, bool> guiFilter;
         private Func<string, VersionControlStatus, bool> baseFilter;
-        
+
         private static VersionControlStatus GetAssetStatus(string assetPath)
         {
             return VCCommands.Instance.GetAssetStatus(assetPath);
@@ -40,7 +40,7 @@ namespace VersionControl.UserInterface
         }
 
         public VCMultiColumnAssetList()
-        {            
+        {
             Initialize();
             VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
@@ -93,16 +93,16 @@ namespace VersionControl.UserInterface
                 GenericMenu menu = new GenericMenu();
                 if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First());
                 else VCGUIControls.CreateVCContextMenu(ref menu, selected);
-                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a));
+                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a)).ToArray();
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Show in Project"), false, () =>
                 {
-                    Selection.objects = selectedObjs.ToArray();
+                    Selection.objects = selectedObjs;
                     EditorGUIUtility.PingObject(Selection.activeObject);
                 });
                 menu.AddItem(new GUIContent("Show on Harddisk"), false, () =>
                 {
-                    Selection.objects = selectedObjs.ToArray();
+                    Selection.objects = selectedObjs;
                     EditorApplication.ExecuteMenuItem((Application.platform == RuntimePlatform.OSXEditor ? "Assets/Reveal in Finder" : "Assets/Show in Explorer"));
                 });
                 return menu;

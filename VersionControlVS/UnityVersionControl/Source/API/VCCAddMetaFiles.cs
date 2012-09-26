@@ -14,6 +14,7 @@ namespace VersionControl
     public class VCCAddMetaFiles : VCCDecorator
     {
         public const string meta = ".meta";
+        private const string projectSettingsFolder = "ProjectSettings/";
 
         public VCCAddMetaFiles(IVersionControlCommands vcc) : base(vcc) { }
 
@@ -76,7 +77,7 @@ namespace VersionControl
         {
             if (assets == null || !assets.Any()) return assets;
             return assets
-                .Where(ap => !ap.EndsWith(meta))
+                .Where(ap => !ap.EndsWith(meta) && !ap.StartsWith(projectSettingsFolder))
                 .Select(ap => ap + meta)
                 .Concat(assets)
                 .Distinct()

@@ -143,7 +143,7 @@ internal static class MultiColumnView
             bool bHover = r.Contains(Event.current.mousePosition);
             Action<Vector2> dragAction = v => { mvcOption.widthTable[cell.text] = Mathf.Max(mvcOption.widthTable[cell.text] + v.x, dragResize); };
 
-            ListViewCell(r, () => action(columnIt), dragAction, selectedFunc, bHover, cell, mvcOption.headerStyle, mvcOption.headerRightClickMenu(columnIt));
+            ListViewCell(r, () => action(columnIt), dragAction, selectedFunc, bHover, cell, mvcOption.headerStyle, () => mvcOption.headerRightClickMenu(columnIt));
             x += width;
         }
     }
@@ -163,18 +163,18 @@ internal static class MultiColumnView
             var content = contentIt.Current;
 
             var r = new Rect(x, rect.y, width, rect.height);
-            ListViewCell(r, action, _ => { }, selectedFunc, bHover, content, mvcOption.rowStyle, mvcOption.rowRightClickMenu());
+            ListViewCell(r, action, _ => { }, selectedFunc, bHover, content, mvcOption.rowStyle, mvcOption.rowRightClickMenu);
             x += width;
         }
     }
 
-    static void ListViewCell(Rect rect, Action action, Action<Vector2> dragAction, Func<bool> selectedFunc, bool bHover, GUIContent content, GUIStyle style, GenericMenu contextMenu)
+    static void ListViewCell(Rect rect, Action action, Action<Vector2> dragAction, Func<bool> selectedFunc, bool bHover, GUIContent content, GUIStyle style, Func<GenericMenu> contextMenu)
     {
         int id = GUIUtility.GetControlID(listViewCellHash, FocusType.Native);
         Event e = Event.current;
         switch (e.GetTypeForControl(id))
         {
-            case EventType.ContextClick: ListViewCellContext(id, e, rect, contextMenu); break;
+            case EventType.ContextClick: ListViewCellContext(id, e, rect, contextMenu()); break;
             case EventType.MouseDown: ListViewCellMouseDown(id, e, rect, action); break;
             case EventType.MouseUp: ListViewCellMouseUp(id, e, rect, action); break;
             case EventType.MouseDrag: ListViewCellMouseDrag(id, e, rect, dragAction); break;

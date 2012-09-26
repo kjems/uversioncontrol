@@ -122,7 +122,7 @@ namespace VersionControl.UserInterface
             GUI.SetNextControlName("CommitMessage");
             using (GUILayoutHelper.BackgroundColor(CommitMessage.Length < 10 ? new Color(1, 0, 0) : new Color(0, 1, 0)))
             {
-                CommitMessage = GUILayout.TextField(CommitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+                CommitMessage = EditorGUILayout.TextField(CommitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             }
             if (firstTime)
             {

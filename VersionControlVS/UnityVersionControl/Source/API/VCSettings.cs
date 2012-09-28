@@ -21,7 +21,7 @@ namespace VersionControl
             hierarchyIcons = EditorPrefs.GetBool("VCSSettings/hierarchyIcons", true);
             hierarchyReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/hierarchyReflectionMode", (int)EReflectionLevel.Remote);
             projectIcons = EditorPrefs.GetBool("VCSSettings/projectIcons", true);
-            projectReflectionMode = (int)EReflectionLevel.Local;//(EReflectionLevel)EditorPrefs.GetInt("VCSSettings/projectReflectionMode", (int)EReflectionLevel.Local);
+            projectReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/projectReflectionMode", (int)EReflectionLevel.Local);
             bugReport = EditorPrefs.GetBool("VCSSettings/bugReport", true);
             bugReportMode = (EBugReportMode)EditorPrefs.GetInt("VCSSettings/bugReportMode", (int)EBugReportMode.Manual);
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention

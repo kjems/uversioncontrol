@@ -5,11 +5,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
-using VersionControl.UserInterface;
-
 
 namespace VersionControl
 {
+    using Extensions;
     /*[InitializeOnLoad]
     internal static class GameObjectToAssetPathCache
     {
@@ -61,38 +60,41 @@ namespace VersionControl
         }
     }
 
-    internal static class ObjectExtension
+    namespace Extensions
     {
-        public static VersionControlStatus GetAssetStatus(this Object obj)
+        public static class ObjectExtension
         {
-            return VCCommands.Instance.GetAssetStatus(GetAssetPath(obj));
-        }
-
-        public static IEnumerable<string> ToAssetPaths(this IEnumerable<Object> objects)
-        {
-            return objects.Select<UnityEngine.Object, string>(GetAssetPath).ToList();
-        }
-
-        public static IEnumerable<string> ToAssetPaths(this Object obj)
-        {
-            return new[] { obj.GetAssetPath() };
-        }
-
-        // The caching of AssetPaths caused too many problems with cache getting out of date.
-        // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
-        public static string GetAssetPath(this Object obj)
-        {
-            return ObjectUtilities.ObjectToAssetPath(obj);
-            /*
-            if (obj == null) return "";
-            string assetPath;
-            if (!GameObjectToAssetPathCache.TryGetValue(obj, out assetPath))
+            public static VersionControlStatus GetAssetStatus(this Object obj)
             {
-                assetPath = ObjectToAssetPath(obj);
-                GameObjectToAssetPathCache.Add(obj, assetPath);                
+                return VCCommands.Instance.GetAssetStatus(GetAssetPath(obj));
             }
-            return assetPath;
-            */
+
+            public static IEnumerable<string> ToAssetPaths(this IEnumerable<Object> objects)
+            {
+                return objects.Select<UnityEngine.Object, string>(GetAssetPath).ToList();
+            }
+
+            public static IEnumerable<string> ToAssetPaths(this Object obj)
+            {
+                return new[] {obj.GetAssetPath()};
+            }
+
+            // The caching of AssetPaths caused too many problems with cache getting out of date.
+            // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
+            public static string GetAssetPath(this Object obj)
+            {
+                return ObjectUtilities.ObjectToAssetPath(obj);
+                /*
+                if (obj == null) return "";
+                string assetPath;
+                if (!GameObjectToAssetPathCache.TryGetValue(obj, out assetPath))
+                {
+                    assetPath = ObjectToAssetPath(obj);
+                    GameObjectToAssetPathCache.Add(obj, assetPath);                
+                }
+                return assetPath;
+                */
+            }
         }
     }
 }

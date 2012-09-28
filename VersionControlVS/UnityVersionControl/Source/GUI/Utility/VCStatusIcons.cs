@@ -3,10 +3,10 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using UnityEngine;
 using UnityEditor;
-using System.Linq;
 
 namespace VersionControl.UserInterface
 {
+    using Extensions;
     [InitializeOnLoad]
     internal static class VCStatusIcons
     {

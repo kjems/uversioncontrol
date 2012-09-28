@@ -13,6 +13,7 @@ using System.Linq;
 
 namespace VersionControl
 {
+    using Extensions;
     public static class VCUtility
     {
         public static System.Action<Object> onHierarchyReverted;

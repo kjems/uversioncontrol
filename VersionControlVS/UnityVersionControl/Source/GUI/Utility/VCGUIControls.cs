@@ -2,9 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
-using System;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -12,6 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace VersionControl.UserInterface
 {
+    using Extensions;
     public static class VCGUIControls
     {
         private static GUIStyle GetPrefabToolbarStyle(GUIStyle style, bool vcRelated)

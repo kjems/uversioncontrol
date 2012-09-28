@@ -6,10 +6,10 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using VersionControl.UserInterface;
 
 namespace VersionControl
 {
+    using Extensions;
     public static class EditableManager
     {
         public static bool IsEditable(Object obj)

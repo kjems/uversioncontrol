@@ -4,7 +4,6 @@
 
 // This script includes menu items for common VC operations
 
-using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -12,6 +11,7 @@ using System.Linq;
 
 namespace VersionControl
 {
+    using Extensions;
     internal class VCMenuItems : ScriptableObject
     {
         private static IEnumerable<string> GetAssetPathsOfSelected()

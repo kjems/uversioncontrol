@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace VersionControl.UserInterface
 {
+    using Extensions;
+
     [InitializeOnLoad]
     internal class VCRendererInspector
     {

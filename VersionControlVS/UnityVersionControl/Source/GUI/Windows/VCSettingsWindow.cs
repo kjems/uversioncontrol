@@ -89,7 +89,7 @@ namespace VersionControl.UserInterface
                 using (GUILayoutHelper.Horizontal())
                 {
                     VCSettings.ProjectIcons = GUILayout.Toggle(VCSettings.ProjectIcons, new GUIContent("Project Icons(?)", "Show Version Control controls in project view\nDefault: On"));
-                    //VCSettings.ProjectReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.ProjectReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                    VCSettings.ProjectReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.ProjectReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
             }
             GUILayout.Label("Commit Window", EditorStyles.boldLabel);

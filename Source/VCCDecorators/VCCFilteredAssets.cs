@@ -70,7 +70,8 @@ namespace VersionControl
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            return base.Revert(NonNormal(ShortestFirst(assets)));
+            assets = ShortestFirst(assets);
+            return assets.Any() ? base.Revert(assets) : true;
         }
 
         public override bool Delete(IEnumerable<string> assets, OperationMode mode)
@@ -154,10 +155,6 @@ namespace VersionControl
         IEnumerable<string> Missing(IEnumerable<string> assets)
         {
             return assets.Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Missing);
-        }
-        IEnumerable<string> NonNormal(IEnumerable<string> assets)
-        {
-            return assets.Where(a => vcc.GetAssetStatus(a).fileStatus != VCFileStatus.Normal);
         }
         IEnumerable<string> Normal(IEnumerable<string> assets)
         {

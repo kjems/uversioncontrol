@@ -19,9 +19,17 @@ namespace VersionControl.UserInterface
             VCCommands.Instance.StatusCompleted += SceneView.RepaintAll;
         }
 
+        static void Refresh()
+        {
+            VCUtility.RequestStatus(EditorApplication.currentScene, VCSettings.HierarchyReflectionMode);
+            SceneView.RepaintAll();
+        }
+
         static void SceneViewUpdate(SceneView sceneView)
         {
             if (!VCSettings.SceneviewGUI || !VCCommands.Active || !VCUtility.ValidAssetPath(EditorApplication.currentScene)) return;
+
+            VCUtility.RequestStatus(EditorApplication.currentScene, VCSettings.HierarchyReflectionMode);
 
             var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
             buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 70};

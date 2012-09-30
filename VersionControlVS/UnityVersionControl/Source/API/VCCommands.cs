@@ -76,7 +76,10 @@ namespace VersionControl
         {
             if (Active)
             {
-                StatusTask(StatusLevel.Local, DetailLevel.Normal);
+                bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
+                var statusLevel = remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local;
+                var detailLevel = remoteProjectReflection ? DetailLevel.Verbose : DetailLevel.Normal;
+                StatusTask(statusLevel, detailLevel)/*.ContinueWithOnNextUpdate(t => vcc.Start())*/;
                 vcc.Start();
             }
         }

@@ -25,27 +25,11 @@ namespace VersionControl.UserInterface
 
         }
 
-        private static void RequestStatus(string assetPath, VCSettings.EReflectionLevel reflectionLevel)
-        {
-            if (VCSettings.VCEnabled)
-            {
-                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
-                {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
-                }
-                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
-                {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Previous);
-                }
-            }
-        }
-
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
             var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
-            RequestStatus(AssetDatabase.GUIDToAssetPath(guid), VCSettings.ProjectReflectionMode);
+            VCUtility.RequestStatus(AssetDatabase.GUIDToAssetPath(guid), VCSettings.ProjectReflectionMode);
             DrawIcon(selectionRect, obj, IconUtils.circleIcon);
         }
 
@@ -59,7 +43,7 @@ namespace VersionControl.UserInterface
 
             if (obj.GetAssetPath() != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs) ) )
             {
-                RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
+                VCUtility.RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
                 DrawIcon(selectionRect, obj, GetHierarchyIcon(obj));
             }
         }

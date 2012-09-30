@@ -106,6 +106,22 @@ namespace VersionControl
             if (onHierarchyBypass != null) onHierarchyBypass(obj);
         }
 
+        public static void RequestStatus(string assetPath, VCSettings.EReflectionLevel reflectionLevel)
+        {
+            if (VCSettings.VCEnabled)
+            {
+                VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
+                }
+                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
+                {
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Previous);
+                }
+            }
+        }
+
         public static bool VCDialog(string command, Object obj)
         {
             return VCDialog(command, obj.ToAssetPaths());

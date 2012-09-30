@@ -23,7 +23,7 @@ namespace VersionControl.UserInterface
         const float toolbarHeight = 18.0f;
         const float inStatusHeight = 18.0f;
         private readonly Color activeColor = new Color(0.8f, 0.8f, 1.0f);
-        
+
         // State
         private bool showUnversioned = true;
         private bool showMeta = true;
@@ -37,7 +37,7 @@ namespace VersionControl.UserInterface
 
         // Cache
         private Vector2 statusScroll = Vector2.zero;
-        
+
 
         [MenuItem("UVC/Overview Window", false, 1)]
         public static void Init()
@@ -142,7 +142,7 @@ namespace VersionControl.UserInterface
             {
                 if (Event.current.keyCode == KeyCode.F5)
                 {
-                    VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Verbose);
+                    RefreshStatus();
                     Event.current.Use();
                 }
                 if (Event.current.keyCode == KeyCode.Delete)
@@ -151,6 +151,19 @@ namespace VersionControl.UserInterface
                     Event.current.Use();
                 }
             }
+        }
+
+        private void RefreshStatus()
+        {
+            refreshInProgress = true;
+            bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
+            VCCommands.Instance.ClearDatabase();
+            VCCommands.Instance.StatusTask(remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local, DetailLevel.Verbose).ContinueWithOnNextUpdate(t =>
+            {
+                refreshInProgress = false;
+                RefreshGUI();
+            });
+
         }
 
         private void DrawToolbar()
@@ -164,13 +177,7 @@ namespace VersionControl.UserInterface
                 {
                     if (GUILayout.Button(Terminology.status, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        refreshInProgress = true;
-                        VCCommands.Instance.ClearDatabase();
-                        VCCommands.Instance.StatusTask(StatusLevel.Remote, DetailLevel.Verbose).ContinueWithOnNextUpdate(t =>
-                        {
-                            refreshInProgress = false;
-                            RefreshGUI();
-                        });
+                        RefreshStatus();
                     }
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {

@@ -220,13 +220,8 @@ namespace VersionControl.Backend.SVN
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
-            lock (statusDatabaseLockToken)
-            {
-                foreach (var assetIt in assets)
-                {
-                    statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
-                }
-            }
+            
+            SetPending(assets);
             lock (requestQueueLockToken)
             {
                 foreach (var assetIt in assets)
@@ -373,6 +368,20 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
+        private void SetPending(IEnumerable<string> assets)
+        {
+            lock (statusDatabaseLockToken)
+            {
+                foreach (var assetIt in assets)
+                {
+                    if (GetAssetStatus(assetIt).reflectionLevel != VCReflectionLevel.Pending)
+                    {
+                        statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
+                    }
+                }
+            }
+        }
+
         private void AddToRemoteStatusQueue(string asset)
         {
             //D.Log("Remote Req : " + asset);
@@ -412,6 +421,7 @@ namespace VersionControl.Backend.SVN
                     }
                 }
             }
+            SetPending(assets);
             return true;
         }
 

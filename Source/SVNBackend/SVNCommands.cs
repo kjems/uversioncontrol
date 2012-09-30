@@ -376,7 +376,9 @@ namespace VersionControl.Backend.SVN
                 {
                     if (GetAssetStatus(assetIt).reflectionLevel != VCReflectionLevel.Pending)
                     {
-                        statusDatabase[assetIt] = new VersionControlStatus { assetPath = assetIt, reflectionLevel = VCReflectionLevel.Pending };
+                        var status = statusDatabase[assetIt];
+                        status.reflectionLevel = VCReflectionLevel.Pending;
+                        statusDatabase[assetIt] = status;
                     }
                 }
             }

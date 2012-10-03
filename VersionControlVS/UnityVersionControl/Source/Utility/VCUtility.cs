@@ -190,7 +190,7 @@ namespace VersionControl
 
         public static bool HaveAssetControl(VersionControlStatus assetStatus)
         {
-            return HaveVCLock(assetStatus) || assetStatus.bypassRevisionControl || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying;
+            return HaveVCLock(assetStatus) || assetStatus.bypassRevisionControl || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying;
         }
 
         public static bool HaveAssetControl(string assetPath)

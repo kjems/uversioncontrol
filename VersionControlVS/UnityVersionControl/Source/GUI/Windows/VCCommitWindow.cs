@@ -11,29 +11,37 @@ namespace VersionControl.UserInterface
 {
     internal class VCCommitWindow : EditorWindow
     {
-        public static void Init()
-        {
-            GetWindow<VCCommitWindow>("Commit");
-        }
+        // Const
+        const float minimumControlHeight = 50;
 
+        // State
         public IEnumerable<string> commitedFiles = new List<string>();
-
+        
+        private IEnumerable<string> assetPaths = new List<string>();
+        private IEnumerable<string> depedencyAssetPaths = new List<string>();
+        private bool firstTime = true;
+        private bool commitInProgress = false;
+        private bool commitCompleted = false;
+        private string commitProgress = "";
+        private float commitMessageHeight;
         private string commitMessage = null;
         private string CommitMessage
         {
             get { return commitMessage ?? (commitMessage = EditorPrefs.GetString("VCCommitWindow/CommitMessage", "")); }
             set { commitMessage = value; EditorPrefs.SetString("VCCommitWindow/CommitMessage", commitMessage); }
         }
-
-        bool firstTime = true;
-        bool commitInProgress = false;
-        bool commitCompleted = false;
-        string commitProgress = "";
-        Vector2 scrollViewVectorLog = Vector2.zero;
-
-        IEnumerable<string> assetPaths = new List<string>();
-        IEnumerable<string> depedencyAssetPaths = new List<string>();
+        
+        // Cache
+        private Vector2 scrollViewVectorLog = Vector2.zero;
+        private Vector2 statusScroll = Vector2.zero;
+        private Rect rect;
+        
         VCMultiColumnAssetList vcMultiColumnAssetList;
+
+        public static void Init()
+        {
+            GetWindow<VCCommitWindow>("Commit");
+        }
 
         public void SetAssetPaths(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
@@ -74,6 +82,8 @@ namespace VersionControl.UserInterface
         private void OnEnable()
         {
             minSize = new Vector2(250,100);
+            commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 1000.0f);
+            rect = new Rect(0, commitMessageHeight, position.width, 10.0f);
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
             UpdateFilteringOfKeys();
             VCCommands.Instance.StatusCompleted += StatusCompleted;
@@ -81,39 +91,49 @@ namespace VersionControl.UserInterface
         
         private void OnDisable()
         {
+            EditorPrefs.SetFloat("VCCommitWindow/commitMessageHeight", commitMessageHeight);
             vcMultiColumnAssetList.Dispose();
         }
-
+        
         private void OnGUI()
         {
             EditorGUILayout.BeginVertical();
-            if (commitInProgress)
-            {
-                scrollViewVectorLog = EditorGUILayout.BeginScrollView(scrollViewVectorLog, false, false);
-                DrawProgress();
-                EditorGUILayout.EndScrollView();
-                if (commitCompleted)
-                {
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button("Close"))
-                    {
-                        Close();
-                    }
-                }
-            }
-            else
-            {
-                vcMultiColumnAssetList.DrawGUI();
-                DrawButtons();
-            }
+            if (commitInProgress) CommitProgressGUI();
+            else CommitMessageGUI();
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawProgress()
+        private void CommitProgressGUI()
         {
+            scrollViewVectorLog = EditorGUILayout.BeginScrollView(scrollViewVectorLog, false, false);
             GUILayout.TextArea(commitProgress);
+            EditorGUILayout.EndScrollView();
+            if (commitCompleted)
+            {
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Close"))
+                {
+                    Close();
+                }
+            }
         }
 
+        private void CommitMessageGUI()
+        {
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeVertical);
+            rect = GUIControls.DragButton(rect, GUIContent.none, null);
+            rect.x = 0.0f;
+            rect.width = position.width;
+            commitMessageHeight = rect.y = Mathf.Clamp(rect.y, minimumControlHeight, position.height - minimumControlHeight);
+
+            GUILayout.BeginArea(new Rect(0, 0, position.width, rect.y));
+            vcMultiColumnAssetList.DrawGUI();
+            GUILayout.EndArea();
+
+            GUILayout.BeginArea(new Rect(0, rect.y, position.width, position.height - rect.y));
+            DrawButtons();
+            GUILayout.EndArea();
+        }
 
         private void DrawButtons()
         {
@@ -122,7 +142,9 @@ namespace VersionControl.UserInterface
             GUI.SetNextControlName("CommitMessage");
             using (GUILayoutHelper.BackgroundColor(CommitMessage.Length < 10 ? new Color(1, 0, 0) : new Color(0, 1, 0)))
             {
-                CommitMessage = EditorGUILayout.TextField(CommitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+                statusScroll = EditorGUILayout.BeginScrollView(statusScroll, false, false);
+                CommitMessage = EditorGUILayout.TextArea(CommitMessage, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                EditorGUILayout.EndScrollView();
             }
             if (firstTime)
             {

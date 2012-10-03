@@ -36,8 +36,8 @@ namespace VersionControl
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = NonPending(InVersionedFolder(NonEmpty(assets))).ToList();
-            return assets.Any() ? base.Status(assets, statusLevel) : false;
+            assets = InVersionedFolder(NonEmpty(assets)).ToArray();
+            return assets.Any() ? base.Status(assets, statusLevel) : true;
         }
 
         public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
@@ -88,7 +88,7 @@ namespace VersionControl
             catch(VCLockedByOther e)
             {
                 D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a,b) => a + ", " + b) + "\n" + e.Message);
-                Status(assets, StatusLevel.Remote);
+                RequestStatus(assets, StatusLevel.Remote);
                 return false;
             }
         }
@@ -106,13 +106,13 @@ namespace VersionControl
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
             assets = Versioned(NonEmpty(assets));
-            return assets.Any() ? base.ChangeListAdd(assets, changelist) : false;
+            return assets.Any() ? (base.ChangeListAdd(assets, changelist) && Status(assets, StatusLevel.Local) ) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
             assets = Versioned(OnChangeList(NonEmpty(assets)));
-            return assets.Any() ? base.ChangeListRemove(Versioned(OnChangeList(assets))) : false;
+            return assets.Any() ? base.ChangeListRemove(Versioned(OnChangeList(assets))) && Status(assets, StatusLevel.Local) : false;
         }
 
         public override bool Move(string from, string to)
@@ -123,11 +123,6 @@ namespace VersionControl
         }
 
         #region Filters
-
-        IEnumerable<string> NonPending(IEnumerable<string> assets)
-        {
-            return assets.Where(a => vcc.GetAssetStatus(a).reflectionLevel != VCReflectionLevel.Pending);
-        }
         IEnumerable<string> NonEmpty(IEnumerable<string> assets)
         {
             return assets.Where(a => !string.IsNullOrEmpty(a));

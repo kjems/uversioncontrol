@@ -9,7 +9,8 @@ namespace VersionControl
     [InitializeOnLoad]
     internal sealed class VCRefreshEditable
     {
-        private static Object selectedObject;
+        private static int previousSelectionHash = 0;
+        private static Object[] previousSelection;
 
         static VCRefreshEditable()
         {
@@ -20,7 +21,7 @@ namespace VersionControl
 
         static void RefreshGUI()
         {
-            selectedObject = null;
+            previousSelectionHash = 0;
             RefreshEditable();
         }
 
@@ -37,21 +38,48 @@ namespace VersionControl
             }
         }
 
+        private static int GetSelectionHash(ref Object[] selection)
+        {
+            int hash = 0;
+            foreach (var selectionIt in selection)
+            {
+                hash ^= selectionIt.GetHashCode();
+            }
+            return hash;
+        }
+
         private static void RefreshEditable()
         {
-            if (selectedObject != Selection.activeObject)
+            Object[] selection = Selection.objects;
+            if (selection == null || selection.Length == 0)
+            {
+                previousSelectionHash = 0;
+            }
+            else if (previousSelectionHash != GetSelectionHash(ref selection))
             {
                 // Make previous selection editable so objects are never left in readonly state
-                MakeEditable(selectedObject);
-                selectedObject = Selection.activeObject;
-                if (selectedObject is Material)
+                if (previousSelection != null && previousSelection.Length > 0)
                 {
-                    EditableManager.RefreshEditableMaterial(selectedObject as Material);
+                    foreach (var selectionIt in previousSelection)
+                    {
+                        MakeEditable(selectionIt);
+                    }
                 }
-                else if (selectedObject is GameObject)
+
+                foreach (var selectionIt in selection)
                 {
-                    EditableManager.RefreshEditableObject(selectedObject as GameObject);
+                    if (selectionIt is Material)
+                    {
+                        EditableManager.RefreshEditableMaterial(selectionIt as Material);
+                    }
+                    else if (selectionIt is GameObject)
+                    {
+                        EditableManager.RefreshEditableObject(selectionIt as GameObject);
+                    }
                 }
+
+                previousSelection = selection;
+                previousSelectionHash = GetSelectionHash(ref selection);
             }
         }
     }

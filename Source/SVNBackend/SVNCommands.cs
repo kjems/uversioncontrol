@@ -65,7 +65,7 @@ namespace VersionControl.Backend.SVN
             {
                 D.ThrowException(e);
             }
-            if(!requestRefreshLoopStop) RefreshLoop();
+            if (!requestRefreshLoopStop) RefreshLoop();
         }
 
         private void StartRefreshLoop()
@@ -184,8 +184,7 @@ namespace VersionControl.Backend.SVN
                     foreach (var statusIt in db)
                     {
                         var status = statusIt.Value;
-                        if (statusLevel == StatusLevel.Remote) status.reflectionLevel = VCReflectionLevel.Repository;
-                        if (statusLevel == StatusLevel.Local) status.reflectionLevel = VCReflectionLevel.Local;
+                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
                         statusDatabase[statusIt.Key] = status;
                     }
                 }
@@ -202,11 +201,15 @@ namespace VersionControl.Backend.SVN
         {
             if (!active) return false;
 
-            if(statusLevel == StatusLevel.Previous)
+            if (statusLevel == StatusLevel.Previous)
             {
+                statusLevel = StatusLevel.Local;
                 foreach (var assetIt in assets)
                 {
-                    statusLevel = GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Repository ? StatusLevel.Remote : StatusLevel.Local;
+                    if (GetAssetStatus(assetIt).reflectionLevel == VCReflectionLevel.Repository && statusLevel == StatusLevel.Local)
+                    {
+                        statusLevel = StatusLevel.Remote;
+                    }
                 }
             }
 
@@ -220,14 +223,15 @@ namespace VersionControl.Backend.SVN
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
             else arguments += " --depth=empty ";
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
-            
+
             SetPending(assets);
+
             lock (requestQueueLockToken)
             {
                 foreach (var assetIt in assets)
                 {
                     if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
-                    if (statusLevel == StatusLevel.Local) localRequestQueue.Remove(assetIt);
+                    localRequestQueue.Remove(assetIt);
                 }
             }
 
@@ -242,12 +246,13 @@ namespace VersionControl.Backend.SVN
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
                 lock (statusDatabaseLockToken)
                 {
+                    //D.Assert(db.Count() == assets.Count(), "It is expected that the status results are as many as the requests");
                     foreach (var statusIt in db)
                     {
                         var status = statusIt.Value;
-                        if (statusLevel == StatusLevel.Remote) status.reflectionLevel = VCReflectionLevel.Repository;
-                        if (statusLevel == StatusLevel.Local) status.reflectionLevel = VCReflectionLevel.Local;
+                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
                         statusDatabase[statusIt.Key] = status;
+                        //D.Log(statusIt.Key + " set to " + status.reflectionLevel.ToString());
                     }
                 }
                 OnStatusCompleted();
@@ -381,19 +386,20 @@ namespace VersionControl.Backend.SVN
                         statusDatabase[assetIt] = status;
                     }
                 }
+                //D.Log("Set Pending : " + assets.Aggregate((a, b) => a + ", " + b));
             }
         }
 
         private void AddToRemoteStatusQueue(string asset)
         {
             //D.Log("Remote Req : " + asset);
-            if(!remoteRequestQueue.Contains(asset)) remoteRequestQueue.Add(asset);
+            if (!remoteRequestQueue.Contains(asset)) remoteRequestQueue.Add(asset);
         }
 
         private void AddToLocalStatusQueue(string asset)
         {
             //D.Log("Local Req : " + asset);
-            if(!localRequestQueue.Contains(asset)) localRequestQueue.Add(asset);
+            if (!localRequestQueue.Contains(asset)) localRequestQueue.Add(asset);
         }
 
         public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
@@ -414,7 +420,7 @@ namespace VersionControl.Backend.SVN
                     {
                         AddToLocalStatusQueue(assetIt);
                     }
-                    else if(statusLevel == StatusLevel.Previous)
+                    else if (statusLevel == StatusLevel.Previous)
                     {
                         if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
                         else if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);

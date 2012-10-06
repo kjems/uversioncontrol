@@ -39,6 +39,8 @@ namespace VersionControl
     {
         void Start();
         void Stop();
+        void ActivateRefreshLoop();
+        void DeactivateRefreshLoop();
         bool IsReady();
         void SetWorkingDirectory(string workingDirectory);
         void SetUserCredentials(string userName, string password);

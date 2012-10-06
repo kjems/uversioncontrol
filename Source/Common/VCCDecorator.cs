@@ -33,6 +33,16 @@ namespace VersionControl
             vcc.Stop();
         }
 
+        public virtual void ActivateRefreshLoop()
+        {
+            vcc.ActivateRefreshLoop();
+        }
+
+        public virtual void DeactivateRefreshLoop()
+        {
+            vcc.DeactivateRefreshLoop();
+        }
+
         public virtual bool IsReady()
         {
             return vcc.IsReady();

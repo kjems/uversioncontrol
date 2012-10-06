@@ -28,6 +28,7 @@ namespace VersionControl.Backend.SVN
         private readonly List<string> localRequestQueue = new List<string>();
         private readonly List<string> remoteRequestQueue = new List<string>();
         private volatile bool active = false;
+        private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
 
         public SVNCommands()
@@ -56,7 +57,7 @@ namespace VersionControl.Backend.SVN
                 while (!requestRefreshLoopStop)
                 {
                     Thread.Sleep(200);
-                    if (active) RefreshStatusDatabase();
+                    if (active && refreshLoopActive) RefreshStatusDatabase();
                 }
             }
             catch (ThreadAbortException) { }
@@ -81,6 +82,7 @@ namespace VersionControl.Backend.SVN
         private void TerminateRefreshLoop()
         {
             active = false;
+            refreshLoopActive = false;
             requestRefreshLoopStop = true;
             if (currentExecutingOperation != null)
             {
@@ -98,11 +100,22 @@ namespace VersionControl.Backend.SVN
         {
             active = true;
         }
-
+        
         public void Stop()
         {
             active = false;
         }
+
+        public void ActivateRefreshLoop()
+        {
+            refreshLoopActive = true;
+        }
+
+        public void DeactivateRefreshLoop()
+        {
+            refreshLoopActive = false;
+        }
+
 
         private void RefreshStatusDatabase()
         {
@@ -188,6 +201,14 @@ namespace VersionControl.Backend.SVN
                         statusDatabase[statusIt.Key] = status;
                     }
                 }
+                lock (requestQueueLockToken)
+                {
+                    foreach (var assetIt in db.Keys)
+                    {
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
+                        localRequestQueue.Remove(assetIt);
+                    }
+                }
                 OnStatusCompleted();
             }
             catch (XmlException)
@@ -225,16 +246,7 @@ namespace VersionControl.Backend.SVN
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
 
             SetPending(assets);
-
-            lock (requestQueueLockToken)
-            {
-                foreach (var assetIt in assets)
-                {
-                    if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
-                    localRequestQueue.Remove(assetIt);
-                }
-            }
-
+            
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
@@ -246,13 +258,19 @@ namespace VersionControl.Backend.SVN
                 var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
                 lock (statusDatabaseLockToken)
                 {
-                    //D.Assert(db.Count() == assets.Count(), "It is expected that the status results are as many as the requests");
                     foreach (var statusIt in db)
                     {
                         var status = statusIt.Value;
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
                         statusDatabase[statusIt.Key] = status;
-                        //D.Log(statusIt.Key + " set to " + status.reflectionLevel.ToString());
+                    }
+                }
+                lock (requestQueueLockToken)
+                {
+                    foreach (var assetIt in db.Keys)
+                    {
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
+                        localRequestQueue.Remove(assetIt);
                     }
                 }
                 OnStatusCompleted();
@@ -536,6 +554,7 @@ namespace VersionControl.Backend.SVN
 
         public void ClearDatabase()
         {
+            D.Log("ClearDatabase");
             lock (statusDatabaseLockToken)
             {
                 statusDatabase.Clear();

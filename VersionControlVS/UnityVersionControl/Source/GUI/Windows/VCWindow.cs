@@ -157,9 +157,11 @@ namespace VersionControl.UserInterface
         {
             refreshInProgress = true;
             bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
+            VCCommands.Instance.DeactivateRefreshLoop();
             VCCommands.Instance.ClearDatabase();
             VCCommands.Instance.StatusTask(remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local, DetailLevel.Verbose).ContinueWithOnNextUpdate(t =>
             {
+                VCCommands.Instance.ActivateRefreshLoop();
                 refreshInProgress = false;
                 RefreshGUI();
             });

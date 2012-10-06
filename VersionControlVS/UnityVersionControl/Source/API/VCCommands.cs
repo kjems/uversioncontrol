@@ -79,15 +79,26 @@ namespace VersionControl
                 bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
                 var statusLevel = remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local;
                 var detailLevel = remoteProjectReflection ? DetailLevel.Verbose : DetailLevel.Normal;
-                StatusTask(statusLevel, detailLevel)/*.ContinueWithOnNextUpdate(t => vcc.Start())*/;
                 vcc.Start();
+                StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t => ActivateRefreshLoop());
             }
         }
 
         public void Stop()
         {
             vcc.Stop();
+            vcc.DeactivateRefreshLoop();
             vcc.ClearDatabase();
+        }
+
+        public void ActivateRefreshLoop()
+        {
+            vcc.ActivateRefreshLoop();
+        }
+
+        public void DeactivateRefreshLoop()
+        {
+            vcc.DeactivateRefreshLoop();
         }
 
 
@@ -253,7 +264,7 @@ namespace VersionControl
             if (ignoreStatusRequests) return false;
             return vcc.RequestStatus(assets, statusLevel);
         }
-        
+
         public bool Update(IEnumerable<string> assets)
         {
             return HandleExceptions(() =>
@@ -289,7 +300,7 @@ namespace VersionControl
                 FlushFiles();
                 Status(assets.ToList(), StatusLevel.Local);
                 bool revertSuccess = vcc.Revert(assets);
-                bool changeListRemoveSuccess =  vcc.ChangeListRemove(assets);
+                bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
                 bool releaseSuccess = true;
                 if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
                 RefreshAssetDatabase();

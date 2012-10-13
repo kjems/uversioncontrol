@@ -8,6 +8,8 @@ using VersionControl;
 
 internal static class FogbugzUtilities
 {
+    private const int maxRetryCount = 5;
+
     public static void SubmitAutoBug(string title, string description)
     {
         SubmitBug("https://uversioncontrol.fogbugz.com/scoutSubmit.asp", "Kristian Kjems", "AutoReports", "Default", title, description, "", false);
@@ -18,7 +20,7 @@ internal static class FogbugzUtilities
         SubmitBug("https://uversioncontrol.fogbugz.com/scoutSubmit.asp", "Kristian Kjems", "Inbox", "Undecided", title, description, email, true);
     }
 
-    public static void SubmitBug(string url, string username, string project, string area, string description, string extra, string email, bool forceNewBug = false)
+    public static void SubmitBug(string url, string username, string project, string area, string description, string extra, string email, bool forceNewBug = false, int retryCount = 0)
     {
         string bugUrl = string.Format("{0}?Description={1}&Extra={2}&Email={3}&ScoutUserName={4}&ScoutProject={5}&ScoutArea={6}&ForceNewBug={7}",
             url,
@@ -35,9 +37,21 @@ internal static class FogbugzUtilities
         ContinuationManager.Add(() => www.isDone, () =>
         {
             bool success = string.IsNullOrEmpty(www.error) && www.text.Contains("<Success>");
-            string message = success ? "Bug successfully reported to the 'Unity Version Control' FogBugz database." : "Bug report failed:\n" + www.error + www.text;
-            D.Log(message + "\n" + www.text);
-            EditorUtility.DisplayDialog("Bug Report " + (success?"Success":"Failed"), message, "Close");
+            if (success)
+            {
+                D.Log("Bug successfully reported to the 'Unity Version Control' FogBugz database.");
+            }
+            else
+            {
+                if (retryCount <= maxRetryCount)
+                {
+                    SubmitBug(url, username, project, area, description, extra, email, forceNewBug, ++retryCount);
+                }
+                else
+                {
+                    D.LogError("Bug report failed:\n" + www.error);
+                }
+            }
         });
     }
 }

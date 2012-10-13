@@ -554,7 +554,6 @@ namespace VersionControl.Backend.SVN
 
         public void ClearDatabase()
         {
-            D.Log("ClearDatabase");
             lock (statusDatabaseLockToken)
             {
                 statusDatabase.Clear();

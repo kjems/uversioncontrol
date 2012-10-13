@@ -5,6 +5,7 @@ obj
 # Auto generated files
 .suo
 _ReSharper
+.user
 
 # Compiled assemblies
 Assemblies/debug

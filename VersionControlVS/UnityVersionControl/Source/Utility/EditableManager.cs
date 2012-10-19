@@ -12,15 +12,15 @@ namespace VersionControl
     using Extensions;
     public static class EditableManager
     {
-        public static bool IsEditable(Object obj)
+        private static bool IsEditable(Object obj)
         {
             return (obj.hideFlags & HideFlags.NotEditable) == 0;
         }
 
-        public static void SetEditable(Object obj, bool editable)
+        internal static void SetEditable(Object obj, bool editable)
         {
             //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
-            if (obj == null) return;
+            if (obj == null || AvoidGUILock(obj)) return;
             if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
             if (!editable && IsEditable(obj)) obj.hideFlags |= HideFlags.NotEditable;
         }
@@ -53,14 +53,11 @@ namespace VersionControl
 
         internal static void RefreshEditableMaterial(Material material)
         {
-            if (AvoidGUILock(material)) return;
             SetEditable(material, VCUtility.HaveAssetControl(material.GetAssetStatus()));
         }
 
         internal static void RefreshEditableObject(GameObject gameObject)
         {
-            if (AvoidGUILock(gameObject)) return;
-
             bool editable = ShouleBeEditable(gameObject);
             bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(EditorApplication.currentScene);
             SetEditable(gameObject, editable || (PrefabHelper.IsPrefabRoot(gameObject) && parentEditable));
@@ -84,6 +81,7 @@ namespace VersionControl
             else // Treat as scene object
             {
                 string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
+                if (scenePath == "") return true;
                 var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
                 bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
                 bool lockScene = LockScene(scenePath);

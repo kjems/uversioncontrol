@@ -48,6 +48,18 @@ namespace VersionControl
             return hash;
         }
 
+        private static void MakePreviousEditable()
+        {
+            // Make previous selection editable so objects are never left in readonly state
+            if (previousSelection != null && previousSelection.Length > 0)
+            {
+                foreach (var selectionIt in previousSelection)
+                {
+                    MakeEditable(selectionIt);
+                }
+            }
+        }
+
         private static void RefreshEditable()
         {
             Object[] selection = Selection.objects;
@@ -57,15 +69,7 @@ namespace VersionControl
             }
             else if (previousSelectionHash != GetSelectionHash(ref selection))
             {
-                // Make previous selection editable so objects are never left in readonly state
-                if (previousSelection != null && previousSelection.Length > 0)
-                {
-                    foreach (var selectionIt in previousSelection)
-                    {
-                        MakeEditable(selectionIt);
-                    }
-                }
-
+                MakePreviousEditable();
                 foreach (var selectionIt in selection)
                 {
                     if (selectionIt is Material)

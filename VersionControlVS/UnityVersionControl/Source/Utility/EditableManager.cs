@@ -53,7 +53,10 @@ namespace VersionControl
 
         internal static void RefreshEditableMaterial(Material material)
         {
-            SetEditable(material, VCUtility.HaveAssetControl(material.GetAssetStatus()));
+            if (!string.IsNullOrEmpty(material.GetAssetPath()))
+            {
+                SetEditable(material, VCUtility.HaveAssetControl(material.GetAssetStatus()));
+            }
         }
 
         internal static void RefreshEditableObject(GameObject gameObject)
@@ -106,10 +109,13 @@ namespace VersionControl
         private static void SetMaterialLock(Material material, bool gameObjectLocked)
         {
             var assetPath = AssetDatabase.GetAssetPath(material);
-            var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-            bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
-            bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
-            SetEditable(material, !shouldLock);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+                bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
+                bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
+                SetEditable(material, !shouldLock);
+            }
         }
     }
 }

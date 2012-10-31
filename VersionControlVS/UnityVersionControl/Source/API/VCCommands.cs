@@ -190,7 +190,10 @@ namespace VersionControl
         public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
-            return StartTask(() => Update(assets));
+            EditorApplication.LockReloadAssemblies();
+            var updateTask = StartTask(() => Update(assets));
+            updateTask.ContinueWithOnNextUpdate(t => EditorApplication.UnlockReloadAssemblies());
+            return updateTask;
         }
 
         public Task<bool> AddTask(IEnumerable<string> assets)

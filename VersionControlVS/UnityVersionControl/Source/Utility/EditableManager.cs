@@ -20,9 +20,11 @@ namespace VersionControl
         internal static void SetEditable(Object obj, bool editable)
         {
             //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
-            if (obj == null || AvoidGUILock(obj)) return;
-            if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
-            if (!editable && IsEditable(obj)) obj.hideFlags |= HideFlags.NotEditable;
+            if (obj != null && !AvoidGUILock(obj) && !string.IsNullOrEmpty(obj.GetAssetPath()))
+            {
+                if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
+                if (!editable && IsEditable(obj)) obj.hideFlags |= HideFlags.NotEditable;
+            }
         }
 
         public static void AddAvoidLockCondition(System.Func<Object, bool> condition)
@@ -53,10 +55,7 @@ namespace VersionControl
 
         internal static void RefreshEditableMaterial(Material material)
         {
-            if (!string.IsNullOrEmpty(material.GetAssetPath()))
-            {
-                SetEditable(material, VCUtility.HaveAssetControl(material.GetAssetStatus()));
-            }
+            SetEditable(material, VCUtility.HaveAssetControl(material.GetAssetStatus()));
         }
 
         internal static void RefreshEditableObject(GameObject gameObject)
@@ -75,7 +74,7 @@ namespace VersionControl
             var assetPath = gameObject.GetAssetPath();
             if (assetPath == "") return true;
             var assetStatus = gameObject.GetAssetStatus();
-            if(!VCUtility.ManagedByRepository(assetStatus)) return true;
+            if (!VCUtility.ManagedByRepository(assetStatus)) return true;
             bool isPrefab = ObjectUtilities.ChangesStoredInPrefab(gameObject);
             if (isPrefab && LockPrefab(assetPath))
             {
@@ -109,13 +108,10 @@ namespace VersionControl
         private static void SetMaterialLock(Material material, bool gameObjectLocked)
         {
             var assetPath = AssetDatabase.GetAssetPath(material);
-            if (!string.IsNullOrEmpty(assetPath))
-            {
-                var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
-                bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
-                SetEditable(material, !shouldLock);
-            }
+            var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+            bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
+            bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
+            SetEditable(material, !shouldLock);
         }
     }
 }

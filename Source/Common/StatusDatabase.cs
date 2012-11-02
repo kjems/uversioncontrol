@@ -10,7 +10,7 @@ namespace VersionControl
     {
         public StatusDatabase() { }
         public StatusDatabase(IDictionary<string, VersionControlStatus> database)
-            : base(database, StringComparer.CurrentCultureIgnoreCase) { }
+            : base(database, StringComparer.OrdinalIgnoreCase) { }
 
         public new VersionControlStatus this[string key]
         {

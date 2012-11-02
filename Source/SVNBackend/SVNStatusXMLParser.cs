@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 
 namespace VersionControl.Backend.SVN
@@ -39,10 +40,22 @@ namespace VersionControl.Backend.SVN
         };
     }
     #endregion
+    
 
     public static class SVNStatusXMLParser
     {
         private const string bypassIdentifier = "bypass";
+
+        public static string DecodeFromUtf8(string utf8String)
+        {
+            byte[] utf8Bytes = new byte[utf8String.Length];
+            for (int i = 0; i < utf8String.Length; ++i)
+            {
+                D.Assert( 0 <= utf8String[i] && utf8String[i] <= 255, "the char must be in byte's range");
+                utf8Bytes[i] = (byte)utf8String[i];
+            }
+            return Encoding.UTF8.GetString(utf8Bytes, 0, utf8Bytes.Length);
+        }
 
         public static StatusDatabase SVNParseStatusXML(string svnStatusXML)
         {
@@ -60,7 +73,7 @@ namespace VersionControl.Backend.SVN
             XmlNodeList entries = xmlDoc.GetElementsByTagName("entry");
             foreach (XmlNode entryIt in entries)
             {
-                string assetPath = (entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim();
+                string assetPath = DecodeFromUtf8((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
                 var status = ParseXMLNode(entryIt);
                 status.assetPath = assetPath;
                 statusDatabase[assetPath] = status;

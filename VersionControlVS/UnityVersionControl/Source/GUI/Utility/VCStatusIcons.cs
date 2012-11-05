@@ -41,7 +41,7 @@ namespace VersionControl.UserInterface
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
             bool guiLockForPrefabs = EditableManager.LockPrefab(obj.GetAssetPath());
 
-            if (obj.GetAssetPath() != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs) ) )
+            if (obj.GetAssetPath() != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs)))
             {
                 VCUtility.RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
                 DrawIcon(selectionRect, obj, GetHierarchyIcon(obj));
@@ -72,16 +72,28 @@ namespace VersionControl.UserInterface
 
         private static Rect GetRightAligned(Rect rect, float size)
         {
-            float border = (rect.height - size);
-            rect.x = rect.x + rect.width - (border / 2.0f);
-            rect.x -= size;
-            rect.width = size;
-            rect.y = rect.y + border / 2.0f;
-            rect.height = size;
+            if (rect.height > 20)
+            {
+                // Unity 4.x large project icons
+                rect.y = rect.y - 3;
+                rect.x = rect.width + rect.x - 12;
+                rect.width = size;
+                rect.height = size;
+            }
+            else
+            {
+                // Normal icons
+                float border = (rect.height - size);
+                rect.x = rect.x + rect.width - (border / 2.0f);
+                rect.x -= size;
+                rect.width = size;
+                rect.y = rect.y + border / 2.0f;
+                rect.height = size;
+            }
             return rect;
         }
 
-        
+
 
         private static bool IsChildNode(Object obj)
         {
@@ -103,12 +115,10 @@ namespace VersionControl.UserInterface
                 string statusText = AssetStatusUtils.GetStatusText(assetStatus);
                 Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
                 Rect placement = GetRightAligned(rect, iconType.Size);
-                if (texture) GUI.DrawTexture(placement, texture);
                 var clickRect = placement;
-                clickRect.xMax += 5;
-                clickRect.xMin -= 15;
-                clickRect.yMax += 5;
-                clickRect.yMin -= 5;
+                clickRect.xMax += iconType.Size * 0.25f;
+                clickRect.xMin -= rect.width * 0.15f;
+                if (texture) GUI.DrawTexture(placement, texture);
                 if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
                 {
                     VCGUIControls.DiaplayVCContextMenu(obj, 10.0f, -40.0f, true);

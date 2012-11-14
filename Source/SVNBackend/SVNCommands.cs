@@ -378,6 +378,11 @@ namespace VersionControl.Backend.SVN
             return asset.Contains("@") ? asset + "@" : asset;
         }
 
+        private static string ReplaceCommentChar(string commitMessage)
+        {
+            return commitMessage.Replace('"', '\"');
+        }
+
         private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)
         {
             return assets.Select(a => a.Replace(workingDirectory, ""));
@@ -459,7 +464,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            return CreateAssetOperation("commit -m \"" + commitMessage + "\"", assets);
+            return CreateAssetOperation("commit -m \"" + ReplaceCommentChar(commitMessage) + "\"", assets);
         }
 
         public bool Add(IEnumerable<string> assets)

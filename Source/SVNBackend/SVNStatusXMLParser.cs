@@ -48,13 +48,9 @@ namespace VersionControl.Backend.SVN
 
         public static string DecodeFromUtf8(string utf8String)
         {
-            byte[] utf8Bytes = new byte[utf8String.Length];
-            for (int i = 0; i < utf8String.Length; ++i)
-            {
-                D.Assert( 0 <= utf8String[i] && utf8String[i] <= 255, "the char must be in byte's range");
-                utf8Bytes[i] = (byte)utf8String[i];
-            }
-            return Encoding.UTF8.GetString(utf8Bytes, 0, utf8Bytes.Length);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(utf8String);
+            byte[] unicodeBytes = Encoding.Convert(Encoding.UTF8, Encoding.Unicode, utf8Bytes);
+            return Encoding.Unicode.GetString(unicodeBytes);
         }
 
         public static StatusDatabase SVNParseStatusXML(string svnStatusXML)

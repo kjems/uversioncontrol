@@ -166,11 +166,11 @@ namespace VersionControl.Backend.SVN
             }
         }
 
-        public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             lock (statusDatabaseLockToken)
             {
-                return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter));
             }
         }
 
@@ -233,6 +233,8 @@ namespace VersionControl.Backend.SVN
                     }
                 }
             }
+
+            assets = RemoveFilesIfParentFolderInList(assets);
 
             const int assetsPerStatus = 20;
             if (assets.Count() > assetsPerStatus)
@@ -592,6 +594,7 @@ namespace VersionControl.Backend.SVN
         public event Action StatusCompleted;
         private void OnStatusCompleted()
         {
+            D.Log("DB Size : " + statusDatabase.Keys.Count); // + "\n" + statusDatabase.Keys.Aggregate((a,b) => a + ", " + b)
             if (StatusCompleted != null) StatusCompleted();
         }
     }

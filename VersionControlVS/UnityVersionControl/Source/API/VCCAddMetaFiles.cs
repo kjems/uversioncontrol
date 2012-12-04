@@ -10,6 +10,20 @@ using System.Linq;
 
 namespace VersionControl
 {
+
+    public static class VersionControlStatusExtension
+    {
+        public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
+        {
+            using (PushStateUtility.Profiler("MetaStatus"))
+            {
+                return vcs.assetPath.EndsWith(VCCAddMetaFiles.meta)
+                    ? vcs
+                    : VCCommands.Instance.GetAssetStatus(vcs.assetPath); // + VCCAddMetaFiles.meta
+            }
+        }
+    }
+
     [Serializable]
     public class VCCAddMetaFiles : VCCDecorator
     {
@@ -63,7 +77,7 @@ namespace VersionControl
             return base.Resolve(AddMeta(assets), conflictResolution);
         }
 
-        public override IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public override IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             return RemoveMetaPostFix(base.GetFilteredAssets(filter));
         }
@@ -85,9 +99,9 @@ namespace VersionControl
                 .ToArray();
         }
 
-        public static IEnumerable<string> RemoveMetaPostFix(IEnumerable<string> assets)
+        public static IEnumerable<VersionControlStatus> RemoveMetaPostFix(IEnumerable<VersionControlStatus> assets)
         {
-            return assets.Select(a => a.EndsWith(meta) ? a.Remove(a.Length - meta.Length) : a).Distinct().ToArray();
+            return assets.Where(status => !status.assetPath.EndsWith(meta));
         }
     }
 }

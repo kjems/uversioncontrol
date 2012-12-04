@@ -17,7 +17,7 @@ namespace VersionControl
         private static readonly List<string> ignoredConflicts = new List<string>();
         private static void HandleConflicts()
         {
-            var conflicts = VCCommands.Instance.GetFilteredAssets((a, s) => s.fileStatus == VCFileStatus.Conflicted || s.MetaStatus().fileStatus == VCFileStatus.Conflicted).ToArray();
+            var conflicts = VCCommands.Instance.GetFilteredAssets(s => s.fileStatus == VCFileStatus.Conflicted || s.MetaStatus().fileStatus == VCFileStatus.Conflicted).Select(status => status.assetPath).ToArray();
             if (conflicts.Any())
             {
                 foreach (var conflictIt in conflicts)

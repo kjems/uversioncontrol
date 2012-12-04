@@ -50,7 +50,6 @@ namespace VersionControl
         public static VCCommands Instance { get { Initialize(); return instance; } }
 
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
-        private List<string> lockedFileResources = new List<string>();
         private bool ignoreStatusRequests = false;
         private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
 
@@ -175,13 +174,6 @@ namespace VersionControl
             commitWindow.ShowUtility();
             return commitWindow.commitedFiles.Any();
         }
-
-        private bool RemoteHasUnloadableResourceChange()
-        {
-            var remoteChanged = GetFilteredAssets((a, s) => s.remoteStatus == VCRemoteFileStatus.Modified);
-            return lockedFileResources.Any(b => remoteChanged.Any(a => String.CompareOrdinal(a.ToLowerInvariant(), b.ToLowerInvariant()) == 0));
-        }
-
         #endregion
 
         #region IVersionControlCommands Tasks
@@ -289,11 +281,6 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
-                if (RemoteHasUnloadableResourceChange())
-                {
-                    OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
-                    return false;
-                }
                 updating = true;
                 bool updateResult = vcc.Update(assets);
                 updating = false;
@@ -471,15 +458,6 @@ namespace VersionControl
         }
 
         #endregion
-
-        /// <summary>
-        /// Add files to a list that requires Unity to be closed to update correctly. Eg. native plugins
-        /// </summary>
-        /// <param name="assets">List of assetpaths</param>
-        public void AddLockedFileResources(IEnumerable<string> assets)
-        {
-            lockedFileResources = lockedFileResources.Concat(assets).Distinct().ToList();
-        }
         public void SetPersistentObjectCallback(Func<Object, string> persistentObjectCallback)
         {
             ObjectUtilities.SetSceneObjectToAssetPathCallback(persistentObjectCallback);

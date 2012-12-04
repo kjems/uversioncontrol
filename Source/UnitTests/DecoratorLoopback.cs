@@ -35,6 +35,14 @@ namespace VersionControl.UnitTests
         {
         }
 
+        public virtual void ActivateRefreshLoop()
+        {
+        }
+
+        public virtual void DeactivateRefreshLoop()
+        {
+        }
+
         public bool IsReady()
         {
             return true;
@@ -53,9 +61,14 @@ namespace VersionControl.UnitTests
             return statusDatabase[assetPath];
         }
 
-        public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
-            return statusDatabase.Keys.Where(k => filter(k, statusDatabase[k])).ToList();
+            return statusDatabase.Values.Where(filter).ToList();
+        }
+
+        public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
+        {
+            return true;
         }
 
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)

@@ -66,7 +66,7 @@ namespace VersionControl
 
         private static void HandleCritical(VCCriticalException e)
         {
-            D.LogError("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
+            D.LogError("Exception caught! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage + "\n\nTurn Off Version Control?", "Yes", "No"))
             {
                 VCSettings.VCEnabled = false;
@@ -75,7 +75,7 @@ namespace VersionControl
 
         private static void HandleBase(VCException e)
         {
-            D.LogError("Exception catched! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
+            D.LogError("Exception caught! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
             if (VCSettings.BugReport)
             {
                 var report = EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage, "Report", "Close");

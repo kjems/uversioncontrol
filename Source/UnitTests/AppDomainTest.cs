@@ -15,12 +15,36 @@ namespace VersionControl.UnitTests
     [TestFixture]
     public class AppDomainTest
     {
-        private const string localPathForTest = @"d:\develop\Game2.4";
+        private const string localPathForTest = @"c:\develop\Game2.4";
+
+        [SetUp]
+        void Setup()
+        {
+            D.writeErrorCallback += Logging;
+            D.exceptionCallback += HandleExceptions;
+        }
+
+        [TearDown]
+        void TearDown()
+        {
+            D.writeErrorCallback -= Logging;
+            D.exceptionCallback -= HandleExceptions;
+        }
+
+        static void HandleExceptions(Exception e)
+        {
+            throw e;
+        }
+        static void Logging(string message)
+        {
+            Console.WriteLine(message);
+        }
+
 
         [Test]
         public void TestStatus()
         {
-            var vcc = new VCCFilteredAssets(CreateAppDomainSVNCommands());
+            var vcc = new VCCFilteredAssets(CreateSVNCommands());
             vcc.SetWorkingDirectory(localPathForTest);
             Directory.SetCurrentDirectory(localPathForTest);
             vcc.ProgressInformation += s => D.Log(s);
@@ -29,12 +53,33 @@ namespace VersionControl.UnitTests
         }
 
         [Test]
+        public void TestMemoryUsage()
+        {
+            var vcc = new VCCFilteredAssets(CreateSVNCommands());
+            vcc.SetWorkingDirectory(localPathForTest);
+            Directory.SetCurrentDirectory(localPathForTest);
+            vcc.ProgressInformation += s => D.Log(s);
+            vcc.Start();
+            vcc.Status(StatusLevel.Remote, DetailLevel.Verbose);
+
+            var assets = vcc.GetFilteredAssets(status =>
+                {
+                    VersionControlStatus metaStatus = status;
+                    if(!status.assetPath.EndsWith(".meta"))
+                    {
+                        metaStatus = vcc.GetAssetStatus(status.assetPath + ".meta");
+                    }
+                    return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
+                });
+
+            Logging(assets.Select(status => status.assetPath).Aggregate((a,b) => a + "\n" + b));
+
+            Logging("Memory Used : " + GC.GetTotalMemory(true));
+        }
+
+        [Test]
         public void TestAppDomainUnload()
         {
-            //D.writeLogCallback += Console.WriteLine;
-            D.writeErrorCallback += s => Console.WriteLine("ERROR: " + s);
-            D.exceptionCallback += exception => { throw exception; };
-
             for (int i = 0; i < 5; i++)
             {
                 var vcc = SetupAppDomain();
@@ -59,11 +104,12 @@ namespace VersionControl.UnitTests
             return new VCCFilteredAssets(svnCommands);
         }
 
+        
+
         private void QueueWork(IVersionControlCommands vcc)
         {
             var files = Directory.GetFiles(localPathForTest, "*.asset", SearchOption.AllDirectories).Select(s => s.Replace("\\", "/"));
-            vcc.SetStatusRequestRule(files, StatusLevel.Remote);
-            vcc.RequestStatus(files);
+            vcc.RequestStatus(files, StatusLevel.Remote);
         }
 
         private static AppDomain svnDomain = null;

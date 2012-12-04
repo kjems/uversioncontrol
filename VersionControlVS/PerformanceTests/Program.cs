@@ -56,7 +56,7 @@ namespace PerformanceTests
 
         static void RunMemoryTestComplex()
         {
-            var assets = vcc.GetFilteredAssets(status =>
+            var assets = vcc.GetFilteredAssets((assetPath, status) =>
             {
                 VersionControlStatus metaStatus = status;
                 if (!status.assetPath.EndsWith(".meta"))
@@ -66,14 +66,14 @@ namespace PerformanceTests
                 return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
             });
 
-            Logging(assets.Select(status => status.assetPath).Aggregate((a, b) => a + "\n" + b));
+            Logging(assets.Aggregate((a, b) => a + "\n" + b));
             Logging("Memory Used Complex: " + GC.GetTotalMemory(true));
         }
 
         static void RunMemoryTestSimple()
         {
-            var assets = vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
-            Logging(assets.Select(status => status.assetPath).Aggregate((a, b) => a + "\n" + b));
+            var assets = vcc.GetFilteredAssets((assetPath, status) => (status.fileStatus != VCFileStatus.Normal));
+            Logging(assets.Aggregate((a, b) => a + "\n" + b));
             Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
         }
 

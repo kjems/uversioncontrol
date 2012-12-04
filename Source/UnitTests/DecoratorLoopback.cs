@@ -61,9 +61,9 @@ namespace VersionControl.UnitTests
             return statusDatabase[assetPath];
         }
 
-        public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
+        public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
         {
-            return statusDatabase.Values.Where(filter).ToList();
+            return statusDatabase.Keys.Where(k => filter(k, statusDatabase[k])).ToList();
         }
 
         public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)

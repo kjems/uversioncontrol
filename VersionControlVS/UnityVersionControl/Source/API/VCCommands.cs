@@ -40,13 +40,11 @@ namespace VersionControl
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
             vcc.StatusCompleted += OnStatusCompleted;
             OnNextUpdate.Do(Start);
-            EditorApplication.playmodeStateChanged += () =>
-            {
-                if (!Application.isPlaying) Start();
-                else Stop();
-            };
+            EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
         }
 
+        private bool stopping = false;
+        private bool updating = false;
         static VCCommands instance;
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
@@ -128,6 +126,25 @@ namespace VersionControl
                 D.Log("VC Action ignored due to not being active");
             }
             return false;
+        }
+
+        private void OnPlaymodeStateChanged()
+        {
+            if (updating)
+            {
+                if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode && !stopping)
+                {
+                    stopping = true;
+                    EditorApplication.isPlaying = false;
+                    D.Log("Playmode canceled because and update is in progress");
+                }
+                stopping = false;
+            }
+            else
+            {
+                if (!Application.isPlaying) Start();
+                else Stop();
+            }
         }
 
         private bool RefreshAssetDatabase()
@@ -268,7 +285,7 @@ namespace VersionControl
             return vcc.RequestStatus(assets, statusLevel);
         }
 
-        public bool Update(IEnumerable<string> assets)
+        public bool Update(IEnumerable<string> assets = null)
         {
             return HandleExceptions(() =>
             {
@@ -277,7 +294,11 @@ namespace VersionControl
                     OnNextUpdate.Do(() => EditorUtility.DisplayDialog("Update in Unity not possible", "The server has changes to files that Unity can not reload. Close Unity and 'update' with an external version control tool.", "OK"));
                     return false;
                 }
-                return vcc.Update(assets) && RefreshAssetDatabase();
+                updating = true;
+                bool updateResult = vcc.Update(assets);
+                updating = false;
+                if(updateResult) RefreshAssetDatabase();
+                return updateResult;
             });
         }
 

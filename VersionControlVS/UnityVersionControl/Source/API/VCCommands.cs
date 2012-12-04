@@ -135,7 +135,7 @@ namespace VersionControl
                 {
                     stopping = true;
                     EditorApplication.isPlaying = false;
-                    D.Log("Playmode canceled because and update is in progress");
+                    SceneView.lastActiveSceneView.ShowNotification(new GUIContent("Playmode cancelled because Version Control 'Update' is in progress"));
                 }
                 stopping = false;
             }

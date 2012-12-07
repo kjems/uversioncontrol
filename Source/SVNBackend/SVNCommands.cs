@@ -221,7 +221,6 @@ namespace VersionControl.Backend.SVN
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (!active) return false;
-
             if (statusLevel == StatusLevel.Previous)
             {
                 statusLevel = StatusLevel.Local;
@@ -233,7 +232,7 @@ namespace VersionControl.Backend.SVN
                     }
                 }
             }
-
+            if(statusLevel == StatusLevel.Remote) assets = RemoveFilesIfParentFolderInList(assets);
             const int assetsPerStatus = 20;
             if (assets.Count() > assetsPerStatus)
             {
@@ -580,7 +579,7 @@ namespace VersionControl.Backend.SVN
         {
             var folders = assets.Where(a => Directory.Exists(a));
             assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
-            return assets;
+            return assets.ToArray();
         }
 
         public event Action<string> ProgressInformation;

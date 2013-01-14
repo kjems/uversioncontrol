@@ -19,14 +19,6 @@ namespace VersionControl
         static VCCommandsOnLoad() { OnNextUpdate.Do(VCCommands.Initialize); }
     }
 
-    public static class VersionControlStatusExtension
-    {
-        public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
-        {
-            return VCCommands.Instance.GetAssetStatus(vcs.assetPath + VCCAddMetaFiles.meta);
-        }
-    }
-
     /// <summary>
     /// Wraps the underlying IVersionControlCommands and add handling of .meta files and other Unity specific concerns.
     /// OnNextUpdate.Do is used to delay callback actions to the next Unity update as Unity does not allow calls into UnityEngine
@@ -250,9 +242,12 @@ namespace VersionControl
         {
             return vcc.GetAssetStatus(assetPath);
         }
-        public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
-            return vcc.GetFilteredAssets(filter);
+            using (PushStateUtility.Profiler("GetFilteredAssets"))
+            {
+                return vcc.GetFilteredAssets(filter);
+            }
         }
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
@@ -279,10 +274,8 @@ namespace VersionControl
 
         public bool Update(IEnumerable<string> assets = null)
         {
-            return HandleExceptions(() =>
-            {
                 updating = true;
-                bool updateResult = vcc.Update(assets);
+                if (RemoteHasUnloadableResourceChange())
                 updating = false;
                 if(updateResult) RefreshAssetDatabase();
                 return updateResult;
@@ -422,7 +415,7 @@ namespace VersionControl
 
         private void OnStatusCompleted()
         {
-            //D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0));
+            OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
         }
 

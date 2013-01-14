@@ -97,11 +97,11 @@ namespace VersionControl
                 if (!string.IsNullOrEmpty(Application.loadedLevelName)) description += "\n\nScene Name: " + Application.loadedLevelName;
                 var conflicts =
                     VCCommands.Instance.GetFilteredAssets(
-                        (a, svnStatus) =>
+                        svnStatus =>
                         svnStatus.treeConflictStatus != VCTreeConflictStatus.Normal || svnStatus.fileStatus == VCFileStatus.Conflicted ||
                         svnStatus.fileStatus == VCFileStatus.Obstructed);
 
-                if (conflicts != null && conflicts.Any()) description += "\n\nSVN Conflicts:\n" + conflicts.Aggregate((a, b) => a + "\n" + b);
+                if (conflicts != null && conflicts.Any()) description += "\n\nSVN Conflicts:\n" + conflicts.Select(status => status.assetPath).Aggregate((a, b) => a + "\n" + b);
 
                 FogbugzUtilities.SubmitAutoBug(title, description);
             }

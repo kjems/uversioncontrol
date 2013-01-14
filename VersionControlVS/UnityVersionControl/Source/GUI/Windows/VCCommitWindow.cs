@@ -49,14 +49,15 @@ namespace VersionControl.UserInterface
             assetPaths = assets.ToList();
             depedencyAssetPaths = dependencies.ToList();
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
             Profiler.EndSample();
         }
 
-        private bool BaseFilter(string key, VersionControlStatus vcStatus)
+        private bool BaseFilter(VersionControlStatus vcStatus)
         {
             using (PushStateUtility.Profiler("CommitWindow::BaseFilter"))
             {
+                string key = vcStatus.assetPath;
                 key = key.EndsWith(VCCAddMetaFiles.meta) ? key.Remove(key.Length - VCCAddMetaFiles.meta.Length) : key;
                 var metaStatus = vcStatus.MetaStatus();
                 bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
@@ -75,7 +76,7 @@ namespace VersionControl.UserInterface
 
         private void StatusCompleted()
         {
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
             Repaint();
         }
 

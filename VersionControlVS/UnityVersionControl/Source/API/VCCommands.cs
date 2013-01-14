@@ -274,12 +274,11 @@ namespace VersionControl
 
         public bool Update(IEnumerable<string> assets = null)
         {
-                updating = true;
-                if (RemoteHasUnloadableResourceChange())
-                updating = false;
-                if(updateResult) RefreshAssetDatabase();
-                return updateResult;
-            });
+            updating = true;
+            bool updateResult = vcc.Update(assets);
+            updating = false;
+            if (updateResult) RefreshAssetDatabase();
+            return updateResult;
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")

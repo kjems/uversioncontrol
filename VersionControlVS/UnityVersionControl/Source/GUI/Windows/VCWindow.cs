@@ -47,8 +47,6 @@ namespace VersionControl.UserInterface
 
         private bool GUIFilter(VersionControlStatus vcStatus)
         {
-            if (!vcStatus.Reflected) return false;
-
             var metaStatus = vcStatus.MetaStatus();
             bool unversioned = vcStatus.fileStatus == VCFileStatus.Unversioned;
             bool meta = metaStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus == VCFileStatus.Normal;

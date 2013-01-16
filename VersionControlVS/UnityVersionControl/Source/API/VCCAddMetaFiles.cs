@@ -94,9 +94,9 @@ namespace VersionControl
                 .ToArray();
         }
 
-        public static IEnumerable<VersionControlStatus> RemoveMetaPostFix(IEnumerable<VersionControlStatus> assets)
+        private IEnumerable<VersionControlStatus> RemoveMetaPostFix(IEnumerable<VersionControlStatus> assets)
         {
-            return assets.Where(status => !status.assetPath.EndsWith(meta));
+            return assets.Select(status => status.assetPath.EndsWith(meta) ? base.GetAssetStatus(status.assetPath.TrimEnd(meta)) : status).Distinct().ToArray();
         }
     }
 }

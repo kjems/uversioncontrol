@@ -10,17 +10,12 @@ using System.Linq;
 
 namespace VersionControl
 {
-
     public static class VersionControlStatusExtension
     {
+        private static readonly ComposedString meta = new ComposedString(VCCAddMetaFiles.meta);
         public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
         {
-            using (PushStateUtility.Profiler("MetaStatus"))
-            {
-                return vcs.assetPath.EndsWith(VCCAddMetaFiles.meta)
-                    ? vcs
-                    : VCCommands.Instance.GetAssetStatus(vcs.assetPath); // + VCCAddMetaFiles.meta
-            }
+            return vcs.assetPath.EndsWith(meta) ? vcs : VCCommands.Instance.GetAssetStatus(vcs.assetPath + meta);
         }
     }
 

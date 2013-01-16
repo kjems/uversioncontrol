@@ -93,7 +93,7 @@ namespace VersionControl
         public VCLockStatus lockStatus = VCLockStatus.NoLock;
         public VCProperty property = VCProperty.Normal;
         public VCTreeConflictStatus treeConflictStatus = VCTreeConflictStatus.Normal;
-        public string assetPath;
+        public ComposedString assetPath;
         public string user;
         public string owner;
         public string lockToken;

@@ -13,7 +13,7 @@ namespace VersionControl.UnitTests
     public class FunctionalTest
     {
         private const string urlToEmptyRepo = @"svn://192.168.9.175:2345/unitysvn_root/FunctionalTest";
-        private const string workingDirectoryForSVNTests = @"d:\develop\VCUnitTest";
+        private const string workingDirectoryForSVNTests = @"c:\develop\VCUnitTest";
         private IVersionControlCommands vcc;
         
         public FunctionalTest()
@@ -63,7 +63,7 @@ namespace VersionControl.UnitTests
             
             vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             var status = vcc.GetAssetStatus(fileA);
-            Assert.IsTrue(status.assetPath == fileA, "AssetPath mismatch: " + status.assetPath + "!=" + fileA);
+            Assert.IsTrue(status.assetPath.ToString() == fileA, "AssetPath mismatch: " + status.assetPath.ToString() + "!=" + fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Unversioned, "Unversioned");
             
             vcc.Add(new[]{fileA});

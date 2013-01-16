@@ -240,6 +240,10 @@ namespace VersionControl
         }
         public VersionControlStatus GetAssetStatus(string assetPath)
         {
+            return vcc.GetAssetStatus(new ComposedString(assetPath));
+        }
+        public VersionControlStatus GetAssetStatus(ComposedString assetPath)
+        {
             return vcc.GetAssetStatus(assetPath);
         }
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
@@ -414,7 +418,7 @@ namespace VersionControl
 
         private void OnStatusCompleted()
         {
-            OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
+            //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
         }
 

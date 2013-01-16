@@ -45,6 +45,7 @@ namespace VersionControl
         void SetWorkingDirectory(string workingDirectory);
         void SetUserCredentials(string userName, string password);
         VersionControlStatus GetAssetStatus(string assetPath);
+        VersionControlStatus GetAssetStatus(ComposedString assetPath);
         IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter);
         bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel);
         bool Status(StatusLevel statusLevel, DetailLevel detailLevel);

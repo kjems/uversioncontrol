@@ -94,15 +94,15 @@ namespace VersionControl.Backend.SVN
                 }
             }
 
-            foreach (var assetPathIt in new List<string>(statusDatabase.Keys))
+            foreach (var assetPathIt in new List<ComposedString>(statusDatabase.Keys))
             {
-
-                if (Directory.Exists(assetPathIt))
+                string assetPathStr = assetPathIt.ToString();
+                if (Directory.Exists(assetPathStr))
                 {
                     var status = statusDatabase[assetPathIt];
                     if (status.fileStatus == VCFileStatus.Unversioned)
                     {
-                        foreach (var unversionedIt in GetFilesInFolder(assetPathIt))
+                        foreach (var unversionedIt in GetFilesInFolder(assetPathStr))
                         {
                             var fileStatus = new VersionControlStatus
                             {

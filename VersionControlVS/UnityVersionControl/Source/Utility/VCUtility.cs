@@ -113,11 +113,11 @@ namespace VersionControl
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                 {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Remote);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Remote);
                 }
                 else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
                 {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath, StatusLevel.Previous);
+                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Previous);
                 }
             }
         }
@@ -169,11 +169,14 @@ namespace VersionControl
             EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
         }
 
-        public static bool IsTextAsset(string assetPath)
+        static readonly List<ComposedString> textPostfix = new List<ComposedString> { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml" };
+        static readonly List<ComposedString> textPostfixTextSerialization = new List<ComposedString> { ".unity", ".prefab", ".mat" };
+        public static bool IsTextAsset(ComposedString assetPath)
         {
-            var textPostfix = new List<string> { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml" };
-            if (EditorSettings.serializationMode == SerializationMode.ForceText) textPostfix.AddRange(new[] { ".unity", ".prefab", ".mat" });
-            return textPostfix.Any(assetPath.EndsWith);
+            bool textAsset = textPostfix.Any(assetPath.EndsWith);
+            if (EditorSettings.serializationMode == SerializationMode.ForceText)
+                textAsset |= textPostfixTextSerialization.Any(assetPath.EndsWith);
+            return textAsset;
         }
 
         public static bool HaveVCLock(VersionControlStatus assetStatus)
@@ -205,7 +208,7 @@ namespace VersionControl
         
         public static bool ManagedByRepository(VersionControlStatus assetStatus)
         {
-            return assetStatus.fileStatus != VCFileStatus.Unversioned && !System.String.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;
+            return assetStatus.fileStatus != VCFileStatus.Unversioned && !ComposedString.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;
         }
 
         public static bool ManagedByRepository(string assetPath)

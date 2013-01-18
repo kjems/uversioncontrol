@@ -7,14 +7,14 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 
-using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
-using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<string>;
+using MultiColumnState = MultiColumnState<VersionControl.VersionControlStatus, UnityEngine.GUIContent>;
+using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<VersionControl.VersionControlStatus>;
 
 namespace VersionControl.UserInterface
 {
     internal class VCMultiColumnAssetList : IDisposable
     {
-        private IEnumerable<string> interrestingKeys = new List<string>();
+        private IEnumerable<VersionControlStatus> interrestingStatus;
         private MultiColumnState multiColumnState;
         private MultiColumnViewOption options;
 
@@ -26,8 +26,8 @@ namespace VersionControl.UserInterface
         private MultiColumnState.Column columnConflict;
         private MultiColumnState.Column columnChangelist;
 
-        private Func<string, VersionControlStatus, bool> guiFilter;
-        private Func<string, VersionControlStatus, bool> baseFilter;
+        private Func<VersionControlStatus, bool> guiFilter;
+        private Func<VersionControlStatus, bool> baseFilter;
 
         private static VersionControlStatus GetAssetStatus(string assetPath)
         {
@@ -62,16 +62,16 @@ namespace VersionControl.UserInterface
 
         private void Initialize()
         {
-            baseFilter = (k, s) => false;
-            guiFilter = (k, s) => true;
+            baseFilter = s => false;
+            guiFilter = s => true;
 
-            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data));
-            columnOwner = new MultiColumnState.Column(new GUIContent("Owner"), data => new GUIContent(GetAssetStatus(data).owner, GetAssetStatus(data).lockToken));
-            columnFileStatus = new MultiColumnState.Column(new GUIContent("Status"), data => GetFileStatusContent(GetAssetStatus(data)));
-            columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(GetMetaStatus(data)));
-            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data)));
-            columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(GetAssetStatus(data).treeConflictStatus.ToString()));
-            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(GetAssetStatus(data).changelist));
+            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.ToString())); // TODO: Performance issue by running ToString every visual update
+            columnOwner = new MultiColumnState.Column(new GUIContent("Owner"), data => new GUIContent(data.owner, data.lockToken));
+            columnFileStatus = new MultiColumnState.Column(new GUIContent("Status"), GetFileStatusContent);
+            columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(data.MetaStatus()));
+            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.ToString()))); // TODO: Performance issue by running ToString every visual update
+            columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
+            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist));
 
             var editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
             multiColumnState = new MultiColumnState();
@@ -88,12 +88,12 @@ namespace VersionControl.UserInterface
 
             Func<GenericMenu> rowRightClickMenu = () =>
             {
-                var selected = multiColumnState.GetSelected();
+                var selected = multiColumnState.GetSelected().Select(status => status.assetPath);
                 if (!selected.Any()) return new GenericMenu();
                 GenericMenu menu = new GenericMenu();
-                if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First());
-                else VCGUIControls.CreateVCContextMenu(ref menu, selected);
-                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a)).ToArray();
+                if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First().ToString());
+                else VCGUIControls.CreateVCContextMenu(ref menu, selected.ToString());
+                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a.ToString())).ToArray();
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Show in Project"), false, () =>
                 {
@@ -122,12 +122,12 @@ namespace VersionControl.UserInterface
                 rowRightClickMenu = rowRightClickMenu,
                 headerRightClickMenu = headerRightClickMenu,
                 widths = new float[] { 200 },
-                doubleClickAction = assetPath =>
+                doubleClickAction = status =>
                 {
-                    if (VCUtility.IsTextAsset(assetPath) && VCUtility.ManagedByRepository(GetAssetStatus(assetPath)))
-                        VCUtility.DiffWithBase(assetPath);
+                    if (VCUtility.IsTextAsset(status.assetPath) && VCUtility.ManagedByRepository(status))
+                        VCUtility.DiffWithBase(status.assetPath.ToString());
                     else
-                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(assetPath));
+                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.ToString()));
                 }
             };
 
@@ -156,25 +156,24 @@ namespace VersionControl.UserInterface
             options.widthTable.Add(columnConflict.GetHeader().text, 80);
         }
 
-        public void SetBaseFilter(Func<string, VersionControlStatus, bool> baseFilter)
+        public void SetBaseFilter(Func<VersionControlStatus, bool> newBaseFilter)
         {
-            this.baseFilter = baseFilter;
+            baseFilter = newBaseFilter;
             RefreshBaseFilter();
         }
 
-        public void SetGUIFilter(Func<string, VersionControlStatus, bool> guiFilter)
+        public void SetGUIFilter(Func<VersionControlStatus, bool> newGUIFilter)
         {
-            this.guiFilter = guiFilter;
+            guiFilter = newGUIFilter;
             RefreshGUIFilter();
         }
 
         private void RefreshBaseFilter()
         {
             Profiler.BeginSample("MultiColumnAssetList::RefreshBaseFilter");
-
-            interrestingKeys = VCCommands.Instance.GetFilteredAssets(baseFilter);
+            interrestingStatus = VCCommands.Instance.GetFilteredAssets(baseFilter);
+            //D.Log("RefreshBaseFilter, interrestingStatus.Count : " + interrestingStatus.Count());
             RefreshGUIFilter();
-
             Profiler.EndSample();
         }
 
@@ -187,13 +186,13 @@ namespace VersionControl.UserInterface
         public void RefreshGUIFilter()
         {
             Profiler.BeginSample("MultiColumnAssetList::RefreshGUIFilter");
-            multiColumnState.Refresh(interrestingKeys.Where(k => guiFilter(k, GetAssetStatus(k))).ToList());
+            multiColumnState.Refresh(interrestingStatus.Where(status => guiFilter(status)));
             Profiler.EndSample();
         }
 
-        public IEnumerable<string> GetSelectedAssets()
+        public IEnumerable<ComposedString> GetSelectedAssets()
         {
-            return multiColumnState.GetSelected();
+            return multiColumnState.GetSelected().Select(status => status.assetPath);
         }
 
         public void ForEachRow(Action<MultiColumnState.Row> action)

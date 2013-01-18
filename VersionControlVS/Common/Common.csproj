@@ -41,6 +41,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Source\Common\ComposedString.cs">
+      <Link>Source\ComposedString.cs</Link>
+    </Compile>
     <Compile Include="..\..\Source\Common\IVersionControlCommands.cs">
       <Link>Source\IVersionControlCommands.cs</Link>
     </Compile>

@@ -62,7 +62,7 @@ namespace VersionControl.UnitTests
             vcc.Start();
             vcc.Status(StatusLevel.Remote, DetailLevel.Verbose);
 
-            var assets = vcc.GetFilteredAssets((assetPath, status) =>
+            var assets = vcc.GetFilteredAssets(status =>
                 {
                     VersionControlStatus metaStatus = status;
                     if(!status.assetPath.EndsWith(".meta"))
@@ -72,7 +72,7 @@ namespace VersionControl.UnitTests
                     return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
                 });
 
-            Logging(assets.Aggregate((a,b) => a + "\n" + b));
+            Logging(assets.Select(s => s.assetPath.ToString()).Aggregate((a,b) => a + "\n" + b));
 
             Logging("Memory Used : " + GC.GetTotalMemory(true));
         }

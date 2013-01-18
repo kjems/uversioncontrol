@@ -63,7 +63,12 @@ namespace VersionControl
             return vcc.GetAssetStatus(assetPath);
         }
 
-        public virtual IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public virtual VersionControlStatus GetAssetStatus(ComposedString assetPath)
+        {
+            return vcc.GetAssetStatus(assetPath);
+        }
+
+        public virtual IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             return vcc.GetFilteredAssets(filter);
         }

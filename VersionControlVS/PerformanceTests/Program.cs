@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,16 +13,17 @@ namespace PerformanceTests
     {
         static readonly IVersionControlCommands vcc = new VCCFilteredAssets(CreateSVNCommands());
         private const string localPathForTest = @"c:\develop\Game2.4";
-
+        static readonly ComposedString meta = new ComposedString(".meta");
         static void Main(string[] args)
         {
             Initialize();
+            var sw = Stopwatch.StartNew();
             for (int i = 0; i < 10; ++i)
             {
                 RunMemoryTestComplex();
                 RunMemoryTestSimple();
             }
-            Logging("Test Finished!");
+            Logging("Test Finished in " + sw.ElapsedMilliseconds + "ms");
         }
 
         static void Initialize()
@@ -56,25 +58,24 @@ namespace PerformanceTests
 
         static void RunMemoryTestComplex()
         {
-            var assets = vcc.GetFilteredAssets((assetPath, status) =>
+            var assets = vcc.GetFilteredAssets(status =>
             {
                 VersionControlStatus metaStatus = status;
-                if (!status.assetPath.EndsWith(".meta"))
+                if (!status.assetPath.EndsWith(meta))
                 {
-                    metaStatus = vcc.GetAssetStatus(status.assetPath + ".meta");
+                    metaStatus = vcc.GetAssetStatus(status.assetPath + meta);
                 }
                 return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
             });
-
-            Logging(assets.Aggregate((a, b) => a + "\n" + b));
-            Logging("Memory Used Complex: " + GC.GetTotalMemory(true));
+            //Logging(assets.Select(s => s.assetPath).Aggregate((a, b) => a + "\n" + b));
+            //Logging("Memory Used Complex: " + GC.GetTotalMemory(true));
         }
 
         static void RunMemoryTestSimple()
         {
-            var assets = vcc.GetFilteredAssets((assetPath, status) => (status.fileStatus != VCFileStatus.Normal));
-            Logging(assets.Aggregate((a, b) => a + "\n" + b));
-            Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
+            var assets = vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
+            //Logging(assets.Select(s => s.assetPath).Aggregate((a, b) => a + "\n" + b));
+            //Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
         }
 
     }

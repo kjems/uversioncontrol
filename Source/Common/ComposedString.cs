@@ -13,6 +13,8 @@ namespace VersionControl
         private static readonly Dictionary<string, int> stringToIndex = new Dictionary<string, int>();
         private static readonly Dictionary<string, List<int>> stringToIndicies = new Dictionary<string, List<int>>();
 
+        private static readonly object constructorLockToken = new object();
+
         public static List<string> GetStringListCopy()
         {
             return new List<string>(stringList);
@@ -44,27 +46,30 @@ namespace VersionControl
         public ComposedString(ComposedString cstr) { indices = new List<int>(cstr.indices); }
         public ComposedString(string str)
         {
-            if (!stringToIndicies.TryGetValue(str, out indices))
+            lock (constructorLockToken)
             {
-                indices = new List<int>();
-                var parts = Regex.Split(str, regexSplit, RegexOptions.Compiled).Where(s => !string.IsNullOrEmpty(s));
-                foreach (var part in parts)
+                if (!stringToIndicies.TryGetValue(str, out indices))
                 {
-                    int index;
-                    if (stringToIndex.TryGetValue(part, out index))
+                    indices = new List<int>();
+                    var parts = Regex.Split(str, regexSplit, RegexOptions.Compiled).Where(s => !string.IsNullOrEmpty(s));
+                    foreach (var part in parts)
                     {
-                        indices.Add(index);
+                        int index;
+                        if (stringToIndex.TryGetValue(part, out index))
+                        {
+                            indices.Add(index);
+                        }
+                        else
+                        {
+                            stringList.Add(part);
+                            int newIndex = stringList.Count - 1;
+                            indices.Add(newIndex);
+                            stringToIndex.Add(part, newIndex);
+                            //D.Log("Tokens in ComposedString : " + stringList.Count + ", " + part + "\n" + stringList.Aggregate((a, b) => a + " | " + b));
+                        }
                     }
-                    else
-                    {
-                        stringList.Add(part);
-                        int newIndex = stringList.Count - 1;
-                        indices.Add(newIndex);
-                        stringToIndex.Add(part, newIndex);
-                        //D.Log("Tokens in ComposedString : " + stringList.Count + ", " + part + "\n" + stringList.Aggregate((a, b) => a + " | " + b));
-                    }
+                    stringToIndicies.Add(str, indices);
                 }
-                stringToIndicies.Add(str, indices);
             }
         }
         public static explicit operator string(ComposedString cstr)

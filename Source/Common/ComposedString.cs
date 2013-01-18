@@ -117,7 +117,7 @@ namespace VersionControl
         }
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(Length);
             for (int i = 0, length = indices.Count; i < length; ++i)
             {
                 sb.Append(stringList[indices[i]]);

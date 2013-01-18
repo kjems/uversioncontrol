@@ -75,7 +75,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) lockMessage = Terminology.getlock + " Here: " + assetStatus.owner;
             if (assetStatus.lockStatus == VCLockStatus.NoLock)
             {
-                if (String.IsNullOrEmpty(assetStatus.assetPath)) lockMessage = "Not saved";
+                if (ComposedString.IsNullOrEmpty(assetStatus.assetPath)) lockMessage = "Not saved";
                 else if (assetStatus.fileStatus == VCFileStatus.Added) lockMessage = "Added";
                 else if (assetStatus.fileStatus == VCFileStatus.Replaced) lockMessage = "Replaced";
                 else lockMessage = VCUtility.ManagedByRepository(assetStatus) ? "Not " + Terminology.getlock : "Not on Version Control";

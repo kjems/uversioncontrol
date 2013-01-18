@@ -35,7 +35,8 @@ namespace VersionControl
         {
             var deletedInFolders = assetPaths
                 .Where(Directory.Exists)
-                .SelectMany(d => VCCommands.Instance.GetFilteredAssets((assetPath, status) => (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && assetPath.StartsWith(d)));
+                .SelectMany(d => VCCommands.Instance.GetFilteredAssets(status => (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && status.assetPath.StartsWith(d)))
+                .Select(status => status.assetPath.ToString());
             return assetPaths.Concat(deletedInFolders);
         }
 

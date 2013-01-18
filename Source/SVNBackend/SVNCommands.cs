@@ -100,7 +100,7 @@ namespace VersionControl.Backend.SVN
         {
             active = true;
         }
-        
+
         public void Stop()
         {
             active = false;
@@ -159,18 +159,23 @@ namespace VersionControl.Backend.SVN
 
         public VersionControlStatus GetAssetStatus(string assetPath)
         {
+            assetPath = assetPath.Replace("\\", "/");
+            return GetAssetStatus(new ComposedString(assetPath));
+        }
+
+        public VersionControlStatus GetAssetStatus(ComposedString assetPath)
+        {
             lock (statusDatabaseLockToken)
             {
-                assetPath = assetPath.Replace("\\", "/");
                 return statusDatabase[assetPath];
             }
         }
 
-        public IEnumerable<string> GetFilteredAssets(Func<string, VersionControlStatus, bool> filter)
+        public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             lock (statusDatabaseLockToken)
             {
-                return new List<string>(statusDatabase.Keys).Where(k => filter(k, statusDatabase[k])).ToList();
+                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter));
             }
         }
 
@@ -205,8 +210,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
-                        localRequestQueue.Remove(assetIt);
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
+                        localRequestQueue.Remove(assetIt.ToString());
                     }
                 }
                 OnStatusCompleted();
@@ -232,7 +237,8 @@ namespace VersionControl.Backend.SVN
                     }
                 }
             }
-            if(statusLevel == StatusLevel.Remote) assets = RemoveFilesIfParentFolderInList(assets);
+
+            if (statusLevel == StatusLevel.Remote) assets = RemoveFilesIfParentFolderInList(assets);
             const int assetsPerStatus = 20;
             if (assets.Count() > assetsPerStatus)
             {
@@ -245,7 +251,7 @@ namespace VersionControl.Backend.SVN
             arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
 
             SetPending(assets);
-            
+
             CommandLineOutput commandLineOutput;
             using (var svnStatusTask = CreateSVNCommandLine(arguments))
             {
@@ -268,8 +274,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt);
-                        localRequestQueue.Remove(assetIt);
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
+                        localRequestQueue.Remove(assetIt.ToString());
                     }
                 }
                 OnStatusCompleted();
@@ -591,6 +597,7 @@ namespace VersionControl.Backend.SVN
         public event Action StatusCompleted;
         private void OnStatusCompleted()
         {
+            //D.Log("DB Size : " + statusDatabase.Keys.Count); // + "\n" + statusDatabase.Keys.Aggregate((a,b) => a + ", " + b)
             if (StatusCompleted != null) StatusCompleted();
         }
     }

@@ -16,9 +16,9 @@ namespace VersionControl.UserInterface
 
         // State
         public IEnumerable<string> commitedFiles = new List<string>();
-        
-        private IEnumerable<string> assetPaths = new List<string>();
-        private IEnumerable<string> depedencyAssetPaths = new List<string>();
+
+        private IEnumerable<ComposedString> assetPaths = new List<ComposedString>();
+        private IEnumerable<ComposedString> depedencyAssetPaths = new List<ComposedString>();
         private bool firstTime = true;
         private bool commitInProgress = false;
         private bool commitCompleted = false;
@@ -30,12 +30,12 @@ namespace VersionControl.UserInterface
             get { return commitMessage ?? (commitMessage = EditorPrefs.GetString("VCCommitWindow/CommitMessage", "")); }
             set { commitMessage = value; EditorPrefs.SetString("VCCommitWindow/CommitMessage", commitMessage); }
         }
-        
+
         // Cache
         private Vector2 scrollViewVectorLog = Vector2.zero;
         private Vector2 statusScroll = Vector2.zero;
         private Rect rect;
-        
+
         VCMultiColumnAssetList vcMultiColumnAssetList;
 
         public static void Init()
@@ -45,56 +45,51 @@ namespace VersionControl.UserInterface
 
         public void SetAssetPaths(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
+            D.Log("VCCommitWindow:SetAssetPaths");
             Profiler.BeginSample("CommitWindow::SetAssetPaths");
-            assetPaths = assets.ToList();
-            depedencyAssetPaths = dependencies.ToList();
+            assetPaths = assets.Select(s => new ComposedString(s)).ToList();
+            depedencyAssetPaths = dependencies.Select(s => new ComposedString(s)).ToList();
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
             Profiler.EndSample();
         }
 
-        private bool BaseFilter(string key, VersionControlStatus vcStatus)
+        private bool BaseFilter(VersionControlStatus vcStatus)
         {
             using (PushStateUtility.Profiler("CommitWindow::BaseFilter"))
             {
-                key = key.EndsWith(VCCAddMetaFiles.meta) ? key.Remove(key.Length - VCCAddMetaFiles.meta.Length) : key;
                 var metaStatus = vcStatus.MetaStatus();
                 bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
                                     (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
                                     vcStatus.lockStatus == VCLockStatus.LockedHere;
 
                 if (!interresting) return false;
-                return (assetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase) || depedencyAssetPaths.Contains(key, System.StringComparer.InvariantCultureIgnoreCase));
+                var key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);
+                return (assetPaths.Contains(key) || depedencyAssetPaths.Contains(key));
             }
         }
-
-        private void UpdateFilteringOfKeys()
-        {
-            vcMultiColumnAssetList.RefreshGUIFilter();
-        }
-
+        
         private void StatusCompleted()
         {
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data));
+            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
             Repaint();
         }
 
         private void OnEnable()
         {
-            minSize = new Vector2(250,100);
+            minSize = new Vector2(250, 100);
             commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 1000.0f);
             rect = new Rect(0, commitMessageHeight, position.width, 10.0f);
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
-            UpdateFilteringOfKeys();
             VCCommands.Instance.StatusCompleted += StatusCompleted;
         }
-        
+
         private void OnDisable()
         {
             EditorPrefs.SetFloat("VCCommitWindow/commitMessageHeight", commitMessageHeight);
             vcMultiColumnAssetList.Dispose();
         }
-        
+
         private void OnGUI()
         {
             EditorGUILayout.BeginVertical();
@@ -158,20 +153,21 @@ namespace VersionControl.UserInterface
                 {
                     if (vcMultiColumnAssetList.GetSelectedAssets().Count() != 0)
                     {
+                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.ToString()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
                             commitProgress = s + "\n" + commitProgress;
                             Repaint();
                         };
-                        var commitTask = VCCommands.Instance.CommitTask(vcMultiColumnAssetList.GetSelectedAssets().ToList(), CommitMessage);
+                        var commitTask = VCCommands.Instance.CommitTask(selectedAssets, CommitMessage);
                         commitTask.ContinueWithOnNextUpdate(result =>
                         {
                             if (result)
                             {
-                                commitedFiles = vcMultiColumnAssetList.GetSelectedAssets();
+                                commitedFiles = selectedAssets;
                                 CommitMessage = "";
                                 Repaint();
-                                if(VCSettings.AutoCloseAfterSuccess) Close();
+                                if (VCSettings.AutoCloseAfterSuccess) Close();
                             }
                             commitCompleted = true;
                         });

@@ -14,20 +14,20 @@ namespace VersionControl
         {
             VCCommands.Instance.StatusCompleted += HandleConflicts;
         }
-        private static readonly List<string> ignoredConflicts = new List<string>();
+        private static readonly List<ComposedString> ignoredConflicts = new List<ComposedString>();
         private static void HandleConflicts()
         {
-            var conflicts = VCCommands.Instance.GetFilteredAssets((a, s) => s.fileStatus == VCFileStatus.Conflicted || s.MetaStatus().fileStatus == VCFileStatus.Conflicted).ToArray();
+            var conflicts = VCCommands.Instance.GetFilteredAssets(s => s.fileStatus == VCFileStatus.Conflicted || s.MetaStatus().fileStatus == VCFileStatus.Conflicted).Select(status => status.assetPath).ToArray();
             if (conflicts.Any())
             {
                 foreach (var conflictIt in conflicts)
                 {
                     if (ignoredConflicts.Contains(conflictIt)) continue;
 
-                    int result = EditorUtility.DisplayDialogComplex("Conflict", "There is a conflict in the file '" + conflictIt + "'. Use 'Theirs' or 'Mine'?", "Theirs", "Mine", "Ignore");
+                    int result = EditorUtility.DisplayDialogComplex("Conflict", "There is a conflict in the file '" + conflictIt.ToString() + "'. Use 'Theirs' or 'Mine'?", "Theirs", "Mine", "Ignore");
                     if (result == 0 || result == 1)
                     {
-                        VCCommands.Instance.Resolve(new[] { conflictIt }, result == 0 ? ConflictResolution.Theirs : ConflictResolution.Mine);
+                        VCCommands.Instance.Resolve(new[] { conflictIt.ToString() }, result == 0 ? ConflictResolution.Theirs : ConflictResolution.Mine);
                     }
                     else
                     {

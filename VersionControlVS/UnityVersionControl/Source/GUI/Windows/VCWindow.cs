@@ -45,22 +45,33 @@ namespace VersionControl.UserInterface
             GetWindow<VCWindow>(false, "VersionControl");
         }
 
-        private bool GUIFilter(string key, VersionControlStatus vcStatus)
+        private bool GUIFilter(VersionControlStatus vcStatus)
         {
             var metaStatus = vcStatus.MetaStatus();
             bool unversioned = vcStatus.fileStatus == VCFileStatus.Unversioned;
             bool meta = metaStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus == VCFileStatus.Normal;
+
             bool rest = !unversioned && !meta;
             return (showUnversioned && unversioned) || (showMeta && meta) || rest;
         }
 
-        private bool BaseFilter(string key, VersionControlStatus vcStatus)
+        // This is a performance critical function
+        private bool BaseFilter(VersionControlStatus vcStatus)
         {
+            if (!vcStatus.Reflected) return false;
+
+            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && vcStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus != VCFileStatus.Ignored;
+            if (assetCriteria) return true;
+            
+            bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;
+            if (localLock) return true;
+
             var metaStatus = vcStatus.MetaStatus();
             bool metaCriteria = metaStatus.fileStatus != VCFileStatus.Normal && metaStatus.fileStatus != VCFileStatus.None && metaStatus.fileStatus != VCFileStatus.Ignored;
-            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && vcStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus != VCFileStatus.Ignored;
-            bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;
-            return metaCriteria || assetCriteria || localLock;
+
+            if (metaCriteria) return true;
+
+            return false;
         }
 
         private void UpdateFilteringOfKeys()
@@ -70,7 +81,7 @@ namespace VersionControl.UserInterface
 
         private List<string> GetSelectedAssets()
         {
-            return vcMultiColumnAssetList.GetSelectedAssets().ToList();
+            return vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.ToString()).ToList();
         }
 
         virtual protected void OnEnable()
@@ -159,7 +170,9 @@ namespace VersionControl.UserInterface
             bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
             VCCommands.Instance.DeactivateRefreshLoop();
             VCCommands.Instance.ClearDatabase();
-            VCCommands.Instance.StatusTask(remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local, DetailLevel.Verbose).ContinueWithOnNextUpdate(t =>
+            var statusLevel = remoteProjectReflection ? StatusLevel.Remote : StatusLevel.Local;
+            var detailLevel = remoteProjectReflection ? DetailLevel.Verbose : DetailLevel.Normal;
+            VCCommands.Instance.StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t =>
             {
                 VCCommands.Instance.ActivateRefreshLoop();
                 refreshInProgress = false;

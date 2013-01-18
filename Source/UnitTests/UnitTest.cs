@@ -2,9 +2,13 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
 
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using CommandLineExecution;
 using NUnit.Framework;
+using System.Threading;
 using VersionControl.Backend.SVN;
 
 namespace VersionControl.UnitTests
@@ -117,6 +121,15 @@ namespace VersionControl.UnitTests
     [TestFixture]
     public class TestComposedString
     {
+        string str1 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush1.cs";
+        string str2 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
+        string str3 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
+        string str4 = "Assets/_Tests/Kjems/Test_Anim/Huddle@run.fbx";
+        string meta = ".meta";
+        string metaDot = ".meta.";
+        string empty = "";
+        string str3meta = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs.meta";
+
         [SetUp]
         public void Init()
         {
@@ -126,15 +139,6 @@ namespace VersionControl.UnitTests
         [Test]
         public void TestComposeAndDecompose()
         {
-            string str1 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush1.cs";
-            string str2 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
-            string str3 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
-            string str4 = "Assets/_Tests/Kjems/Test_Anim/Huddle@run.fbx";
-            string meta = ".meta";
-            string metaDot = ".meta.";
-            string empty = "";
-            string str3meta = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs.meta";
-            
             ComposedString cstr1 = new ComposedString(str1);
             ComposedString cstr2 = new ComposedString(str2);
             ComposedString cstr3 = new ComposedString(str3);
@@ -149,7 +153,37 @@ namespace VersionControl.UnitTests
             Assert.True(cstr4.EndsWith("@run.fbx"), "Endwith");
             Assert.AreEqual(cstr3, cstr3meta.TrimEnd(meta), "Trim End");
             Assert.AreEqual(cstr3meta, cstr3 + meta, "Trim End does not modify original");
-            
+        }
+
+        [Test]
+        public void TestSequential()
+        {
+            const int testSize = 100000;
+            var sw = Stopwatch.StartNew();
+            for (int i = 0; i < testSize; ++i)
+            {
+                TestComposeAndDecompose();
+            }
+            D.Log("Time per test " + ((float)sw.ElapsedMilliseconds / testSize).ToString("0.0000ms") + ", total : " + sw.ElapsedMilliseconds + "ms");
+        }
+
+        [Test]
+        public void TestMultiThreading()
+        {
+            const int testSize = 100000;
+            Task[] tasks = new Task[testSize];
+            for (int i = 0; i < testSize; ++i)
+            {
+                tasks[i] = new Task(TestComposeAndDecompose);
+            }
+
+            var sw = Stopwatch.StartNew();
+            for (int i = 0; i < testSize; ++i)
+            {
+                tasks[i].Start();
+            }
+            Task.WaitAll(tasks);
+            D.Log("Time per test " + ((float)sw.ElapsedMilliseconds / testSize).ToString("0.0000ms") + ", total : " + sw.ElapsedMilliseconds + "ms");
         }
     }
 }

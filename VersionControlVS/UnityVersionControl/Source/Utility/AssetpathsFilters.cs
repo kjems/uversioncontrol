@@ -13,7 +13,8 @@ namespace VersionControl
                 .Select(a => Path.GetDirectoryName(a))
                 .Where(d => VCCommands.Instance.GetAssetStatus(d).fileStatus != VCFileStatus.Normal)
                 .Concat(assets)
-                .Distinct();
+                .Distinct()
+                .ToArray();
         }
 
         internal static IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets)
@@ -25,7 +26,8 @@ namespace VersionControl
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
                                     .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.meta) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                                    .Select(s => s.Replace("\\", "/")));
+                                    .Select(s => s.Replace("\\", "/")))
+                        .ToArray();
                 }
             }
             return assets;
@@ -36,15 +38,17 @@ namespace VersionControl
             var deletedInFolders = assetPaths
                 .Where(Directory.Exists)
                 .SelectMany(d => VCCommands.Instance.GetFilteredAssets(status => (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && status.assetPath.StartsWith(d)))
-                .Select(status => status.assetPath.ToString());
-            return assetPaths.Concat(deletedInFolders);
+                .Select(status => status.assetPath.ToString())
+                .ToArray();
+            return assetPaths.Concat(deletedInFolders).ToArray();
         }
 
         internal static IEnumerable<string> GetDependencies(IEnumerable<string> assetPaths)
         {
             return AssetDatabase.GetDependencies(assetPaths.ToArray())
                 .Where(dep => VCCommands.Instance.GetAssetStatus(dep).fileStatus != VCFileStatus.Normal)
-                .Except(assetPaths.Select(ap => ap.ToLowerInvariant()));
+                .Except(assetPaths.Select(ap => ap.ToLowerInvariant()))
+                .ToArray();
         }
     }
 }

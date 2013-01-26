@@ -36,7 +36,7 @@ namespace VersionControl
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = InVersionedFolder(NonEmpty(assets)).ToArray();
+            assets = InVersionedFolder(NonEmpty(assets));
             return assets.Any() ? base.Status(assets, statusLevel) : true;
         }
 
@@ -125,7 +125,7 @@ namespace VersionControl
         #region Filters
         IEnumerable<string> NonEmpty(IEnumerable<string> assets)
         {
-            return assets.Where(a => !string.IsNullOrEmpty(a));
+            return assets.Where(a => !string.IsNullOrEmpty(a)).ToArray();
         }
         IEnumerable<string> Unversioned(IEnumerable<string> assets)
         {
@@ -133,7 +133,7 @@ namespace VersionControl
         }
         IEnumerable<string> InVersionedFolder(IEnumerable<string> assets)
         {
-            return assets.Where(a => !InUnversionedParentFolder(a));
+            return assets.Where(a => !InUnversionedParentFolder(a)).ToArray();
         }
         IEnumerable<string> UnversionedInVersionedFolder(IEnumerable<string> assets)
         {
@@ -179,7 +179,7 @@ namespace VersionControl
         }
         IEnumerable<string> FilesExist(IEnumerable<string> assets)
         {
-            return assets.Where(File.Exists);
+            return assets.Where(File.Exists).ToArray();
         }
         static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
         {
@@ -191,13 +191,14 @@ namespace VersionControl
                 .Select(a => Path.GetDirectoryName(a))
                 .Where(d => GetAssetStatus(d).fileStatus != VCFileStatus.Normal)
                 .Concat(assets)
-                .Distinct();
+                .Distinct()
+                .ToArray();
         }
 
         
         IEnumerable<string> AddedOrUnversionedParentFolders(IEnumerable<string> assets)
         {
-            return assets.Concat(assets.SelectMany(ParentFolders).Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned || vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Added)).Distinct();
+            return assets.Concat(assets.SelectMany(ParentFolders).Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned || vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Added)).Distinct().ToArray();
         }
 
         bool InUnversionedParentFolder(string asset)
@@ -230,7 +231,8 @@ namespace VersionControl
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
                         .Where(a => File.Exists(a) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                        .Select(s => s.Replace("\\", "/")));
+                        .Select(s => s.Replace("\\", "/")))
+                        .ToArray();
                 }
             }
             return assets;
@@ -238,14 +240,14 @@ namespace VersionControl
 
         IEnumerable<string> RemoveFolders(IEnumerable<string> assets)
         {
-            return assets.Where(a => !Directory.Exists(a));
+            return assets.Where(a => !Directory.Exists(a)).ToArray();
         }
 
         IEnumerable<string> RemoveFilesUnderUnversionedFolders(IEnumerable<string> assets)
         {
             var folders = assets.Where(a => Directory.Exists(a) && GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
             assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
-            return assets;
+            return assets.ToArray();
         }
         #endregion
     }

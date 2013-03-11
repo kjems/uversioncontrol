@@ -37,6 +37,7 @@ namespace VersionControl
 
         private bool stopping = false;
         private bool updating = false;
+        private bool pendingAssetDatabaseRefresh = false;
         static VCCommands instance;
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
@@ -140,10 +141,19 @@ namespace VersionControl
 
         private bool RefreshAssetDatabase()
         {
-            OnNextUpdate.Do(AssetDatabase.Refresh);
+            pendingAssetDatabaseRefresh = true;
             return true;
         }
 
+        private void RefreshAssetDatabaseAfterStatusUpdate()
+        {
+            if (pendingAssetDatabaseRefresh)
+            {
+                pendingAssetDatabaseRefresh = false;
+                OnNextUpdate.Do(AssetDatabase.Refresh);
+            }
+        }
+        
         private void FlushFiles()
         {
             if (ThreadUtility.IsMainThread())
@@ -420,6 +430,7 @@ namespace VersionControl
         {
             //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
+            RefreshAssetDatabaseAfterStatusUpdate();
         }
 
         public event Action<string> ProgressInformation;

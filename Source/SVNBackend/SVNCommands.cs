@@ -385,7 +385,7 @@ namespace VersionControl.Backend.SVN
 
         private static string ReplaceCommentChar(string commitMessage)
         {
-            return commitMessage.Replace('"', '\"');
+            return commitMessage.Replace('"', '\'');
         }
 
         private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)

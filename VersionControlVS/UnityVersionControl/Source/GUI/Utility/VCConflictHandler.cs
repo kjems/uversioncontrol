@@ -7,15 +7,10 @@ using UnityEditor;
 
 namespace VersionControl
 {
-    [InitializeOnLoad]
     internal static class VCConflictHandler
     {
-        static VCConflictHandler()
-        {
-            VCCommands.Instance.StatusCompleted += HandleConflicts;
-        }
         private static readonly List<ComposedString> ignoredConflicts = new List<ComposedString>();
-        private static void HandleConflicts()
+        public static void HandleConflicts()
         {
             var conflicts = VCCommands.Instance.GetFilteredAssets(s => s.fileStatus == VCFileStatus.Conflicted || s.MetaStatus().fileStatus == VCFileStatus.Conflicted).Select(status => status.assetPath).ToArray();
             if (conflicts.Any())
@@ -34,7 +29,7 @@ namespace VersionControl
                         ignoredConflicts.Add(conflictIt);
                     }
                 }
-                AssetDatabase.Refresh();
+                OnNextUpdate.Do(AssetDatabase.Refresh);
             }
         }
     }

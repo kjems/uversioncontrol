@@ -139,8 +139,9 @@ namespace VersionControl
             }
         }
 
-        private bool RefreshAssetDatabase()
+        private bool RequestAssetDatabaseRefresh()
         {
+            // The AssetDatabase will be refreshed on next status update
             pendingAssetDatabaseRefresh = true;
             return true;
         }
@@ -150,7 +151,11 @@ namespace VersionControl
             if (pendingAssetDatabaseRefresh)
             {
                 pendingAssetDatabaseRefresh = false;
-                OnNextUpdate.Do(AssetDatabase.Refresh);
+                OnNextUpdate.Do(() =>
+                {
+                    VCConflictHandler.HandleConflicts();
+                    AssetDatabase.Refresh();
+                });
             }
         }
         
@@ -291,7 +296,11 @@ namespace VersionControl
             updating = true;
             bool updateResult = vcc.Update(assets);
             updating = false;
-            if (updateResult) RefreshAssetDatabase();
+            if (updateResult)
+            {
+                RequestAssetDatabaseRefresh();
+                Status(StatusLevel.Local, DetailLevel.Normal);
+            }
             return updateResult;
         }
 
@@ -302,7 +311,7 @@ namespace VersionControl
                 FlushFiles();
                 Status(assets, StatusLevel.Local);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
-                RefreshAssetDatabase();
+                RequestAssetDatabaseRefresh();
                 return commitSuccess;
             });
         }
@@ -320,7 +329,7 @@ namespace VersionControl
                 bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
                 bool releaseSuccess = true;
                 if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
-                RefreshAssetDatabase();
+                RequestAssetDatabaseRefresh();
                 return (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
             });
         }
@@ -360,7 +369,7 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, mode) && RefreshAssetDatabase();
+                return vcc.Delete(deleteAssets, mode) && RequestAssetDatabaseRefresh();
             });
         }
         public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
@@ -393,7 +402,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
-                RefreshAssetDatabase();
+                RequestAssetDatabaseRefresh();
                 return resolveSuccess;
             });
         }
@@ -403,7 +412,7 @@ namespace VersionControl
             {
                 FlushFiles();
                 bool moveSuccess = vcc.Move(from, to);
-                RefreshAssetDatabase();
+                RequestAssetDatabaseRefresh();
                 return moveSuccess;
             });
         }

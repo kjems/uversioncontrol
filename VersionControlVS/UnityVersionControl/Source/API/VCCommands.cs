@@ -19,6 +19,19 @@ namespace VersionControl
         static VCCommandsOnLoad() { OnNextUpdate.Do(VCCommands.Initialize); }
     }
 
+    public enum OperationType
+    {
+        Update,
+        Revert,
+        Commit,
+        GetLock,
+        ReleaseLock,
+        Delete,
+        Move,
+        CleanUp,
+        Resolve,
+    }
+
     /// <summary>
     /// Wraps the underlying IVersionControlCommands and add handling of .meta files and other Unity specific concerns.
     /// OnNextUpdate.Do is used to delay callback actions to the next Unity update as Unity does not allow calls into UnityEngine
@@ -45,6 +58,10 @@ namespace VersionControl
         private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
         private bool ignoreStatusRequests = false;
         private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
+
+        public event Action<string> ProgressInformation;
+        public event Action StatusCompleted;
+        public event Action<OperationType> OperationCompleted;
 
         public static bool Active
         {
@@ -301,6 +318,7 @@ namespace VersionControl
                 RequestAssetDatabaseRefresh();
                 Status(StatusLevel.Local, DetailLevel.Normal);
             }
+            if (updateResult) OnOperationCompleted(OperationType.Update);
             return updateResult;
         }
 
@@ -312,6 +330,7 @@ namespace VersionControl
                 Status(assets, StatusLevel.Local);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 RequestAssetDatabaseRefresh();
+                if (commitSuccess) OnOperationCompleted(OperationType.Commit);
                 return commitSuccess;
             });
         }
@@ -330,7 +349,9 @@ namespace VersionControl
                 bool releaseSuccess = true;
                 if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
                 RequestAssetDatabaseRefresh();
-                return (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
+                bool result = (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
+                if(result) OnOperationCompleted(OperationType.Revert);
+                return result;
             });
         }
         public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Force)
@@ -369,7 +390,10 @@ namespace VersionControl
                         }
                     }
                 }
-                return vcc.Delete(deleteAssets, mode) && RequestAssetDatabaseRefresh();
+                bool result = vcc.Delete(deleteAssets, mode);
+                RequestAssetDatabaseRefresh();
+                if (result) OnOperationCompleted(OperationType.Delete);
+                return result;
             });
         }
         public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
@@ -378,12 +402,18 @@ namespace VersionControl
             {
                 bool getlockSuccess = vcc.GetLock(assets, mode);
                 bool removeChangeListSuccess = vcc.ChangeListRemove(assets);
+                if (getlockSuccess) OnOperationCompleted(OperationType.GetLock);
                 return getlockSuccess;
             });
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.ReleaseLock(assets));
+            return HandleExceptions(() =>
+            {
+                bool result = vcc.ReleaseLock(assets);
+                if(result) OnOperationCompleted(OperationType.ReleaseLock);
+                return result;
+            });
         }
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
@@ -403,6 +433,7 @@ namespace VersionControl
             {
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
                 RequestAssetDatabaseRefresh();
+                if (resolveSuccess) OnOperationCompleted(OperationType.Resolve);
                 return resolveSuccess;
             });
         }
@@ -413,6 +444,7 @@ namespace VersionControl
                 FlushFiles();
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
+                if(moveSuccess) OnOperationCompleted(OperationType.Move);
                 return moveSuccess;
             });
         }
@@ -422,7 +454,12 @@ namespace VersionControl
         }
         public bool CleanUp()
         {
-            return HandleExceptions(() => vcc.CleanUp());
+            return HandleExceptions(() =>
+            {
+                bool result = vcc.CleanUp();
+                if(result) OnOperationCompleted(OperationType.CleanUp);
+                return result;
+            });
         }
         public void ClearDatabase()
         {
@@ -442,9 +479,17 @@ namespace VersionControl
             RefreshAssetDatabaseAfterStatusUpdate();
         }
 
-        public event Action<string> ProgressInformation;
-        public event Action StatusCompleted;
-
+        private void OnOperationCompleted(OperationType operation)
+        {
+            if (OperationCompleted != null)
+            {
+                if (ThreadUtility.IsMainThread())
+                    OperationCompleted(operation);
+                else
+                    OnNextUpdate.Do(() => OperationCompleted(operation));
+            }
+        }
+        
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();

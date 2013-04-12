@@ -47,7 +47,6 @@ namespace VersionControl
         }
         public static bool ChangesStoredInPrefab(Object obj)
         {
-            obj = AssetDatabase.LoadMainAssetAtPath(obj.GetAssetPath());
             return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
@@ -76,7 +75,7 @@ namespace VersionControl
 
             public static IEnumerable<string> ToAssetPaths(this Object obj)
             {
-                return new[] {obj.GetAssetPath()};
+                return new[] { obj.GetAssetPath() };
             }
 
             // The caching of AssetPaths caused too many problems with cache getting out of date.

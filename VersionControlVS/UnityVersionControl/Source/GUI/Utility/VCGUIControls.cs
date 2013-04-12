@@ -94,7 +94,7 @@ namespace VersionControl.UserInterface
         {
             return new GUIStyle(EditorStyles.boldLabel) { normal = { textColor = Color.black }, alignment = TextAnchor.MiddleCenter };
         }
-        
+
         public static void CreateVCContextMenu(ref GenericMenu menu, IEnumerable<string> assetPaths)
         {
             menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(assetPaths));
@@ -112,8 +112,8 @@ namespace VersionControl.UserInterface
                 if (ready)
                 {
                     var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                    if (ObjectUtilities.ChangesStoredInScene(AssetDatabase.LoadMainAssetAtPath(assetPath))) assetPath = EditorApplication.currentScene;
-                    
+                    if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = EditorApplication.currentScene;
+
                     bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                     bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
                     bool isFolder = Directory.Exists(assetPath);
@@ -145,16 +145,16 @@ namespace VersionControl.UserInterface
                     bool showDisconnect = isPrefab && !isPrefabParent;
 
                     if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
-                    if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] {assetPath}));
+                    if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
                     if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance));
                     if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
                     if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
                     if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                    if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] {assetPath}));
+                    if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));
                     if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
-                    if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] {assetPath}));
+                    if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                     if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
-                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] {assetPath}));
+                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace VersionControl.UserInterface
         public static void DiaplayVCContextMenu(string assetPath, Object instance = null, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
         {
             var menu = new GenericMenu();
-            if(showAssetName)
+            if (showAssetName)
             {
                 menu.AddDisabledItem(new GUIContent(Path.GetFileName(assetPath)));
                 menu.AddSeparator("");

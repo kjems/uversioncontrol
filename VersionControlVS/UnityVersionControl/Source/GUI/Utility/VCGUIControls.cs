@@ -116,7 +116,7 @@ namespace VersionControl.UserInterface
                     
                     bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                     bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
-                    bool isFolder = System.IO.Directory.Exists(assetPath);
+                    bool isFolder = Directory.Exists(assetPath);
                     bool modifiedTextAsset = VCUtility.IsTextAsset(assetPath) && assetStatus.fileStatus != VCFileStatus.Normal;
                     bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
                     bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
@@ -187,15 +187,15 @@ namespace VersionControl.UserInterface
             else VCCommands.Instance.Revert(new[] { assetPath });
         }
 
-        public static void DiaplayVCContextMenu(Object instance, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
+        public static void DiaplayVCContextMenu(string assetPath, Object instance = null, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
         {
             var menu = new GenericMenu();
             if(showAssetName)
             {
-                menu.AddDisabledItem(new GUIContent(Path.GetFileName(instance.GetAssetPath())));
+                menu.AddDisabledItem(new GUIContent(Path.GetFileName(assetPath)));
                 menu.AddSeparator("");
             }
-            CreateVCContextMenu(ref menu, instance.GetAssetPath(), instance);
+            CreateVCContextMenu(ref menu, assetPath, instance);
             menu.DropDown(new Rect(Event.current.mousePosition.x + xoffset, Event.current.mousePosition.y + yoffset, 0.0f, 0.0f));
             Event.current.Use();
         }

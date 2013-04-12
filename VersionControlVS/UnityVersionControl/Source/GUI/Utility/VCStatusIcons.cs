@@ -27,24 +27,24 @@ namespace VersionControl.UserInterface
 
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons) return;
-            var obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
-            VCUtility.RequestStatus(AssetDatabase.GUIDToAssetPath(guid), VCSettings.ProjectReflectionMode);
-            DrawIcon(selectionRect, obj, IconUtils.circleIcon);
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons || !VCCommands.Active) return;
+            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            VCUtility.RequestStatus(assetPath, VCSettings.ProjectReflectionMode);
+            DrawIcon(selectionRect, IconUtils.circleIcon, assetPath);
         }
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
-
+            string assetPath = obj.GetAssetPath();
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
             bool guiLockForPrefabs = EditableManager.LockPrefab(obj.GetAssetPath());
 
-            if (obj.GetAssetPath() != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs)))
+            if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs)))
             {
-                VCUtility.RequestStatus(obj.GetAssetPath(), VCSettings.HierarchyReflectionMode);
-                DrawIcon(selectionRect, obj, GetHierarchyIcon(obj));
+                VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
+                DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, obj);
             }
         }
 
@@ -107,11 +107,11 @@ namespace VersionControl.UserInterface
             return false;
         }
 
-        private static void DrawIcon(Rect rect, Object obj, IconUtils.Icon iconType)
+        private static void DrawIcon(Rect rect, IconUtils.Icon iconType, string assetPath, Object instance = null)
         {
             if (VCSettings.VCEnabled)
             {
-                var assetStatus = obj.GetAssetStatus();
+                var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 string statusText = AssetStatusUtils.GetStatusText(assetStatus);
                 Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
                 Rect placement = GetRightAligned(rect, iconType.Size);
@@ -121,7 +121,7 @@ namespace VersionControl.UserInterface
                 if (texture) GUI.DrawTexture(placement, texture);
                 if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
                 {
-                    VCGUIControls.DiaplayVCContextMenu(obj, 10.0f, -40.0f, true);
+                    VCGUIControls.DiaplayVCContextMenu(assetPath, instance, 10.0f, -40.0f, true);
                 }
             }
         }

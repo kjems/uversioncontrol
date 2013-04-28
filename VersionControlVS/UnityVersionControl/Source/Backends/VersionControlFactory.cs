@@ -2,6 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using VersionControl.Backend.SVN;
+using VersionControl.Backend.P4;
 
 namespace VersionControl
 {
@@ -9,12 +10,18 @@ namespace VersionControl
     {
         public static IVersionControlCommands CreateVersionControlCommands()
         {
-            return CreateSVNCommands();
+            return CreateP4Commands();
+//            return CreateSVNCommands();
         }
 
         private static IVersionControlCommands CreateSVNCommands()
         {
             return new VCCFilteredAssets(new VCCAddMetaFiles(new SVNCommands()));
+        }
+
+        private static IVersionControlCommands CreateP4Commands()
+        {
+            return new VCCFilteredAssets(new VCCAddMetaFiles(new P4Commands()));
         }
 
         /*private static IVersionControlCommands CreateAppDomainSVNCommands()

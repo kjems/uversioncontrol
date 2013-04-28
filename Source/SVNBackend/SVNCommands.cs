@@ -479,7 +479,11 @@ namespace VersionControl.Backend.SVN
 
         public bool Revert(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("revert --depth=infinity", assets);
+            bool revertSuccess = CreateAssetOperation("revert --depth=infinity", assets);
+			bool changeListRemoveSuccess = ChangeListRemove(assets);
+			bool releaseSuccess = true;
+			if ( revertSuccess ) releaseSuccess = ReleaseLock(assets);
+			return ( revertSuccess && releaseSuccess ) || changeListRemoveSuccess;
         }
 
         public bool Delete(IEnumerable<string> assets, OperationMode mode)
@@ -489,7 +493,9 @@ namespace VersionControl.Backend.SVN
 
         public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
+            bool getLockSuccess = CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
+			bool getChangeListRemove = ChangeListRemove(assets);
+			return getLockSuccess;
         }
 
         public bool ReleaseLock(IEnumerable<string> assets)

@@ -56,8 +56,8 @@ namespace VersionControl.UserInterface
         private static GUIContent GetFileStatusContent(VersionControlStatus assetStatus)
         {
             if (assetStatus.treeConflictStatus != VCTreeConflictStatus.Normal)
-                return new GUIContent(assetStatus.treeConflictStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
-            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, false)));
+                return new GUIContent(assetStatus.treeConflictStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
+            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
         }
 
         private void Initialize()
@@ -180,7 +180,7 @@ namespace VersionControl.UserInterface
         private static string GetFileType(string assetPath)
         {
             int indexOfLastDot = assetPath.LastIndexOf(".", StringComparison.Ordinal);
-            return (indexOfLastDot > 0) ? assetPath.Substring(assetPath.LastIndexOf(".", StringComparison.Ordinal) + 1) : "[folder]";
+            return (indexOfLastDot > 0) ? assetPath.Substring(assetPath.LastIndexOf(".", StringComparison.Ordinal) + 1) : (System.IO.Directory.Exists(assetPath) ? "[folder]" : "[unknown]");
         }
 
         public void RefreshGUIFilter()

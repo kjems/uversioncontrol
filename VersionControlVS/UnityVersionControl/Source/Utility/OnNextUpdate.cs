@@ -11,45 +11,54 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 
-[InitializeOnLoad]
-internal static class OnNextUpdate
+namespace VersionControl
 {
-    static readonly object lockToken = new object();
-    static readonly List<Action> actionQueue = new List<Action>();
-
-    static OnNextUpdate()
+    [InitializeOnLoad]
+    public static class OnNextUpdate
     {
-        EditorApplication.update += Update;
-    }
+        private static readonly object mLockToken = new object();
+        private static readonly List<Action> mActionQueue = new List<Action>();
 
-    /// <summary>
-    /// Add an Action to be performed on next editor update. Actions er performed in a FIFO manner.
-    /// </summary>
-    /// <param name="work">Actual work to be performed as an Action</param>
-    static public void Do(Action work)
-    {
-        lock (lockToken)
+        static OnNextUpdate()
         {
-            actionQueue.Add(work);
+            EditorApplication.update += Update;
         }
-    }
 
-    static private void Update()
-    {
-        if (actionQueue.Count > 0)
+        public static void Do(Action work)
         {
-            List<Action> actionQueueCopy;
-            lock (lockToken)
+            lock (mLockToken)
             {
-                actionQueueCopy = new List<Action>(actionQueue);
-                actionQueue.Clear();
+                mActionQueue.Add(work);
             }
-            while (actionQueueCopy.Count > 0)
+        }
+
+        private static void Update()
+        {
+            if (mActionQueue.Count > 0)
             {
-                actionQueueCopy[0]();
-                actionQueueCopy.RemoveAt(0);
+                List<Action> actionQueueCopy;
+                lock (mLockToken)
+                {
+                    actionQueueCopy = new List<Action>(mActionQueue);
+                    mActionQueue.Clear();
+                }
+                while (actionQueueCopy.Count > 0)
+                {
+                    try
+                    {
+                        actionQueueCopy[0]();
+                    }
+                    catch (Exception e)
+                    {
+                        string message = string.Format("Exception cast in OnNextUpdate : {0}\n{1}", e.Message, e.StackTrace);
+                        D.LogError(message);
+                    }
+                    finally
+                    {
+                        actionQueueCopy.RemoveAt(0);
+                    }
+                }
             }
         }
     }
 }
-

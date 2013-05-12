@@ -345,13 +345,9 @@ namespace VersionControl
                 FlushFiles();
                 Status(assets.ToList(), StatusLevel.Local);
                 bool revertSuccess = vcc.Revert(assets);
-                bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
-                bool releaseSuccess = true;
-                if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
                 RequestAssetDatabaseRefresh();
-                bool result = (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
-                if(result) OnOperationCompleted(OperationType.Revert);
-                return result;
+                if(revertSuccess) OnOperationCompleted(OperationType.Revert);
+                return revertSuccess;
             });
         }
         public bool Delete(IEnumerable<string> assets, OperationMode mode = OperationMode.Force)
@@ -401,7 +397,6 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool getlockSuccess = vcc.GetLock(assets, mode);
-                bool removeChangeListSuccess = vcc.ChangeListRemove(assets);
                 if (getlockSuccess) OnOperationCompleted(OperationType.GetLock);
                 return getlockSuccess;
             });

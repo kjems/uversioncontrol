@@ -1,6 +1,4 @@
-// Copyright (c) <2012> <Playdead>
-// This file is subject to the MIT License as seen in the trunk of this repository
-// Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
+// Copyright (c) <2013> <E-Line Media, LLC>
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,15 +7,20 @@ using System.Threading;
 using System.Xml;
 using CommandLineExecution;
 
-namespace VersionControl.Backend.SVN
+namespace VersionControl.Backend.P4
 {
 
-    public class SVNCommands : MarshalByRefObject, IVersionControlCommands
+    public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
+		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
         private string workingDirectory = ".";
-        private string userName;
-        private string password;
+        private string userName = "";
+        private string password = "";
+		private string clientSpec = "";
+		private string port = "";
+		private string rootPath = "";
         private string versionNumber;
+		private Dictionary<string, string> depotToDir = null;
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
@@ -30,11 +33,13 @@ namespace VersionControl.Backend.SVN
         private volatile bool active = false;
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
-        private IVersionControlCommands vcc;
+		
+		private bool P4Initialized {
+			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(password) || String.IsNullOrEmpty(clientSpec) || String.IsNullOrEmpty(port)); }
+		}
 
-        public SVNCommands()
+        public P4Commands()
         {
-            vcc = new VCCFilteredAssets(this);
             StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
@@ -56,10 +61,16 @@ namespace VersionControl.Backend.SVN
         {
             try
             {
-                while (!requestRefreshLoopStop)
+				while (!requestRefreshLoopStop)
                 {
                     Thread.Sleep(200);
-                    if (active && refreshLoopActive) RefreshStatusDatabase();
+
+					// make sure p4 data is initialized
+					if ( P4Initialized || InitializeP4Connection() )
+					{
+						// refresh status
+	                    if (active && refreshLoopActive) RefreshStatusDatabase();
+					}
                 }
             }
             catch (ThreadAbortException) { }
@@ -143,7 +154,132 @@ namespace VersionControl.Backend.SVN
             if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
         }
 
-        public bool IsReady()
+		private bool InitializeP4Connection()
+		{
+            CommandLineOutput commandLineOutput;
+			
+			// get connection info
+            using (var p4StatusTask = CreateP4CommandLine("set"))
+            {
+                commandLineOutput = ExecuteOperation(p4StatusTask);
+				// sample output:
+				// P4CLIENT=asilva_asilva-eline-PC_Misc (set)
+				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
+				// P4PASSWD=questforever (set)
+				// P4PORT=10.208.64.21:1666 (set)
+				// P4USER=asilva (set)
+				string output = commandLineOutput.OutputStr;
+				if ( output.Contains("P4CLIENT=") )
+				{
+					clientSpec = output.Substring( output.IndexOf("P4CLIENT=") + "P4CLIENT=".Length);
+					clientSpec = clientSpec.Substring(0, clientSpec.IndexOf("(set)")).TrimEnd();
+					D.Log(clientSpec);
+				}
+				if ( output.Contains("P4PASSWD=") )
+				{
+					password = output.Substring( output.IndexOf("P4PASSWD=") + "P4PASSWD=".Length);
+					password = password.Substring(0, password.IndexOf("(set)")).TrimEnd();
+					D.Log(password);
+				}
+				if ( output.Contains("P4PORT=") )
+				{
+					port = output.Substring( output.IndexOf("P4PORT=") + "P4PORT=".Length);
+					port = port.Substring(0, port.IndexOf("(set)")).TrimEnd();
+					D.Log(port);
+				}
+				if ( output.Contains("P4USER=") )
+				{
+					userName = output.Substring( output.IndexOf("P4USER=") + "P4USER=".Length);
+					userName = userName.Substring(0, userName.IndexOf("(set)")).TrimEnd();
+					D.Log(userName);
+				}
+            }
+			
+			// get directory info
+            using (var p4WhereTask = CreateP4CommandLine("client -o"))
+            {
+                commandLineOutput = ExecuteOperation(p4WhereTask);
+				depotToDir = new Dictionary<string, string>();
+				// sample output:
+				//# A Perforce Client Specification.
+				//#
+				//#  Client:      The client name.
+				//#  Update:      The date this specification was last modified.
+				//#  Access:      The date this client was last used in any way.
+				//#  Owner:       The Perforce user name of the user who owns the client
+				//#               workspace. The default is the user who created the
+				//#               client workspace.
+				//#  Host:        If set, restricts access to the named host.
+				//#  Description: A short description of the client (optional).
+				//#  Root:        The base directory of the client workspace.
+				//#  AltRoots:    Up to two alternate client workspace roots.
+				//#  Options:     Client options:
+				//#                      [no]allwrite [no]clobber [no]compress
+				//#                      [un]locked [no]modtime [no]rmdir
+				//#  SubmitOptions:
+				//#                      submitunchanged/submitunchanged+reopen
+				//#                      revertunchanged/revertunchanged+reopen
+				//#                      leaveunchanged/leaveunchanged+reopen
+				//#  LineEnd:     Text file line endings on client: local/unix/mac/win/share.
+				//#  ServerID:    If set, restricts access to the named server.
+				//#  View:        Lines to map depot files into the client workspace.
+				//#  Stream:      The stream to which this client's view will be dedicated.
+				//#               (Files in stream paths can be submitted only by dedicated
+				//#               stream clients.) When this optional field is set, the
+				//#               View field will be automatically replaced by a stream
+				//#               view as the client spec is saved.
+				//#
+				//# Use 'p4 help client' to see more about client views and options.
+				//
+				//Client: asilva_asilva-eline-PC_Misc
+				//
+				//Update: 2013/04/23 21:52:59
+				//
+				//Access: 2013/04/24 06:15:05
+				//
+				//Owner:  asilva
+				//
+				//Host:   asilva-eline-PC
+				//
+				//Description:
+				//        Created by asilva.
+				//
+				//Root:   C:\Users\anthonys\Perforce\asilva_asilva-eline-PC_Misc
+				//
+				//Options:        noallwrite noclobber nocompress unlocked nomodtime normdir
+				//
+				//SubmitOptions:  submitunchanged
+				//
+				//LineEnd:        local
+				//
+				//View:
+				//        //depot/Misc/... //asilva_asilva-eline-PC_Misc/...
+				//        -//depot/Misc/P4Test/Temp/... //asilva_asilva-eline-PC_Misc/P4Test/Temp/...
+				//        -//depot/Misc/P4Test/Library/... //asilva_asilva-eline-PC_Misc/P4Test/Library/...
+				string output = commandLineOutput.OutputStr;
+				var lines = output.Split( new Char[] { '\r', '\n' } );
+				foreach( String line in lines ) {
+					//D.Log( line );
+					if ( line.StartsWith( "Root:" ) ) {
+						rootPath = line.Substring( "Root:".Length ).Trim().Replace("\\", "/");
+					}
+					else if ( line.Trim().StartsWith( "//" ) ) {
+						string repoPath = line.Substring( 0, line.IndexOf("...") ).Trim();
+						//D.Log( "Repo Path: " + repoPath );
+						int clientPathStart = repoPath.Length + "...".Length + 1;
+						string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
+						//D.Log( "Client Path: " + clientPath );
+						string localPath = clientPath.Replace( "//" + clientSpec, rootPath );
+						//D.Log( "Local Path: " + localPath );
+						depotToDir.Add( repoPath, localPath );
+					}
+				}
+            }
+
+			return P4Initialized;
+		}
+			
+		public bool IsReady()
         {
             return !OperationActive && active;
         }
@@ -185,32 +321,48 @@ namespace VersionControl.Backend.SVN
         {
             if (!active) return false;
 
-            string arguments = "status --xml";
-            if (statusLevel == StatusLevel.Remote) arguments += " -u";
-            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
+            string arguments = "status -a -e -d ";
+//            if (statusLevel == StatusLevel.Remote) arguments += " -u";
+//            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
 
-            CommandLineOutput commandLineOutput;
-            using (var svnStatusTask = CreateSVNCommandLine(arguments))
+            CommandLineOutput statusCommandLineOutput;
+            using (var p4StatusTask = CreateP4CommandLine(arguments))
             {
-                commandLineOutput = ExecuteOperation(svnStatusTask);
+                statusCommandLineOutput = ExecuteOperation(p4StatusTask);
+            }
+			
+            arguments = "fstat -T " + fstatAttributes + " //" + clientSpec + "/...";
+            CommandLineOutput fstatCommandLineOutput;
+            using (var p4FstatTask = CreateP4CommandLine(arguments))
+            {
+                fstatCommandLineOutput = ExecuteOperation(p4FstatTask);
             }
 
-            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
+			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
+			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, userName);
+                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, workingDirectory);
                 lock (statusDatabaseLockToken)
                 {
-                    foreach (var statusIt in db)
+                    foreach (var statusIt in statusDB)
                     {
                         var status = statusIt.Value;
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
                         statusDatabase[statusIt.Key] = status;
                     }
-                }
+
+                    foreach (var statusIt in fstatDB)
+                    {
+                        var status = statusIt.Value;
+                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+                        statusDatabase[statusIt.Key] = status;
+                    }
+				}
                 lock (requestQueueLockToken)
                 {
-                    foreach (var assetIt in db.Keys)
+                    foreach (var assetIt in statusDB.Keys)
                     {
                         if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
                         localRequestQueue.Remove(assetIt.ToString());
@@ -218,8 +370,9 @@ namespace VersionControl.Backend.SVN
                 }
                 OnStatusCompleted();
             }
-            catch (XmlException)
+            catch (Exception e)
             {
+                D.ThrowException(e);
                 return false;
             }
             return true;
@@ -247,25 +400,42 @@ namespace VersionControl.Backend.SVN
                 return Status(assets.Take(assetsPerStatus), statusLevel) && Status(assets.Skip(assetsPerStatus), statusLevel);
             }
 
-            string arguments = "status --xml -q -v ";
-            if (statusLevel == StatusLevel.Remote) arguments += "-u ";
-            else arguments += " --depth=empty ";
-            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
+            string arguments = "status -a -e -d";//--xml -q -v ";
+//            if (statusLevel == StatusLevel.Remote) arguments += "-u ";
+//            else arguments += " --depth=empty ";
+//            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
 
             SetPending(assets);
 
-            CommandLineOutput commandLineOutput;
-            using (var svnStatusTask = CreateSVNCommandLine(arguments))
+            CommandLineOutput statusCommandLineOutput;
+            using (var p4StatusTask = CreateP4CommandLine(arguments))
             {
-                commandLineOutput = ExecuteOperation(svnStatusTask);
+                statusCommandLineOutput = ExecuteOperation(p4StatusTask);
             }
-            if (commandLineOutput == null || commandLineOutput.Failed || string.IsNullOrEmpty(commandLineOutput.OutputStr) || !active) return false;
+
+            arguments = "fstat -T " + fstatAttributes + " //" + clientSpec + "/...";
+            CommandLineOutput fstatCommandLineOutput;
+            using (var p4FstatTask = CreateP4CommandLine(arguments))
+            {
+                fstatCommandLineOutput = ExecuteOperation(p4FstatTask);
+            }
+
+			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
+			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-                var db = SVNStatusXMLParser.SVNParseStatusXML(commandLineOutput.OutputStr);
+                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, userName);
+                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, workingDirectory);
                 lock (statusDatabaseLockToken)
                 {
-                    foreach (var statusIt in db)
+                    foreach (var statusIt in statusDB)
+                    {
+                        var status = statusIt.Value;
+                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+                        statusDatabase[statusIt.Key] = status;
+                    }
+
+                    foreach (var statusIt in fstatDB)
                     {
                         var status = statusIt.Value;
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
@@ -274,7 +444,7 @@ namespace VersionControl.Backend.SVN
                 }
                 lock (requestQueueLockToken)
                 {
-                    foreach (var assetIt in db.Keys)
+                    foreach (var assetIt in statusDB.Keys)
                     {
                         if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
                         localRequestQueue.Remove(assetIt.ToString());
@@ -282,7 +452,7 @@ namespace VersionControl.Backend.SVN
                 }
                 OnStatusCompleted();
             }
-            catch (XmlException e)
+            catch (Exception e)
             {
                 D.ThrowException(e);
                 return false;
@@ -290,14 +460,13 @@ namespace VersionControl.Backend.SVN
             return true;
         }
 
-        private CommandLine CreateSVNCommandLine(string arguments)
+        private CommandLine CreateP4CommandLine(string arguments, string input = null)
         {
-            arguments = "--non-interactive " + arguments;
-            if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(password))
+            if (P4Initialized)
             {
-                arguments = " --username " + userName + " --password " + password + " --no-auth-cache " + arguments;
+                arguments = " -u " + userName + " -P " + password + " -c " + clientSpec + " -p " + port + " " + arguments;
             }
-            return new CommandLine("svn", arguments, workingDirectory);
+            return new CommandLine("p4", arguments, workingDirectory, input);
         }
 
         private bool CreateOperation(string arguments)
@@ -305,7 +474,7 @@ namespace VersionControl.Backend.SVN
             if (!active) return false;
 
             CommandLineOutput commandLineOutput;
-            using (var commandLineOperation = CreateSVNCommandLine(arguments))
+            using (var commandLineOperation = CreateP4CommandLine(arguments))
             {
                 commandLineOperation.OutputReceived += OnProgressInformation;
                 commandLineOperation.ErrorReceived += OnProgressInformation;
@@ -321,12 +490,12 @@ namespace VersionControl.Backend.SVN
             {
                 D.Log(commandLine.ToString());
                 currentExecutingOperation = commandLine;
-                //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
+                //System.Threading.Thread.Sleep(500); // emulate latency to P4 server
                 commandLineOutput = commandLine.Execute();
             }
             catch (Exception e)
             {
-                throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
+                throw new VCCriticalException("Check that your commandline P4 client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
             }
             finally
             {
@@ -365,9 +534,9 @@ namespace VersionControl.Backend.SVN
                     throw new VCCriticalException(errStr, commandLine.ToString());
                 if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
                     throw new VCOutOfDate(errStr, commandLine.ToString());
-                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'"))
+                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'p4 cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160035") || errStr.Contains("run 'svn cleanup'"))
+                if (errStr.Contains("W160035") || errStr.Contains("run 'p4 cleanup'"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
                 throw new VCException(errStr, commandLine.ToString());
             }
@@ -377,7 +546,11 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
+			bool success = true;
+			foreach( String asset in assets ) {
+				success &= CreateOperation(arguments + " \"" + asset + "\"") && RequestStatus(new String[] { asset }, StatusLevel.Previous);
+			}
+			return success;
         }
 
         private static string FixAtChar(string asset)
@@ -466,12 +639,48 @@ namespace VersionControl.Backend.SVN
         public bool Update(IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
-            return CreateAssetOperation("update --force", assets);
+            return CreateAssetOperation("update", assets);
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            return CreateAssetOperation("commit -m \"" + ReplaceCommentChar(commitMessage) + "\"", assets);
+            string arguments = "change -i";
+            CommandLineOutput statusCommandLineOutput;
+			string changeNum = "";
+
+			// create a new changelist
+			// TODO: custom comments
+			string input = "Change: new\n\nClient: " + clientSpec + "\n\nUser: " + userName + "\n\nStatus: new\n\nDescription:\n\t" + commitMessage + "\n\nFiles:\n";
+            using (var p4ChangeTask = CreateP4CommandLine(arguments, input))
+            {
+                statusCommandLineOutput = ExecuteOperation(p4ChangeTask);
+            }
+
+			// get the last/new changelist number
+			arguments = "changes -m 1 -u " + userName;
+            using (var p4ChangesTask = CreateP4CommandLine(arguments))
+            {
+                statusCommandLineOutput = ExecuteOperation(p4ChangesTask);
+				changeNum = statusCommandLineOutput.OutputStr.Substring( "Change ".Length );
+				changeNum = changeNum.Substring( 0, changeNum.IndexOf( " " ) ).Trim();
+            }
+
+			if ( String.IsNullOrEmpty(changeNum) ) return false;
+
+			// "reopen" files in that changelist
+			bool success = true;
+			foreach( var asset in assets ) {
+				success &= CreateAssetOperation("reopen -c " + changeNum, new String[] { workingDirectory.Replace("\\", "/") + "/" + asset });
+			}
+
+			// submit the changelist
+			arguments = "submit -c " + changeNum + " ";
+            using (var p4SubmitTask = CreateP4CommandLine(arguments))
+            {
+                statusCommandLineOutput = ExecuteOperation(p4SubmitTask);
+				success &= String.IsNullOrEmpty(statusCommandLineOutput.ErrorStr);
+            }
+            return success;
         }
 
         public bool Add(IEnumerable<string> assets)
@@ -481,23 +690,22 @@ namespace VersionControl.Backend.SVN
 
         public bool Revert(IEnumerable<string> assets)
         {
-            bool revertSuccess = CreateAssetOperation("revert --depth=infinity", assets);
-            bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
-            bool releaseSuccess = true;
-            if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
-            return (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
+            return CreateAssetOperation("revert", assets);
         }
 
         public bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return CreateAssetOperation("delete" + (mode == OperationMode.Force ? " --force" : ""), assets);
+			// OperationMode.Force is not supported in p4
+			// TODO: can we detect when delete fails (i.e. trying to delete a file that is already opened for edit)?
+            return CreateAssetOperation("delete", assets);
         }
 
         public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            bool getLockSuccess = CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
-            bool getChangeListRemove = vcc.ChangeListRemove(assets);
-            return getLockSuccess;
+			// OperationMode.Force is not supported in p4
+			// need to make sure the assets are opened for edit first...
+			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[a].fileStatus == VCFileStatus.Normal ));
+            return success & CreateAssetOperation("lock", assets);
         }
 
         public bool ReleaseLock(IEnumerable<string> assets)
@@ -507,23 +715,29 @@ namespace VersionControl.Backend.SVN
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return CreateAssetOperation("changelist " + changelist, assets);
+            return CreateAssetOperation("reopen -c " + changelist, assets);
         }
 
         public bool ChangeListRemove(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("changelist --remove", assets);
+			bool success = true;
+			foreach( var asset in assets ) {
+				success &= CreateAssetOperation("reopen -c default", new String[] { asset } );
+			}
+			return success;
         }
 
         public bool Checkout(string url, string path = "")
         {
-            return CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+			// unsupported on p4
+            // CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+			return true;
         }
 
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
             if (conflictResolution == ConflictResolution.Ignore) return true;
-            string conflictparameter = conflictResolution == ConflictResolution.Theirs ? "--accept theirs-full" : "--accept mine-full";
+            string conflictparameter = conflictResolution == ConflictResolution.Theirs ? "-at" : "-ay";
             return CreateAssetOperation("resolve " + conflictparameter, assets);
         }
 
@@ -536,38 +750,18 @@ namespace VersionControl.Backend.SVN
         {
             if (string.IsNullOrEmpty(versionNumber))
             {
-                versionNumber = CreateSVNCommandLine("--version --quiet").Execute().OutputStr;
+                versionNumber = CreateP4CommandLine("-V").Execute().OutputStr;
+				versionNumber = versionNumber.Substring(versionNumber.LastIndexOf("\n")+1);
             }
-            if (versionNumber.StartsWith("1.7"))
-            {
-                var svnInfo = CreateSVNCommandLine("info --xml " + assetPath).Execute();
-                if (!svnInfo.Failed)
-                {
-                    var xmlDoc = new XmlDocument();
-                    xmlDoc.LoadXml(svnInfo.OutputStr);
-                    var checksumNode = xmlDoc.GetElementsByTagName("checksum").Item(0);
-                    var rootPathNode = xmlDoc.GetElementsByTagName("wcroot-abspath").Item(0);
-
-                    if (checksumNode != null && rootPathNode != null)
-                    {
-                        string checksum = checksumNode.InnerText;
-                        string firstTwo = checksum.Substring(0, 2);
-                        string rootPath = rootPathNode.InnerText;
-                        string basePath = rootPath + "/.svn/pristine/" + firstTwo + "/" + checksum + ".svn-base";
-                        if (File.Exists(basePath)) return basePath;
-                    }
-                }
-            }
-            if (versionNumber.StartsWith("1.6"))
-            {
-                return Path.GetDirectoryName(assetPath) + "/.svn/text-base/" + Path.GetFileName(assetPath) + ".svn-base";
-            }
+			
+			// base version is not stored locally - need to get base version from server into a temp path and return that path
             return "";
         }
 
         public bool CleanUp()
         {
-            return CreateOperation("cleanup");
+			// no cleanup operation for p4 - doesn't need it?
+            return true;//CreateOperation("cleanup");
         }
 
         public void ClearDatabase()

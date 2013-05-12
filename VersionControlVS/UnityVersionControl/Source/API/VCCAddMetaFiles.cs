@@ -62,6 +62,11 @@ namespace VersionControl
             return base.Delete(AddMeta(assets), mode);
         }
 
+        public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
+        {
+            return base.GetLock(AddMeta(assets), mode);
+        }
+
         public override bool Move(string from, string to)
         {
             return base.Move(from, to) && base.Move(from + meta, to + meta);

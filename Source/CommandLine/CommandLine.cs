@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using System.IO;
 
 
 namespace CommandLineExecution
@@ -31,11 +32,12 @@ namespace CommandLineExecution
 
     public sealed class CommandLine : IDisposable
     {
-        public CommandLine(string command, string arguments, string workingDirectory)
+        public CommandLine(string command, string arguments, string workingDirectory, string input = null)
         {
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
+			this.input = input;
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -74,6 +76,7 @@ namespace CommandLineExecution
 
         string output;
         string error;
+		string input;
         int exitcode;
         bool aborted;
         readonly string command;
@@ -99,7 +102,14 @@ namespace CommandLineExecution
                     ErrorDialog = false,
                 });
                 
-                var sbOutput = new StringBuilder();
+				if ( !String.IsNullOrEmpty( input ) ) {
+					StreamWriter myStreamWriter = process.StandardInput;
+					BinaryWriter writer = new BinaryWriter(myStreamWriter.BaseStream);
+					writer.Write(System.Text.Encoding.UTF8.GetBytes(input));
+					myStreamWriter.Close();
+				}
+				
+				var sbOutput = new StringBuilder();
                 process.OutputDataReceived += (obj, de) =>
                 {
                     if (!string.IsNullOrEmpty(de.Data))

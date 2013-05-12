@@ -30,9 +30,11 @@ namespace VersionControl.Backend.SVN
         private volatile bool active = false;
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
+        private IVersionControlCommands vcc;
 
         public SVNCommands()
         {
+            vcc = new VCCFilteredAssets(this);
             StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
@@ -479,7 +481,11 @@ namespace VersionControl.Backend.SVN
 
         public bool Revert(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("revert --depth=infinity", assets);
+            bool revertSuccess = CreateAssetOperation("revert --depth=infinity", assets);
+            bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
+            bool releaseSuccess = true;
+            if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);
+            return (revertSuccess && releaseSuccess) || changeListRemoveSuccess;
         }
 
         public bool Delete(IEnumerable<string> assets, OperationMode mode)
@@ -489,7 +495,9 @@ namespace VersionControl.Backend.SVN
 
         public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
+            bool getLockSuccess = CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
+            bool getChangeListRemove = vcc.ChangeListRemove(assets);
+            return getLockSuccess;
         }
 
         public bool ReleaseLock(IEnumerable<string> assets)

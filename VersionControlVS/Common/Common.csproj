@@ -56,6 +56,9 @@
     <Compile Include="..\..\Source\Common\VCCDecorator.cs">
       <Link>Source\VCCDecorator.cs</Link>
     </Compile>
+    <Compile Include="..\..\Source\Common\VCCFilterExtensions.cs">
+      <Link>Source\VCCFilterExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\..\Source\Common\VCExceptions.cs">
       <Link>Source\VCExceptions.cs</Link>
     </Compile>

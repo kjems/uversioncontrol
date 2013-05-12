@@ -30,7 +30,7 @@ namespace VersionControl.Backend.SVN
         private volatile bool active = false;
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
-        private IVersionControlCommands vcc;
+        private readonly IVersionControlCommands vcc;
 
         public SVNCommands()
         {
@@ -58,7 +58,7 @@ namespace VersionControl.Backend.SVN
             {
                 while (!requestRefreshLoopStop)
                 {
-                    Thread.Sleep(200);
+                    //Thread.Sleep(200);
                     if (active && refreshLoopActive) RefreshStatusDatabase();
                 }
             }

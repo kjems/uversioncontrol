@@ -367,7 +367,7 @@ namespace VersionControl.Backend.SVN
                     throw new VCOutOfDate(errStr, commandLine.ToString());
                 if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160035") || errStr.Contains("run 'svn cleanup'"))
+                if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
                 throw new VCException(errStr, commandLine.ToString());
             }

@@ -58,7 +58,7 @@ namespace VersionControl.Backend.SVN
             {
                 while (!requestRefreshLoopStop)
                 {
-                    //Thread.Sleep(200);
+                    Thread.Sleep(200);
                     if (active && refreshLoopActive) RefreshStatusDatabase();
                 }
             }

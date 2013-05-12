@@ -10,8 +10,8 @@ namespace VersionControl
     {
         public static IVersionControlCommands CreateVersionControlCommands()
         {
-            return CreateP4Commands();
-//            return CreateSVNCommands();
+            //return CreateP4Commands();
+            return CreateSVNCommands();
         }
 
         private static IVersionControlCommands CreateSVNCommands()

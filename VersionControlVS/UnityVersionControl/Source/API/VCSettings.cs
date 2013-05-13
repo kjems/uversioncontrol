@@ -31,8 +31,10 @@ namespace VersionControl
             ClientPath = EditorPrefs.GetString("VCSSettings/clientPath"); // using ClientPath property instead of field by intention
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
+            versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.Svn);
+
             OnSettingsChanged();
-            
+
             AppDomain.CurrentDomain.DomainUnload += (o, d) =>
             {
                 EditorPrefs.SetBool("VCSSettings/vcEnabled", vcEnabled);
@@ -54,15 +56,18 @@ namespace VersionControl
                 EditorPrefs.SetString("VCSSettings/clientPath", clientPath);
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
+                EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
             };
         }
 
         public enum EBugReportMode { Automatic, Manual }
         public enum EReflectionLevel { Local, Remote }
+        public enum EVersionControlBackend { Svn, Perforce }
 
         public static event Action SettingChanged;
 
-        [SerializeField] private static bool vcEnabled = true;
+        [SerializeField]
+        private static bool vcEnabled = true;
         public static bool VCEnabled
         {
             get { return vcEnabled; }
@@ -83,65 +88,85 @@ namespace VersionControl
             if (SettingChanged != null) SettingChanged();
         }
 
-        [SerializeField] private static bool lockPrefabs;
-        public static bool LockPrefabs { get { return lockPrefabs; } set { if (lockPrefabs != value) {lockPrefabs = value; OnSettingsChanged();} } }
-        
-        [SerializeField] private static bool lockScenes;
+        [SerializeField]
+        private static EVersionControlBackend versionControlBackend;
+        public static EVersionControlBackend VersionControlBackend { get { return versionControlBackend; } set { if (versionControlBackend != value) { versionControlBackend = value; OnSettingsChanged(); } } }
+
+        [SerializeField]
+        private static bool lockPrefabs;
+        public static bool LockPrefabs { get { return lockPrefabs; } set { if (lockPrefabs != value) { lockPrefabs = value; OnSettingsChanged(); } } }
+
+        [SerializeField]
+        private static bool lockScenes;
         public static bool LockScenes { get { return lockScenes; } set { if (lockScenes != value) { lockScenes = value; OnSettingsChanged(); } } }
-        
-        [SerializeField] private static bool lockMaterials;
+
+        [SerializeField]
+        private static bool lockMaterials;
         public static bool LockMaterials { get { return lockMaterials; } set { if (lockMaterials != value) { lockMaterials = value; OnSettingsChanged(); } } }
-        
-        [SerializeField] private static bool sceneviewGUI;
+
+        [SerializeField]
+        private static bool sceneviewGUI;
         public static bool SceneviewGUI { get { return sceneviewGUI; } set { if (sceneviewGUI != value) { sceneviewGUI = value; OnSettingsChanged(); } } }
 
-        [SerializeField] private static bool materialGUI;
+        [SerializeField]
+        private static bool materialGUI;
         public static bool MaterialGUI { get { return materialGUI; } set { if (materialGUI != value) { materialGUI = value; OnSettingsChanged(); } } }
 
-        [SerializeField] private static bool hierarchyIcons;
+        [SerializeField]
+        private static bool hierarchyIcons;
         public static bool HierarchyIcons { get { return hierarchyIcons; } set { if (hierarchyIcons != value) { hierarchyIcons = value; OnSettingsChanged(); } } }
 
         [SerializeField]
         private static EReflectionLevel hierarchyReflectionMode;
         public static EReflectionLevel HierarchyReflectionMode { get { return hierarchyReflectionMode; } set { if (hierarchyReflectionMode != value) { hierarchyReflectionMode = value; } } }
-        
-        [SerializeField] private static bool projectIcons;
+
+        [SerializeField]
+        private static bool projectIcons;
         public static bool ProjectIcons { get { return projectIcons; } set { if (projectIcons != value) { projectIcons = value; OnSettingsChanged(); } } }
 
         [SerializeField]
         private static EReflectionLevel projectReflectionMode;
         public static EReflectionLevel ProjectReflectionMode { get { return projectReflectionMode; } set { if (projectReflectionMode != value) { projectReflectionMode = value; } } }
-        
-        [SerializeField] private static bool bugReport;
+
+        [SerializeField]
+        private static bool bugReport;
         public static bool BugReport { get { return bugReport; } set { if (bugReport != value) { bugReport = value; OnSettingsChanged(); } } }
-        
-        [SerializeField] private static EBugReportMode bugReportMode;
+
+        [SerializeField]
+        private static EBugReportMode bugReportMode;
         public static EBugReportMode BugReportMode { get { return bugReportMode; } set { if (bugReportMode != value) { bugReportMode = value; } } }
-        
-        [SerializeField]private static string lockScenesFilter;
+
+        [SerializeField]
+        private static string lockScenesFilter;
         public static string LockScenesFilter { get { return lockScenesFilter; } set { if (lockScenesFilter != value) { lockScenesFilter = value.TrimStart(new[] { ' ', '/' }); } } }
-        
-        [SerializeField]private static string lockPrefabsFilter;
+
+        [SerializeField]
+        private static string lockPrefabsFilter;
         public static string LockPrefabsFilter { get { return lockPrefabsFilter; } set { if (lockPrefabsFilter != value) { lockPrefabsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
-        
-        [SerializeField]private static string lockMaterialsFilter;
+
+        [SerializeField]
+        private static string lockMaterialsFilter;
         public static string LockMaterialsFilter { get { return lockMaterialsFilter; } set { if (lockMaterialsFilter != value) { lockMaterialsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
 
-        [SerializeField] private static bool autoCloseAfterSuccess;
+        [SerializeField]
+        private static bool autoCloseAfterSuccess;
         public static bool AutoCloseAfterSuccess { get { return autoCloseAfterSuccess; } set { if (autoCloseAfterSuccess != value) { autoCloseAfterSuccess = value; OnSettingsChanged(); } } }
 
-        [SerializeField] private static bool includeDepedenciesAsDefault;
+        [SerializeField]
+        private static bool includeDepedenciesAsDefault;
         public static bool IncludeDepedenciesAsDefault { get { return includeDepedenciesAsDefault; } set { if (includeDepedenciesAsDefault != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
 
-        [SerializeField]private static string clientPath;
+        [SerializeField]
+        private static string clientPath;
         public static string ClientPath
         {
-            get { return clientPath; } 
-            set { 
+            get { return clientPath; }
+            set
+            {
                 if (clientPath != value)
                 {
                     clientPath = value;
-                    if (!string.IsNullOrEmpty(clientPath)) EnvironmentManager.AddPathEnvironment(clientPath,  ":");
+                    if (!string.IsNullOrEmpty(clientPath)) EnvironmentManager.AddPathEnvironment(clientPath, ":");
                     else EnvironmentManager.ResetPathEnvironment();
                 }
             }
@@ -161,7 +186,7 @@ namespace VersionControl
                         D.writeLogCallback += Debug.Log;
                         D.writeWarningCallback += Debug.LogWarning;
                     }
-                    else 
+                    else
                     {
                         if (D.writeLogCallback != null) D.writeLogCallback -= Debug.Log;
                         if (D.writeWarningCallback != null) D.writeWarningCallback -= Debug.LogWarning;

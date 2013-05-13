@@ -17,7 +17,8 @@ namespace VersionControl.UserInterface
             GetWindow(typeof(VCSettingsWindow), false, "Version Control Settings");
         }
 
-        [SerializeField] private readonly VCSettingsGUI settingsGUI = new VCSettingsGUI();
+        [SerializeField]
+        private readonly VCSettingsGUI settingsGUI = new VCSettingsGUI();
 
         private void OnEnable()
         {
@@ -120,6 +121,11 @@ namespace VersionControl.UserInterface
                     clientPath = EditorGUILayout.TextField(clientPath, textStyle, GUILayout.ExpandWidth(true), GUILayout.Width(180)).Trim(new[] { ' ' }).Replace('\\', '/');
                 }
                 if (ValidCommandLineClient(clientPath)) VCSettings.ClientPath = clientPath;
+                using (GUILayoutHelper.Horizontal())
+                {
+                    GUILayout.Label(new GUIContent("Prefered Version Control(?)", "The selected Version Control will be used if a valid local copy can be found"));
+                    VCSettings.VersionControlBackend = (VCSettings.EVersionControlBackend)EditorGUILayout.EnumPopup(VCSettings.VersionControlBackend, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
             }
         }
 

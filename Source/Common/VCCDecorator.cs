@@ -48,6 +48,11 @@ namespace VersionControl
             return vcc.IsReady();
         }
 
+        public virtual bool HasValidLocalCopy()
+        {
+            return vcc.HasValidLocalCopy();
+        }
+
         public virtual void SetWorkingDirectory(string workingDirectory)
         {
             vcc.SetWorkingDirectory(workingDirectory);

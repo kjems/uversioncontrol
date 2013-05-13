@@ -565,6 +565,11 @@ namespace VersionControl.Backend.SVN
             return "";
         }
 
+        public bool HasValidLocalCopy()
+        {
+            return string.IsNullOrEmpty(CreateSVNCommandLine("info").Execute().ErrorStr);
+        }
+
         public bool CleanUp()
         {
             return CreateOperation("cleanup");

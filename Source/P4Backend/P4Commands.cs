@@ -284,6 +284,11 @@ namespace VersionControl.Backend.P4
             return !OperationActive && active;
         }
 
+        public bool HasValidLocalCopy()
+        {
+            return P4Initialized;
+        }
+
         public void SetWorkingDirectory(string workingDirectory)
         {
             this.workingDirectory = workingDirectory;
@@ -536,7 +541,7 @@ namespace VersionControl.Backend.P4
                     throw new VCOutOfDate(errStr, commandLine.ToString());
                 if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'p4 cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160035") || errStr.Contains("run 'p4 cleanup'"))
+                if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
                 throw new VCException(errStr, commandLine.ToString());
             }

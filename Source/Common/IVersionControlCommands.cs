@@ -42,6 +42,7 @@ namespace VersionControl
         void ActivateRefreshLoop();
         void DeactivateRefreshLoop();
         bool IsReady();
+        bool HasValidLocalCopy();
         void SetWorkingDirectory(string workingDirectory);
         void SetUserCredentials(string userName, string password);
         VersionControlStatus GetAssetStatus(string assetPath);

@@ -41,7 +41,7 @@ namespace VersionControl
     {
         private VCCommands()
         {
-            vcc.SetWorkingDirectory(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
+            vcc = VersionControlFactory.CreateVersionControlCommands(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
             vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
             vcc.StatusCompleted += OnStatusCompleted;
             OnNextUpdate.Do(Start);
@@ -55,7 +55,7 @@ namespace VersionControl
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
 
-        private readonly IVersionControlCommands vcc = VersionControlFactory.CreateVersionControlCommands();
+        private readonly IVersionControlCommands vcc;
         private bool ignoreStatusRequests = false;
         private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
 
@@ -261,6 +261,10 @@ namespace VersionControl
         public bool IsReady()
         {
             return VCSettings.VCEnabled && vcc.IsReady();
+        }
+        public bool HasValidLocalCopy()
+        {
+            return vcc.HasValidLocalCopy();
         }
         public void SetWorkingDirectory(string workingDirectory)
         {

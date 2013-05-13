@@ -1,41 +1,74 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
+
+using VersionControl.Backend.Noop;
 using VersionControl.Backend.SVN;
 using VersionControl.Backend.P4;
+using UnityEngine;
+using UnityEditor;
 
 namespace VersionControl
 {
     public static class VersionControlFactory
     {
-        public static IVersionControlCommands CreateVersionControlCommands()
+        public static IVersionControlCommands CreateVersionControlCommands(string workDirectory)
         {
-            //return CreateP4Commands();
-            return CreateSVNCommands();
+            var p4Commands = AddDecorators(new P4Commands());
+            p4Commands.SetWorkingDirectory(workDirectory);
+
+            var svnCommands = AddDecorators(new SVNCommands());
+            svnCommands.SetWorkingDirectory(workDirectory);
+            
+            bool svnValid = svnCommands.HasValidLocalCopy();
+            bool p4Valid = p4Commands.HasValidLocalCopy();
+            bool svnSelected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn;
+            bool p4Selected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce;
+
+
+            if (svnValid && !p4Valid)
+            {
+                if (svnSelected || PromptUserForBackend(VCSettings.EVersionControlBackend.Svn))
+                {
+                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;
+                    p4Commands.Dispose();
+                    return svnCommands;
+                }
+            }
+            if (!svnValid && p4Valid)
+            {
+                if (p4Selected || PromptUserForBackend(VCSettings.EVersionControlBackend.Perforce))
+                {
+                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Perforce;
+                    svnCommands.Dispose();
+                    return p4Commands;
+                }
+            }
+            if (svnValid && p4Valid)
+            {
+                if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn)
+                {
+                    p4Commands.Dispose();
+                    return svnCommands;
+                }
+                if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce)
+                {
+                    svnCommands.Dispose();
+                    return p4Commands;
+                }
+            }
+            D.LogWarning("No valid version control local copy found, so version control is inactive");
+            return new NoopCommands();
         }
 
-        private static IVersionControlCommands CreateSVNCommands()
+        private static bool PromptUserForBackend(VCSettings.EVersionControlBackend backend)
         {
-            return new VCCFilteredAssets(new VCCAddMetaFiles(new SVNCommands()));
+            return EditorUtility.DisplayDialog("Use " + backend + " ?", "The only valid version control found is '" + backend + "'. \nUse " + backend + " as version control?", "Yes", "No");
         }
 
-        private static IVersionControlCommands CreateP4Commands()
+        private static IVersionControlCommands AddDecorators(IVersionControlCommands vcc)
         {
-            return new VCCFilteredAssets(new VCCAddMetaFiles(new P4Commands()));
+            return new VCCFilteredAssets(new VCCAddMetaFiles(vcc));
         }
-
-        /*private static IVersionControlCommands CreateAppDomainSVNCommands()
-        {
-            var svnDomain = BuildChildDomain(AppDomain.CurrentDomain, "SVNDomain");
-            var svnCommands = (IVersionControlCommands)svnDomain.CreateInstanceAndUnwrap("SVNBackend", "VersionControl.Backend.SVN.SVNCommands");
-            return new VCCFilteredAssets(svnCommands);
-        }
-
-        private static AppDomain BuildChildDomain(AppDomain parentDomain, string name)
-        {
-            var evidence = new Evidence(parentDomain.Evidence);
-            var setup = parentDomain.SetupInformation;
-            return AppDomain.CreateDomain(name, evidence, setup);
-        }*/
     }
 }

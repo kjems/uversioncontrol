@@ -163,11 +163,11 @@ namespace VersionControl.Backend.P4
             {
                 commandLineOutput = ExecuteOperation(p4StatusTask);
 				// sample output:
-				// P4CLIENT=asilva_asilva-eline-PC_Misc (set)
+				// P4CLIENT=workspace_name (set)
 				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
-				// P4PASSWD=questforever (set)
-				// P4PORT=10.208.64.21:1666 (set)
-				// P4USER=asilva (set)
+				// P4PASSWD=password (set)
+				// P4PORT=192.168.1.1:1666 (set)
+				// P4USER=uesrname (set)
 				string output = commandLineOutput.OutputStr;
 				if ( output.Contains("P4CLIENT=") )
 				{
@@ -231,20 +231,20 @@ namespace VersionControl.Backend.P4
 				//#
 				//# Use 'p4 help client' to see more about client views and options.
 				//
-				//Client: asilva_asilva-eline-PC_Misc
+				//Client: workspace_name
 				//
 				//Update: 2013/04/23 21:52:59
 				//
 				//Access: 2013/04/24 06:15:05
 				//
-				//Owner:  asilva
+				//Owner:  username
 				//
-				//Host:   asilva-eline-PC
+				//Host:   machine_name
 				//
 				//Description:
-				//        Created by asilva.
+				//        Created by username.
 				//
-				//Root:   C:\Users\anthonys\Perforce\asilva_asilva-eline-PC_Misc
+				//Root:   C:\Users\username\Perforce\workspace_name
 				//
 				//Options:        noallwrite noclobber nocompress unlocked nomodtime normdir
 				//
@@ -253,9 +253,9 @@ namespace VersionControl.Backend.P4
 				//LineEnd:        local
 				//
 				//View:
-				//        //depot/Misc/... //asilva_asilva-eline-PC_Misc/...
-				//        -//depot/Misc/P4Test/Temp/... //asilva_asilva-eline-PC_Misc/P4Test/Temp/...
-				//        -//depot/Misc/P4Test/Library/... //asilva_asilva-eline-PC_Misc/P4Test/Library/...
+				//        //depot/... //workspace_name/...
+				//        -//depot/Temp/... //workspace_name/Temp/...
+				//        -//depot/Library/... //workspace_name/Library/...
 				string output = commandLineOutput.OutputStr;
 				var lines = output.Split( new Char[] { '\r', '\n' } );
 				foreach( String line in lines ) {

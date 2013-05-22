@@ -28,25 +28,25 @@ namespace VersionControl.Backend.P4
 		public void ReadFromLines(string []lines)
 		{
 			// typical fstat formatting:
-			//... depotFile //depot/Misc/A
-			//... clientFile C:\Users\anthonys\Perforce\asilva_asilva-eline-PC_Misc\A
+			//... depotFile //depot/A
+			//... clientFile C:\Users\username\Perforce\workspace_name\A
 			//... headRev 7
 			//... haveRev 7
 			//... action edit
-			//... actionOwner asilva
+			//... actionOwner username
 			//... change default
 			//... ourLock 
 			//
-			//... depotFile //depot/Misc/Artwork/HQ.psd
-			//... clientFile C:\Users\anthonys\Perforce\asilva_asilva-eline-PC_Misc\Artwork\HQ.psd
+			//... depotFile //depot/Artwork/HQ.psd
+			//... clientFile C:\Users\username\Perforce\workspace_name\Artwork\HQ.psd
 			//... headRev 6
 			//... haveRev 6
-			//... ... otherOpen0 aburley@aburley-p4
+			//... ... otherOpen0 other_username@other_workspace
 			//... ... otherOpen 1
 			//... ... otherLock 
 			//
-			//... depotFile //depot/Misc/Artwork/elvenchain_export.mb
-			//... clientFile C:\Users\anthonys\Perforce\asilva_asilva-eline-PC_Misc\Artwork\elvenchain_export.mb
+			//... depotFile //depot/Artwork/elvenchain_export.mb
+			//... clientFile C:\Users\username\Perforce\workspace_name\Artwork\elvenchain_export.mb
 			//... headRev 3
 			//... haveRev 3
 

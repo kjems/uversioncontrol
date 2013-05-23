@@ -48,6 +48,11 @@ namespace VersionControl.UnitTests
             return true;
         }
 
+        public bool HasValidLocalCopy()
+        {
+            return false;
+        }
+
         public void SetWorkingDirectory(string workingDirectory)
         {
         }

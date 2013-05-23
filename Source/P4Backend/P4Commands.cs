@@ -35,7 +35,7 @@ namespace VersionControl.Backend.P4
         private volatile bool requestRefreshLoopStop = false;
 		
 		private bool P4Initialized {
-			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(password) || String.IsNullOrEmpty(clientSpec) || String.IsNullOrEmpty(port)); }
+			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(clientSpec) || String.IsNullOrEmpty(port)); }
 		}
 
         public P4Commands()
@@ -159,41 +159,40 @@ namespace VersionControl.Backend.P4
             CommandLineOutput commandLineOutput;
 			
 			// get connection info
-            using (var p4StatusTask = CreateP4CommandLine("set"))
-            {
-                commandLineOutput = ExecuteOperation(p4StatusTask);
+			using (var p4StatusTask = CreateP4CommandLine("set"))
+			{
+				commandLineOutput = ExecuteOperation(p4StatusTask);
 				// sample output:
 				// P4CLIENT=workspace_name (set)
 				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
 				// P4PASSWD=password (set)
-				// P4PORT=192.168.1.1:1666 (set)
-				// P4USER=uesrname (set)
-				string output = commandLineOutput.OutputStr;
-				if ( output.Contains("P4CLIENT=") )
-				{
-					clientSpec = output.Substring( output.IndexOf("P4CLIENT=") + "P4CLIENT=".Length);
-					clientSpec = clientSpec.Substring(0, clientSpec.IndexOf("(set)")).TrimEnd();
-					D.Log(clientSpec);
+				// P4PORT=192.168.1.1:1666
+				// P4USER=uesrname
+				string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+				foreach( String line in output ) {
+					var cleaned = line.Replace("(set)", "").Trim();
+					if ( cleaned.StartsWith("P4CLIENT=") )
+					{
+						clientSpec = cleaned.Substring( "P4CLIENT=".Length );
+						D.Log(clientSpec);
+					}
+					else if ( cleaned.StartsWith("P4PASSWD=") )
+					{
+						password = cleaned.Substring( "P4PASSWD=".Length );
+						D.Log(password);
+					}
+					else if ( cleaned.StartsWith("P4PORT=") )
+					{
+						port = cleaned.Substring( "P4PORT=".Length );
+						D.Log(port);
+					}
+					else if ( cleaned.StartsWith("P4USER=") )
+					{
+						userName = cleaned.Substring( "P4USER=".Length );
+						D.Log(userName);
+					}
 				}
-				if ( output.Contains("P4PASSWD=") )
-				{
-					password = output.Substring( output.IndexOf("P4PASSWD=") + "P4PASSWD=".Length);
-					password = password.Substring(0, password.IndexOf("(set)")).TrimEnd();
-					D.Log(password);
-				}
-				if ( output.Contains("P4PORT=") )
-				{
-					port = output.Substring( output.IndexOf("P4PORT=") + "P4PORT=".Length);
-					port = port.Substring(0, port.IndexOf("(set)")).TrimEnd();
-					D.Log(port);
-				}
-				if ( output.Contains("P4USER=") )
-				{
-					userName = output.Substring( output.IndexOf("P4USER=") + "P4USER=".Length);
-					userName = userName.Substring(0, userName.IndexOf("(set)")).TrimEnd();
-					D.Log(userName);
-				}
-            }
+			}
 			
 			// get directory info
             using (var p4WhereTask = CreateP4CommandLine("client -o"))

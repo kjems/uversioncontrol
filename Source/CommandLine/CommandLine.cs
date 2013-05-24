@@ -108,36 +108,13 @@ namespace CommandLineExecution
 					writer.Write(System.Text.Encoding.UTF8.GetBytes(input));
 					myStreamWriter.Close();
 				}
-				
-				var sbOutput = new StringBuilder();
-                process.OutputDataReceived += (obj, de) =>
-                {
-                    if (!string.IsNullOrEmpty(de.Data))
-                    {
-                        sbOutput.Append(de.Data);
-                        if (OutputReceived != null) OutputReceived(de.Data);
-                    }
-                };
-
-                var sbError = new StringBuilder();
-                process.ErrorDataReceived += (obj, de) =>
-                {
-                    if (!string.IsNullOrEmpty(de.Data))
-                    {
-                        sbError.Append(de.Data);
-                        if (ErrorReceived != null) ErrorReceived(de.Data);
-                    }
-                };
-
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
 
                 process.WaitForExit();
 
                 if (!aborted)
                 {
-                    error = sbError.ToString();
-                    output = sbOutput.ToString();
+                    error = process.StandardError.ReadToEnd();
+                    output = process.StandardOutput.ReadToEnd();
                     exitcode = process.ExitCode;
                 }
             }

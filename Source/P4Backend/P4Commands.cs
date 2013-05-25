@@ -35,12 +35,13 @@ namespace VersionControl.Backend.P4
         private volatile bool requestRefreshLoopStop = false;
 		
 		private bool P4Initialized {
-			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(clientSpec) || String.IsNullOrEmpty(port)); }
+			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(port)); }
 		}
 
         public P4Commands()
         {
-            StartRefreshLoop();
+			InitializeP4Connection();
+			StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -167,11 +168,21 @@ namespace VersionControl.Backend.P4
 				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
 				// P4PASSWD=password (set)
 				// P4PORT=192.168.1.1:1666
-				// P4USER=uesrname
+				// P4USER=username
 				string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 				foreach( String line in output ) {
-					var cleaned = line.Replace("(set)", "").Trim();
-					if ( cleaned.StartsWith("P4CLIENT=") )
+                    var cleaned = line.Trim();
+                    // check for/remove (set) and (config) tags
+                    if (line.IndexOf("(set") != -1)
+                    {
+                        cleaned = line.Substring(0, line.IndexOf("(set")).Trim();
+                    }
+                    else if (line.IndexOf("(config") != -1)
+                    {
+                        cleaned = line.Substring(0, line.IndexOf("(config")).Trim();
+                    }
+
+                    if ( cleaned.StartsWith("P4CLIENT=") )
 					{
 						clientSpec = cleaned.Substring( "P4CLIENT=".Length );
 						D.Log(clientSpec);
@@ -468,7 +479,10 @@ namespace VersionControl.Backend.P4
         {
             if (P4Initialized)
             {
-                arguments = " -u " + userName + " -P " + password + " -c " + clientSpec + " -p " + port + " " + arguments;
+                arguments = " -u " + userName
+                          + (String.IsNullOrEmpty(password) ? "" : " -P " + password)
+                          + (String.IsNullOrEmpty(clientSpec) ? "" : " -c " + clientSpec)
+                          + " -p " + port + " " + arguments;
             }
             return new CommandLine("p4", arguments, workingDirectory, input);
         }
@@ -499,7 +513,7 @@ namespace VersionControl.Backend.P4
             }
             catch (Exception e)
             {
-                throw new VCCriticalException("Check that your commandline P4 client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
+                throw new VCCriticalException("Check that your commandline P4 client is installed correctly\n\n" + e.Message, commandLine.ToString(), e);
             }
             finally
             {

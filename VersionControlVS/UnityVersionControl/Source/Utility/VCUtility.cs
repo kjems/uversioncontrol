@@ -111,14 +111,16 @@ namespace VersionControl
             if (VCSettings.VCEnabled)
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
-                {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Remote);
-                }
-                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
-                {
-                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Previous);
-                }
+				if ( assetStatus.assetPath != null ) {
+	                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+	                {
+	                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Remote);
+	                }
+	                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
+	                {
+	                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.ToString(), StatusLevel.Previous);
+	                }
+				}
             }
         }
 

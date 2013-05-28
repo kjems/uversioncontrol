@@ -32,12 +32,13 @@ namespace CommandLineExecution
 
     public sealed class CommandLine : IDisposable
     {
-        public CommandLine(string command, string arguments, string workingDirectory, string input = null)
+        public CommandLine(string command, string arguments, string workingDirectory, string input = null, string cliEnding = "")
         {
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
 			this.input = input;
+			this.cliEnding = cliEnding;
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -77,6 +78,7 @@ namespace CommandLineExecution
         string output;
         string error;
 		string input;
+		string cliEnding;
         int exitcode;
         bool aborted;
         readonly string command;
@@ -114,7 +116,7 @@ namespace CommandLineExecution
                 {
                     if (!string.IsNullOrEmpty(de.Data))
                     {
-                        sbOutput.Append(de.Data);
+                        sbOutput.Append(de.Data + cliEnding);
                         if (OutputReceived != null) OutputReceived(de.Data);
                     }
                 };
@@ -124,7 +126,7 @@ namespace CommandLineExecution
                 {
                     if (!string.IsNullOrEmpty(de.Data))
                     {
-                        sbError.Append(de.Data);
+                        sbError.Append(de.Data + cliEnding);
                         if (ErrorReceived != null) ErrorReceived(de.Data);
                     }
                 };

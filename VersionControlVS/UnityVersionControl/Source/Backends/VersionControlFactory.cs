@@ -7,6 +7,7 @@ using VersionControl.Backend.SVN;
 using VersionControl.Backend.P4;
 using UnityEngine;
 using UnityEditor;
+using System;
 
 namespace VersionControl
 {
@@ -14,10 +15,14 @@ namespace VersionControl
     {
         public static IVersionControlCommands CreateVersionControlCommands(string workDirectory)
         {
-            var p4Commands = AddDecorators(new P4Commands());
+			string cliEnding = "";
+			if ( Application.platform == RuntimePlatform.OSXEditor ) {
+				cliEnding = Environment.NewLine;
+			}
+            var p4Commands = AddDecorators(new P4Commands(cliEnding));
             p4Commands.SetWorkingDirectory(workDirectory);
 
-            var svnCommands = AddDecorators(new SVNCommands());
+            var svnCommands = AddDecorators(new SVNCommands(cliEnding));
             svnCommands.SetWorkingDirectory(workDirectory);
             
             bool svnValid = svnCommands.HasValidLocalCopy();

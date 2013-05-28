@@ -142,6 +142,23 @@ namespace VersionControl.Backend.P4
             }
             return versionControlStatus;
         }
+		
+		private static void AddItemToDatabase(string []fstatLines, int rootDirLength, string rootUnixDir, ref StatusDatabase statusDatabase) 
+		{
+			if ( fstatLines.Length > 0 ) {
+				P4FStatData fileData = new P4FStatData();
+				fileData.ReadFromLines( fstatLines );
+				string unixPath = fileData.clientFile.Replace( "\\", "/" );
+				if ( unixPath.Length > rootDirLength ) {
+					string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
+					if ( unixPath.Contains( rootUnixDir ) ) {
+						var status = PopulateFromFstatData(fileData);
+						status.assetPath = assetPath;
+						statusDatabase[assetPath] = status;
+					}
+				}
+			}
+		}
 
         public static StatusDatabase P4ParseFstat(string p4Status, string rootDir)
         {
@@ -155,20 +172,8 @@ namespace VersionControl.Backend.P4
 				String line = lines[numLines++];
 				
 				if ( line.StartsWith( "... depotFile" ) ) {
-					if ( fstatLines.Count > 0 ) {
-						P4FStatData fileData = new P4FStatData();
-						fileData.ReadFromLines( fstatLines.ToArray() );
-						fstatLines.Clear();
-						string unixPath = fileData.clientFile.Replace( "\\", "/" );
-						if ( unixPath.Length > rootDirLength ) {
-							string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
-							if ( unixPath.Contains( rootUnixDir ) ) {
-								var status = PopulateFromFstatData(fileData);
-								status.assetPath = assetPath;
-								statusDatabase[assetPath] = status;
-							}
-						}
-					}
+					AddItemToDatabase( fstatLines.ToArray(), rootDirLength, rootUnixDir, ref statusDatabase );
+					fstatLines.Clear();
 				}
 
 				fstatLines.Add(line);
@@ -176,18 +181,7 @@ namespace VersionControl.Backend.P4
 			
 			// make sure we get the last one
 			if ( fstatLines.Count > 0 ) {
-				P4FStatData fileData = new P4FStatData();
-				fileData.ReadFromLines( fstatLines.ToArray() );
-				fstatLines.Clear();
-				string unixPath = fileData.clientFile.Replace( "\\", "/" );
-				if ( unixPath.Length > rootDirLength ) {
-					string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
-					if ( unixPath.Contains( rootUnixDir ) ) {
-						var status = PopulateFromFstatData(fileData);
-						status.assetPath = assetPath;
-						statusDatabase[assetPath] = status;
-					}
-				}
+				AddItemToDatabase( fstatLines.ToArray(), rootDirLength, rootUnixDir, ref statusDatabase );
 			}
 
 			return statusDatabase;

@@ -7,6 +7,7 @@ obj
 _ReSharper
 .user
 .pidb
+.DS_Store
 
 # Compiled assemblies
 Assemblies/debug

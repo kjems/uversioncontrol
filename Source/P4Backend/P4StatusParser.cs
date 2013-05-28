@@ -154,21 +154,38 @@ namespace VersionControl.Backend.P4
 			while ( numLines < lines.Length ) {
 				String line = lines[numLines++];
 				
-				if ( !String.IsNullOrEmpty(line) ) {
-					fstatLines.Add(line);
-				}
-				else {
-					P4FStatData fileData = new P4FStatData();
-					fileData.ReadFromLines( fstatLines.ToArray() );
-					fstatLines.Clear();
-					string unixPath = fileData.clientFile.Replace( "\\", "/" );
-					if ( unixPath.Length > rootDirLength ) {
-						string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
-						if ( unixPath.Contains( rootUnixDir ) ) {
-							var status = PopulateFromFstatData(fileData);
-							status.assetPath = assetPath;
-							statusDatabase[assetPath] = status;
+				if ( line.StartsWith( "... depotFile" ) ) {
+					if ( fstatLines.Count > 0 ) {
+						P4FStatData fileData = new P4FStatData();
+						fileData.ReadFromLines( fstatLines.ToArray() );
+						fstatLines.Clear();
+						string unixPath = fileData.clientFile.Replace( "\\", "/" );
+						if ( unixPath.Length > rootDirLength ) {
+							string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
+							if ( unixPath.Contains( rootUnixDir ) ) {
+								var status = PopulateFromFstatData(fileData);
+								status.assetPath = assetPath;
+								statusDatabase[assetPath] = status;
+							}
 						}
+					}
+				}
+
+				fstatLines.Add(line);
+			}
+			
+			// make sure we get the last one
+			if ( fstatLines.Count > 0 ) {
+				P4FStatData fileData = new P4FStatData();
+				fileData.ReadFromLines( fstatLines.ToArray() );
+				fstatLines.Clear();
+				string unixPath = fileData.clientFile.Replace( "\\", "/" );
+				if ( unixPath.Length > rootDirLength ) {
+					string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
+					if ( unixPath.Contains( rootUnixDir ) ) {
+						var status = PopulateFromFstatData(fileData);
+						status.assetPath = assetPath;
+						statusDatabase[assetPath] = status;
 					}
 				}
 			}

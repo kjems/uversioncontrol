@@ -20,6 +20,7 @@ namespace VersionControl.Backend.P4
 		private string port = "";
 		private string rootPath = "";
         private string versionNumber;
+		private string cliEnding = "";
 		private Dictionary<string, string> depotToDir = null;
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
@@ -38,8 +39,9 @@ namespace VersionControl.Backend.P4
 			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(port)); }
 		}
 
-        public P4Commands()
+        public P4Commands(string cliEnding = "")
         {
+			this.cliEnding = cliEnding;
 			InitializeP4Connection();
 			StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
@@ -484,7 +486,7 @@ namespace VersionControl.Backend.P4
                           + (String.IsNullOrEmpty(clientSpec) ? "" : " -c " + clientSpec)
                           + " -p " + port + " " + arguments;
             }
-            return new CommandLine("p4", arguments, workingDirectory, input);
+            return new CommandLine("p4", arguments, workingDirectory, input, cliEnding);
         }
 
         private bool CreateOperation(string arguments)

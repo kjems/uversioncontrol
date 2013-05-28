@@ -18,6 +18,7 @@ namespace VersionControl.Backend.SVN
         private string userName;
         private string password;
         private string versionNumber;
+		private string cliEnding = "";
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
@@ -32,8 +33,9 @@ namespace VersionControl.Backend.SVN
         private volatile bool requestRefreshLoopStop = false;
         private readonly IVersionControlCommands vcc;
 
-        public SVNCommands()
+        public SVNCommands(string cliEnding = "")
         {
+			this.cliEnding = cliEnding;
             vcc = new VCCFilteredAssets(this);
             StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;

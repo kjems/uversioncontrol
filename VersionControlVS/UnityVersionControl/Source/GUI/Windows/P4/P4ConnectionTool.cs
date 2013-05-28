@@ -15,6 +15,7 @@ public class P4ConnectionTool : EditorWindow {
 	private string port = "";
 	private string rootPath = "";
     private string workingDirectory = ".";
+	private string cliEnding = "";
 	private string p4ConfigFile = ".p4config";
 	private string p4IgnoreFile = ".gitignore"; 
 	private List<string> clients = new List<string>();
@@ -46,6 +47,9 @@ public class P4ConnectionTool : EditorWindow {
 		};
 		
 		window.workingDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
+		if ( Application.platform == RuntimePlatform.OSXEditor ) {
+			window.cliEnding = Environment.NewLine;
+		}
 
         CommandLineOutput commandLineOutput;
 		
@@ -166,10 +170,7 @@ public class P4ConnectionTool : EditorWindow {
 					  + (String.IsNullOrEmpty(clientSpec) ? "" : " -c " + clientSpec)
 					  + " -p " + port + " " + arguments;
         }
-		if (Application.platform == RuntimePlatform.OSXEditor) {
-	        return new CommandLine("/usr/local/bin/p4", arguments, workingDirectory, input);
-		}
-        return new CommandLine("p4", arguments, workingDirectory, input);
+        return new CommandLine("p4", arguments, workingDirectory, input, cliEnding);
     }
 
     private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)

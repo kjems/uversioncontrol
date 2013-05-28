@@ -51,54 +51,56 @@ namespace VersionControl.Backend.P4
 			//... haveRev 3
 
 			foreach( String line in lines ) {
-				string cleanedLine = line.Replace("... ", "");
-				int firstSpace = cleanedLine.IndexOf(" ");
-				string attrName = cleanedLine.Substring( 0, firstSpace );
-				string val = cleanedLine.Substring( firstSpace + 1 ).Trim();
-				
-				switch ( attrName ) {
-				case "clientFile":
-					clientFile = val;
-					break;
-				case "depotFile":
-					depotFile = val;
-					break;
-				case "movedFile":
-					movedFile = val;
-					break;
-				case "shelved":
-					shelved = true;
-					break;
-				case "headRev":
-					headRev = Int32.Parse(val);
-					break;
-				case "haveRev":
-					haveRev = Int32.Parse(val);
-					break;
-				case "action":
-					action = val;
-					break;
-				case "actionOwner":
-					actionOwner = val;
-					break;
-				case "change":
-					change = val;
-					break;
-				case "otherOpen":
-					otherOpen = Int32.Parse(val);
-					break;
-				case "otherOpen0":
-					otherOwner = val.Split('@')[0];
-					break;
-				case "otherLock":
-					otherLock = true;
-					break;
-				case "ourLock":
-					ourLock = true;
-					break;
-				default:
-					D.LogError( String.Format( "p4 fstat line unrecognized: {0}", line ) );
-					break;
+				if ( !String.IsNullOrEmpty( line ) ) {
+					string cleanedLine = line.Replace("... ", "");
+					int firstSpace = cleanedLine.IndexOf(" ");
+					string attrName = cleanedLine.Substring( 0, firstSpace );
+					string val = cleanedLine.Substring( firstSpace + 1 ).Trim();
+					
+					switch ( attrName ) {
+					case "clientFile":
+						clientFile = val;
+						break;
+					case "depotFile":
+						depotFile = val;
+						break;
+					case "movedFile":
+						movedFile = val;
+						break;
+					case "shelved":
+						shelved = true;
+						break;
+					case "headRev":
+						headRev = Int32.Parse(val);
+						break;
+					case "haveRev":
+						haveRev = Int32.Parse(val);
+						break;
+					case "action":
+						action = val;
+						break;
+					case "actionOwner":
+						actionOwner = val;
+						break;
+					case "change":
+						change = val;
+						break;
+					case "otherOpen":
+						otherOpen = Int32.Parse(val);
+						break;
+					case "otherOpen0":
+						otherOwner = val.Split('@')[0];
+						break;
+					case "otherLock":
+						otherLock = true;
+						break;
+					case "ourLock":
+						ourLock = true;
+						break;
+					default:
+						D.LogError( String.Format( "p4 fstat line unrecognized: {0}", line ) );
+						break;
+					}
 				}
 			}
 		}

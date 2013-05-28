@@ -337,7 +337,7 @@ namespace VersionControl.Backend.P4
         public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
         {
             if (!active) return false;
-
+			
             string arguments = "status -a -e -d ";
 //            if (statusLevel == StatusLevel.Remote) arguments += " -u";
 //            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
@@ -372,9 +372,12 @@ namespace VersionControl.Backend.P4
 
                     foreach (var statusIt in fstatDB)
                     {
-                        var status = statusIt.Value;
-                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[statusIt.Key] = status;
+                        VersionControlStatus status = null;
+						if ( !statusDatabase.TryGetValue(statusIt.Key, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
+							status = statusIt.Value;
+	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+	                        statusDatabase[statusIt.Key] = status;
+						}
                     }
 				}
                 lock (requestQueueLockToken)
@@ -454,9 +457,12 @@ namespace VersionControl.Backend.P4
 
                     foreach (var statusIt in fstatDB)
                     {
-                        var status = statusIt.Value;
-                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[statusIt.Key] = status;
+                        VersionControlStatus status = null;
+						if ( !statusDatabase.TryGetValue(statusIt.Key, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
+							status = statusIt.Value;
+	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+	                        statusDatabase[statusIt.Key] = status;
+						}
                     }
                 }
                 lock (requestQueueLockToken)

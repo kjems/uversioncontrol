@@ -68,6 +68,7 @@
     <Compile Include="Source\GUI\Utility\VCSceneViewGUI.cs" />
     <Compile Include="Source\GUI\Utility\VCStatusIcons.cs" />
     <Compile Include="Source\GUI\Utility\Terminology.cs" />
+    <Compile Include="Source\GUI\Windows\P4\P4ConnectionTool.cs" />
     <Compile Include="Source\GUI\Windows\VCAboutWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCBugReportWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCCommitWindow.cs" />
@@ -150,4 +151,5 @@
       <LogicalName>circle</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
 </Project>

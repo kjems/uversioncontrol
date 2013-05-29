@@ -13,20 +13,13 @@ namespace VersionControl.Backend.P4
     public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
 		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
-        private string workingDirectory = ".";
-        private string userName = "";
-        private string password = "";
-		private string clientSpec = "";
-		private string port = "";
 		private string rootPath = "";
         private string versionNumber;
-		private string cliEnding = "";
 		private Dictionary<string, string> depotToDir = null;
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
         private Thread refreshThread = null;
-        private readonly object operationActiveLockToken = new object();
         private readonly object requestQueueLockToken = new object();
         private readonly object statusDatabaseLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
@@ -35,13 +28,9 @@ namespace VersionControl.Backend.P4
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
 		
-		private bool P4Initialized {
-			get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(port)); }
-		}
-
         public P4Commands(string cliEnding = "")
         {
-			this.cliEnding = cliEnding;
+			P4Util.Instance.Vars.cliEnding = cliEnding;
 			InitializeP4Connection();
 			StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
@@ -69,7 +58,7 @@ namespace VersionControl.Backend.P4
                     Thread.Sleep(200);
 
 					// make sure p4 data is initialized
-					if ( P4Initialized || InitializeP4Connection() )
+					if ( P4Util.Instance.P4Initialized || InitializeP4Connection() )
 					{
 						// refresh status
 	                    if (active && refreshLoopActive) RefreshStatusDatabase();
@@ -160,57 +149,13 @@ namespace VersionControl.Backend.P4
 		private bool InitializeP4Connection()
 		{
             CommandLineOutput commandLineOutput;
-			
-			// get connection info
-			using (var p4StatusTask = CreateP4CommandLine("set"))
-			{
-				commandLineOutput = ExecuteOperation(p4StatusTask);
-				// sample output:
-				// P4CLIENT=workspace_name (set)
-				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
-				// P4PASSWD=password (set)
-				// P4PORT=192.168.1.1:1666
-				// P4USER=username
-				string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-				foreach( String line in output ) {
-                    var cleaned = line.Trim();
-                    // check for/remove (set) and (config) tags
-                    if (line.IndexOf("(set") != -1)
-                    {
-                        cleaned = line.Substring(0, line.IndexOf("(set")).Trim();
-                    }
-                    else if (line.IndexOf("(config") != -1)
-                    {
-                        cleaned = line.Substring(0, line.IndexOf("(config")).Trim();
-                    }
 
-                    if ( cleaned.StartsWith("P4CLIENT=") )
-					{
-						clientSpec = cleaned.Substring( "P4CLIENT=".Length );
-						D.Log(clientSpec);
-					}
-					else if ( cleaned.StartsWith("P4PASSWD=") )
-					{
-						password = cleaned.Substring( "P4PASSWD=".Length );
-						D.Log(password);
-					}
-					else if ( cleaned.StartsWith("P4PORT=") )
-					{
-						port = cleaned.Substring( "P4PORT=".Length );
-						D.Log(port);
-					}
-					else if ( cleaned.StartsWith("P4USER=") )
-					{
-						userName = cleaned.Substring( "P4USER=".Length );
-						D.Log(userName);
-					}
-				}
-			}
-			
+			P4Util.Instance.InitVars();
+
 			// get directory info
-            using (var p4WhereTask = CreateP4CommandLine("client -o"))
+            using (var p4WhereTask = P4Util.Instance.CreateP4CommandLine("client -o"))
             {
-                commandLineOutput = ExecuteOperation(p4WhereTask);
+                commandLineOutput = P4Util.Instance.ExecuteOperation(p4WhereTask);
 				depotToDir = new Dictionary<string, string>();
 				// sample output:
 				//# A Perforce Client Specification.
@@ -281,14 +226,14 @@ namespace VersionControl.Backend.P4
 						int clientPathStart = repoPath.Length + "...".Length + 1;
 						string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
 						//D.Log( "Client Path: " + clientPath );
-						string localPath = clientPath.Replace( "//" + clientSpec, rootPath );
+						string localPath = clientPath.Replace( "//" + P4Util.Instance.Vars.clientSpec, rootPath );
 						//D.Log( "Local Path: " + localPath );
 						depotToDir.Add( repoPath, localPath );
 					}
 				}
             }
 
-			return P4Initialized;
+			return P4Util.Instance.P4Initialized;
 		}
 			
 		public bool IsReady()
@@ -298,18 +243,18 @@ namespace VersionControl.Backend.P4
 
         public bool HasValidLocalCopy()
         {
-            return P4Initialized;
+            return P4Util.Instance.P4Initialized;
         }
 
         public void SetWorkingDirectory(string workingDirectory)
         {
-            this.workingDirectory = workingDirectory;
+            P4Util.Instance.Vars.workingDirectory = workingDirectory;
         }
 
         public void SetUserCredentials(string userName, string password)
         {
-            if (!string.IsNullOrEmpty(userName)) this.userName = userName;
-            if (!string.IsNullOrEmpty(password)) this.password = password;
+            if (!string.IsNullOrEmpty(userName)) P4Util.Instance.Vars.userName = userName;
+            if (!string.IsNullOrEmpty(password)) P4Util.Instance.Vars.password = password;
         }
 
         public VersionControlStatus GetAssetStatus(string assetPath)
@@ -343,24 +288,24 @@ namespace VersionControl.Backend.P4
 //            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
 
             CommandLineOutput statusCommandLineOutput;
-            using (var p4StatusTask = CreateP4CommandLine(arguments))
+            using (var p4StatusTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                statusCommandLineOutput = ExecuteOperation(p4StatusTask);
+                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4StatusTask);
             }
 			
-            arguments = "fstat -T " + fstatAttributes + " //" + clientSpec + "/...";
+            arguments = "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...";
             CommandLineOutput fstatCommandLineOutput;
-            using (var p4FstatTask = CreateP4CommandLine(arguments))
+            using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                fstatCommandLineOutput = ExecuteOperation(p4FstatTask);
+                fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
             }
 
 			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
 			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, userName);
-                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, workingDirectory);
+                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName);
+                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, P4Util.Instance.Vars.workingDirectory);
                 lock (statusDatabaseLockToken)
                 {
                     foreach (var statusIt in statusDB)
@@ -428,24 +373,24 @@ namespace VersionControl.Backend.P4
             SetPending(assets);
 
             CommandLineOutput statusCommandLineOutput;
-            using (var p4StatusTask = CreateP4CommandLine(arguments))
+            using (var p4StatusTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                statusCommandLineOutput = ExecuteOperation(p4StatusTask);
+                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4StatusTask);
             }
 
-            arguments = "fstat -T " + fstatAttributes + " //" + clientSpec + "/...";
+            arguments = "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...";
             CommandLineOutput fstatCommandLineOutput;
-            using (var p4FstatTask = CreateP4CommandLine(arguments))
+            using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                fstatCommandLineOutput = ExecuteOperation(p4FstatTask);
+                fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
             }
 
 			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
 			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, userName);
-                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, workingDirectory);
+                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName);
+                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, P4Util.Instance.Vars.workingDirectory);
                 lock (statusDatabaseLockToken)
                 {
                     foreach (var statusIt in statusDB)
@@ -483,90 +428,18 @@ namespace VersionControl.Backend.P4
             return true;
         }
 
-        private CommandLine CreateP4CommandLine(string arguments, string input = null)
-        {
-            if (P4Initialized)
-            {
-                arguments = " -u " + userName
-                          + (String.IsNullOrEmpty(password) ? "" : " -P " + password)
-                          + (String.IsNullOrEmpty(clientSpec) ? "" : " -c " + clientSpec)
-                          + " -p " + port + " " + arguments;
-            }
-            return new CommandLine("p4", arguments, workingDirectory, input, cliEnding);
-        }
-
         private bool CreateOperation(string arguments)
         {
             if (!active) return false;
 
             CommandLineOutput commandLineOutput;
-            using (var commandLineOperation = CreateP4CommandLine(arguments))
+            using (var commandLineOperation = P4Util.Instance.CreateP4CommandLine(arguments))
             {
                 commandLineOperation.OutputReceived += OnProgressInformation;
                 commandLineOperation.ErrorReceived += OnProgressInformation;
-                commandLineOutput = ExecuteOperation(commandLineOperation);
+                commandLineOutput = P4Util.Instance.ExecuteOperation(commandLineOperation);
             }
             return !(commandLineOutput == null || commandLineOutput.Failed);
-        }
-
-        private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)
-        {
-            CommandLineOutput commandLineOutput;
-            try
-            {
-                D.Log(commandLine.ToString());
-                currentExecutingOperation = commandLine;
-                //System.Threading.Thread.Sleep(500); // emulate latency to P4 server
-                commandLineOutput = commandLine.Execute();
-            }
-            catch (Exception e)
-            {
-                throw new VCCriticalException("Check that your commandline P4 client is installed correctly\n\n" + e.Message, commandLine.ToString(), e);
-            }
-            finally
-            {
-                currentExecutingOperation = null;
-            }
-            return commandLineOutput;
-        }
-
-        private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
-        {
-            CommandLineOutput commandLineOutput;
-            if (useOperationLock)
-            {
-                lock (operationActiveLockToken)
-                {
-                    commandLineOutput = ExecuteCommandLine(commandLine);
-                }
-            }
-            else
-            {
-                commandLineOutput = ExecuteCommandLine(commandLine);
-            }
-
-            if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
-            {
-                throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
-            }
-            if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
-            {
-                var errStr = commandLineOutput.ErrorStr;
-                if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
-                    throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
-                    throw new VCNewerVersionException(errStr, commandLine.ToString());
-                if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
-                    throw new VCCriticalException(errStr, commandLine.ToString());
-                if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
-                    throw new VCOutOfDate(errStr, commandLine.ToString());
-                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'p4 cleanup'"))
-                    throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
-                    throw new VCLockedByOther(errStr, commandLine.ToString());
-                throw new VCException(errStr, commandLine.ToString());
-            }
-            return commandLineOutput;
         }
 
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
@@ -591,7 +464,7 @@ namespace VersionControl.Backend.P4
 
         private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)
         {
-            return assets.Select(a => a.Replace(workingDirectory, ""));
+            return assets.Select(a => a.Replace(P4Util.Instance.Vars.workingDirectory, ""));
         }
 
         private static string ConcatAssetPaths(IEnumerable<string> assets)
@@ -664,7 +537,7 @@ namespace VersionControl.Backend.P4
 
         public bool Update(IEnumerable<string> assets = null)
         {
-            if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
+            if (assets == null || !assets.Any()) assets = new[] { P4Util.Instance.Vars.workingDirectory };
             return CreateAssetOperation("update", assets);
         }
 
@@ -676,17 +549,17 @@ namespace VersionControl.Backend.P4
 
 			// create a new changelist
 			// TODO: custom comments
-			string input = "Change: new\n\nClient: " + clientSpec + "\n\nUser: " + userName + "\n\nStatus: new\n\nDescription:\n\t" + commitMessage + "\n\nFiles:\n";
-            using (var p4ChangeTask = CreateP4CommandLine(arguments, input))
+			string input = "Change: new\n\nClient: " + P4Util.Instance.Vars.clientSpec + "\n\nUser: " + P4Util.Instance.Vars.userName + "\n\nStatus: new\n\nDescription:\n\t" + commitMessage + "\n\nFiles:\n";
+            using (var p4ChangeTask = P4Util.Instance.CreateP4CommandLine(arguments, input))
             {
-                statusCommandLineOutput = ExecuteOperation(p4ChangeTask);
+                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4ChangeTask);
             }
 
 			// get the last/new changelist number
-			arguments = "changes -m 1 -u " + userName;
-            using (var p4ChangesTask = CreateP4CommandLine(arguments))
+			arguments = "changes -m 1 -u " + P4Util.Instance.Vars.userName;
+            using (var p4ChangesTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                statusCommandLineOutput = ExecuteOperation(p4ChangesTask);
+                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4ChangesTask);
 				changeNum = statusCommandLineOutput.OutputStr.Substring( "Change ".Length );
 				changeNum = changeNum.Substring( 0, changeNum.IndexOf( " " ) ).Trim();
             }
@@ -696,14 +569,14 @@ namespace VersionControl.Backend.P4
 			// "reopen" files in that changelist
 			bool success = true;
 			foreach( var asset in assets ) {
-				success &= CreateAssetOperation("reopen -c " + changeNum, new String[] { workingDirectory.Replace("\\", "/") + "/" + asset });
+				success &= CreateAssetOperation("reopen -c " + changeNum, new String[] { P4Util.Instance.Vars.workingDirectory.Replace("\\", "/") + "/" + asset });
 			}
 
 			// submit the changelist
 			arguments = "submit -c " + changeNum + " ";
-            using (var p4SubmitTask = CreateP4CommandLine(arguments))
+            using (var p4SubmitTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
-                statusCommandLineOutput = ExecuteOperation(p4SubmitTask);
+                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4SubmitTask);
 				success &= String.IsNullOrEmpty(statusCommandLineOutput.ErrorStr);
             }
             return success;
@@ -776,7 +649,7 @@ namespace VersionControl.Backend.P4
         {
             if (string.IsNullOrEmpty(versionNumber))
             {
-                versionNumber = CreateP4CommandLine("-V").Execute().OutputStr;
+                versionNumber = P4Util.Instance.CreateP4CommandLine("-V").Execute().OutputStr;
 				versionNumber = versionNumber.Substring(versionNumber.LastIndexOf("\n")+1);
             }
 			

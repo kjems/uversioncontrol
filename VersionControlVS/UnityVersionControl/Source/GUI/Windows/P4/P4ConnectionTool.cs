@@ -4,35 +4,23 @@ using System.Collections.Generic;
 using CommandLineExecution;
 using System;
 using System.Linq;
+using VersionControl.Backend.P4;
 
 public class P4ConnectionTool : EditorWindow {
 
 	static P4ConnectionTool window = null;
 	
-	private string userName = "";
-	private string password = "";
-	private string clientSpec = "";
-	private string port = "";
 	private string rootPath = "";
-    private string workingDirectory = ".";
-	private string cliEnding = "";
-	private string p4ConfigFile = ".p4config";
-	private string p4IgnoreFile = ".gitignore"; 
 	private List<string> clients = new List<string>();
 	private List<string> log = new List<string>();
 	private string logString = "";
 	private bool clientSelected = false;
-	private readonly object operationActiveLockToken = new object();
 	
 	private const int VISIBLE_LOG_LINES = 8;
 	private const int FIELD_HEIGHT = 20;
 	private const int OUTER_PADDING = 15;
 	private const int TEXT_AREA_LINE_HEIGHT = 13;
 	
-	private bool P4Initialized {
-		get { return !(String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(port)); }
-	}
-
 	[MenuItem("Tools/Connect To Perforce")]
 	public static void Init() {
 		window = EditorWindow.GetWindow<P4ConnectionTool>();
@@ -46,76 +34,17 @@ public class P4ConnectionTool : EditorWindow {
 			}
 		};
 		
-		window.workingDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
+		P4Util.Instance.Vars.workingDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
 		if ( Application.platform == RuntimePlatform.OSXEditor ) {
-			window.cliEnding = Environment.NewLine;
-		}
-
-        CommandLineOutput commandLineOutput;
-		
-		// get connection info
-		bool gotP4Config = false;
-        using (var p4StatusTask = window.CreateP4CommandLine("set"))
-        {
-			window.log.Add("CMD: " + p4StatusTask.ToString());
-            commandLineOutput = window.ExecuteOperation(p4StatusTask);
-			if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
-				string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-				window.AddLogMessage("P4: " + commandLineOutput.OutputStr);
-				// sample output:
-				// P4CLIENT=workspace_name (set)
-				// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
-				// P4PASSWD=password (set)
-				// P4PORT=192.168.1.1:1666
-				// P4USER=username
-				foreach( String line in output ) {
-					var cleaned = line.Trim();
-					// check for/remove (set) and (config) tags
-					if ( line.IndexOf("(set") != -1 ) {
-						cleaned = line.Substring(0, line.IndexOf("(set")).Trim();
-					}
-					else if ( line.IndexOf("(config") != -1 ) {
-						cleaned = line.Substring(0, line.IndexOf("(config")).Trim();
-					}
-	
-					if ( cleaned.StartsWith("P4CLIENT=") )
-					{
-						window.clientSpec = cleaned.Substring( "P4CLIENT=".Length );
-						//Debug.Log(window.clientSpec);
-					}
-					else if ( cleaned.StartsWith("P4PASSWD=") )
-					{
-						window.password = cleaned.Substring( "P4PASSWD=".Length );
-						//Debug.Log(window.password);
-					}
-					else if ( cleaned.StartsWith("P4PORT=") )
-					{
-						window.port = cleaned.Substring( "P4PORT=".Length );
-						//Debug.Log(window.port);
-					}
-					else if ( cleaned.StartsWith("P4USER=") )
-					{
-						window.userName = cleaned.Substring( "P4USER=".Length );
-						//Debug.Log(window.userName);
-					}
-					else if ( cleaned.StartsWith("P4CONFIG=") )
-					{
-						window.p4ConfigFile = cleaned.Substring( "P4CONFIG=".Length );
-						//Debug.Log(window.p4ConfigFile);
-						gotP4Config = true;
-					}
-					else if ( cleaned.StartsWith("P4IGNORE=") )
-					{
-						window.p4IgnoreFile = cleaned.Substring( "P4IGNORE=".Length );
-						//Debug.Log(window.p4IgnoreFile);
-					}
-				}
-			}
+			P4Util.Instance.Vars.cliEnding = Environment.NewLine;
 		}
 		
-		if ( !gotP4Config ) {
+		string oldP4Config = P4Util.Instance.Vars.configFile;
+		P4Util.Instance.InitVars();
+		
+		if ( P4Util.Instance.Vars.configFile != oldP4Config ) {
 			// set P4CONFIG
-			window.P4Set("P4CONFIG", window.p4ConfigFile);
+			P4Util.Instance.P4Set("P4CONFIG", P4Util.Instance.Vars.configFile);
 		}
 		
 		window.LoadSettings();
@@ -128,11 +57,11 @@ public class P4ConnectionTool : EditorWindow {
 			args = args + " -u " + user;
 		}
 
-		using (var p4ClientsTask = CreateP4CommandLine(args))
+		using (var p4ClientsTask = P4Util.Instance.CreateP4CommandLine(args))
 	    {
 			clients.Clear();
 			AddLogMessage("CMD: " + p4ClientsTask.ToString());
-	        commandLineOutput = ExecuteOperation(p4ClientsTask);
+	        commandLineOutput = P4Util.Instance.ExecuteOperation(p4ClientsTask);
 			string output = commandLineOutput.OutputStr;
 			AddLogMessage("P4: " + output);
 			// sample output:
@@ -161,75 +90,6 @@ public class P4ConnectionTool : EditorWindow {
 		logString = BuildLogString();
 	}
 	
-    private CommandLine CreateP4CommandLine(string arguments, string input = null)
-    {
-        if (P4Initialized)
-        {
-            arguments = " -u " + userName
-				      + (String.IsNullOrEmpty(password) ? "" : " -P " + password)
-					  + (String.IsNullOrEmpty(clientSpec) ? "" : " -c " + clientSpec)
-					  + " -p " + port + " " + arguments;
-        }
-        return new CommandLine("p4", arguments, workingDirectory, input, cliEnding);
-    }
-
-    private CommandLineOutput ExecuteCommandLine(CommandLine commandLine)
-    {
-        CommandLineOutput commandLineOutput;
-        try
-        {
-            //Debug.Log(commandLine.ToString());
-            commandLineOutput = commandLine.Execute();
-	        return commandLineOutput;
-        }
-        catch (Exception e)
-        {
-            AddLogMessage("ERROR: Check that your commandline P4 client is installed correctly - " + e.Message);
-        }
-        return null;
-    }
-
-    private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
-    {
-        CommandLineOutput commandLineOutput;
-        if (useOperationLock)
-        {
-            lock (operationActiveLockToken)
-            {
-                commandLineOutput = ExecuteCommandLine(commandLine);
-            }
-        }
-        else
-        {
-            commandLineOutput = ExecuteCommandLine(commandLine);
-        }
-		
-		if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
-	        if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
-	        {
-	            AddLogMessage("ERROR: Test Exception cast due to ExceptionTest.txt being a part of arguments");
-	        }
-	        if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
-	        {
-	            var errStr = commandLineOutput.ErrorStr;
-	            if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	            if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	            if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	            if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	            if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'p4 cleanup'"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	            if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
-	                AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-				AddLogMessage("ERROR: " + errStr + " " + commandLine.ToString());
-	        }
-		}
-        return commandLineOutput;
-    }
-	
 	string BuildLogString() {
 		string fullLog = "";
 		for ( int i = 0; i < log.Count; i++ ) {
@@ -247,28 +107,28 @@ public class P4ConnectionTool : EditorWindow {
 		int y = 5;
 		Rect winDims = EditorGUILayout.BeginVertical(); {
 			// server
-			port = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Server:", port);
+			P4Util.Instance.Vars.port = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Server:", P4Util.Instance.Vars.port);
 			y += FIELD_HEIGHT + 5;
 			
 			// username
-			userName = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Username:", userName);
+			P4Util.Instance.Vars.userName = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Username:", P4Util.Instance.Vars.userName);
 			y += FIELD_HEIGHT + 5;
 			
 			// password
-			password = EditorGUI.PasswordField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Password:", password);
+			P4Util.Instance.Vars.password = EditorGUI.PasswordField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Password:", P4Util.Instance.Vars.password);
 			y += FIELD_HEIGHT + 5;
 
 			// ignore
-			p4IgnoreFile = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Ignore:", p4IgnoreFile);
+			P4Util.Instance.Vars.ignoreFile = EditorGUI.TextField(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Ignore:", P4Util.Instance.Vars.ignoreFile);
 			y += FIELD_HEIGHT + 5;
 
 			// client
-			int clientIndex = Mathf.Max(0, clients.IndexOf(clientSpec));
+			int clientIndex = Mathf.Max(0, clients.IndexOf(P4Util.Instance.Vars.clientSpec));
 			Color oldColor = GUI.color;
 			if ( !clientSelected ) GUI.color = Color.red;
 			clientIndex = EditorGUI.Popup(new Rect(OUTER_PADDING, y, winDims.width - (2 * OUTER_PADDING), FIELD_HEIGHT), "Workspace:", clientIndex, clients.ToArray());
 			if ( clients.Count > 0 && clientIndex > -1 ) {
-				clientSpec = clients[clientIndex];
+				P4Util.Instance.Vars.clientSpec = clients[clientIndex];
 			}
 			y += FIELD_HEIGHT + 5;
 			GUI.color = oldColor;
@@ -277,7 +137,7 @@ public class P4ConnectionTool : EditorWindow {
 				// refresh
 				int width = (int)(winDims.width / 2.0f) - OUTER_PADDING;
 				if ( GUI.Button(new Rect(OUTER_PADDING, y, width, FIELD_HEIGHT), "Refresh") ) {
-					clientSpec = "";
+					P4Util.Instance.Vars.clientSpec = "";
 					clientSelected = false;
 					LoadSettings();
 				}
@@ -295,25 +155,25 @@ public class P4ConnectionTool : EditorWindow {
 	}
 	
 	void LoadSettings() {
-		if ( String.IsNullOrEmpty(clientSpec) ) {
+		if ( String.IsNullOrEmpty(P4Util.Instance.Vars.clientSpec) ) {
 			DetectClient();
 		}
 		else {
 			var user = "";
-			if ( !String.IsNullOrEmpty( userName ) ) user = userName;
+			if ( !String.IsNullOrEmpty( P4Util.Instance.Vars.userName ) ) user = P4Util.Instance.Vars.userName;
 			RefreshClients(user);
-			AddLogMessage("INFO: Selected workspace: " + clientSpec + " from P4CONFIG");
+			AddLogMessage("INFO: Selected workspace: " + P4Util.Instance.Vars.clientSpec + " from P4CONFIG");
 			clientSelected = true;
 		}
 	}
 	
 	void DetectClient() {
 		clientSelected = false;
-		if ( P4Initialized ) {
+		if ( P4Util.Instance.P4Initialized ) {
 			CommandLineOutput commandLineOutput;
 
 			// get all clients owned by this user
-			RefreshClients(userName);
+			RefreshClients(P4Util.Instance.Vars.userName);
 
 			// check each client looking for a root path match with this unity project
 			int matchLength = 0;
@@ -321,9 +181,9 @@ public class P4ConnectionTool : EditorWindow {
 			string matchRoot = "";
 			for ( int i = 0; i < clients.Count; i++ ) {
 				string client = clients[i];
-		        using (var p4ClientTask = CreateP4CommandLine("client -o " + client))
+		        using (var p4ClientTask = P4Util.Instance.CreateP4CommandLine("client -o " + client))
 		        {
-		            commandLineOutput = ExecuteOperation(p4ClientTask);
+		            commandLineOutput = P4Util.Instance.ExecuteOperation(p4ClientTask);
 					// sample output:
 					//# A Perforce Client Specification.
 					//#
@@ -407,9 +267,9 @@ public class P4ConnectionTool : EditorWindow {
 			if ( matchIndex != -1 ) {
 				// found a match, set detected info...
 				clientSelected = true;
-				clientSpec = clients[matchIndex];
+				P4Util.Instance.Vars.clientSpec = clients[matchIndex];
 				rootPath = matchRoot;
-				AddLogMessage("INFO: Auto-detected workspace: " + clientSpec);
+				AddLogMessage("INFO: Auto-detected workspace: " + P4Util.Instance.Vars.clientSpec);
 			}
 			else {
 				AddLogMessage("WARNING: Unable to auto-detect a workspace - make sure your username is set and you've created a workspace with a root at or above this Unity directory.");
@@ -417,43 +277,31 @@ public class P4ConnectionTool : EditorWindow {
 		}
 	}
 	
-	void P4Set(string key, string value) {
-        CommandLineOutput commandLineOutput;
-        using (var p4SetTask = CreateP4CommandLine("set " + key + "=" + value))
-        {
-			log.Add("CMD: " + p4SetTask.ToString());
-            commandLineOutput = ExecuteOperation(p4SetTask);
-			if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
-				AddLogMessage("P4: " + commandLineOutput.OutputStr);
-			}
-		}
-	}
-	
 	void SaveSettings() {
 		// use p4 set to save P4USER, P4PASSWD, and P4PORT
-		if ( !String.IsNullOrEmpty(userName) ) {
+		if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.userName) ) {
 			// set P4USER
-			P4Set("P4USER", userName);
+			P4Util.Instance.P4Set("P4USER", P4Util.Instance.Vars.userName);
 		}
 		
-		if ( !String.IsNullOrEmpty(password) ) {
+		if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.password) ) {
 			// set P4PASSWD
-			P4Set("P4PASSWD", password);
+			P4Util.Instance.P4Set("P4PASSWD", P4Util.Instance.Vars.password);
 		}
 		
-		if ( !String.IsNullOrEmpty(port) ) {
+		if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.port) ) {
 			// set P4PORT
-			P4Set("P4PORT", port);
+			P4Util.Instance.P4Set("P4PORT", P4Util.Instance.Vars.port);
 		}
 		
-		if ( !String.IsNullOrEmpty(p4IgnoreFile) ) {
+		if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.ignoreFile) ) {
 			// set P4IGNORE
-			P4Set("P4IGNORE", p4IgnoreFile);
+			P4Util.Instance.P4Set("P4IGNORE", P4Util.Instance.Vars.ignoreFile);
 		}
 		
 		// save P4CLIENT to file specified by P4CONFIG
 		if ( clientSelected && !String.IsNullOrEmpty(rootPath) ) {
-			string filepath = rootPath + "/" + p4ConfigFile;
+			string filepath = rootPath + "/" + P4Util.Instance.Vars.configFile;
 			bool foundSpec = false;
 			System.IO.StreamWriter fileWriter = null;
 			
@@ -463,8 +311,8 @@ public class P4ConnectionTool : EditorWindow {
 				System.IO.File.Delete( filepath );
 				fileWriter = System.IO.File.CreateText( filepath );
 				foreach ( string line in lines ) {
-					if ( !String.IsNullOrEmpty(clientSpec) && line.StartsWith( "P4CLIENT=" ) ) {
-						fileWriter.WriteLine( "P4CLIENT=" + clientSpec );
+					if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.clientSpec) && line.StartsWith( "P4CLIENT=" ) ) {
+						fileWriter.WriteLine( "P4CLIENT=" + P4Util.Instance.Vars.clientSpec );
 						foundSpec = true;
 					}
 					else {
@@ -481,8 +329,8 @@ public class P4ConnectionTool : EditorWindow {
 			if ( fileWriter == null ) AddLogMessage("ERROR: Unable to save settings to P4CONFIG file - will need to be re-entered on next launch");
 
 			// add missing vars to the bottom
-			if ( !String.IsNullOrEmpty(clientSpec) && !foundSpec ) {
-				fileWriter.WriteLine( "P4CLIENT=" + clientSpec );
+			if ( !String.IsNullOrEmpty(P4Util.Instance.Vars.clientSpec) && !foundSpec ) {
+				fileWriter.WriteLine( "P4CLIENT=" + P4Util.Instance.Vars.clientSpec );
 			}
 			fileWriter.Close();
 		}

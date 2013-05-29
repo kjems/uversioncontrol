@@ -58,5 +58,8 @@
     <Compile Include="..\..\Source\P4Backend\P4FStatData.cs">
       <Link>Source\P4FStatData.cs</Link>
     </Compile>
+    <Compile Include="..\..\Source\P4Backend\P4Util.cs">
+      <Link>Source\P4Util.cs</Link>
+    </Compile>
   </ItemGroup>
 </Project>

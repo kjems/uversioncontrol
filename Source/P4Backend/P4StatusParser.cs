@@ -60,7 +60,7 @@ namespace VersionControl.Backend.P4
                 string assetPath = line.Substring( 0, line.IndexOf(" - reconcile") ).Replace( '\\', '/' ).Trim();
                 var status = ParseStatusLine(line, username);
                 status.assetPath = assetPath;
-                statusDatabase[assetPath] = status;
+                statusDatabase[new ComposedString(assetPath)] = status;
 			}
 
 			return statusDatabase;
@@ -76,7 +76,7 @@ namespace VersionControl.Backend.P4
 			
 			versionControlStatus.revision = versionControlStatus.lastModifiedRevision = Int32.Parse( line.Substring( line.LastIndexOf( "#" ) + 1 ) );
 			versionControlStatus.repositoryStatus = VCRepositoryStatus.NotLocked;
-			versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
+//			versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
 			versionControlStatus.user = "";
 			if ( line.Contains( "reconcile to add" ) ) {
 				// file is unversioned
@@ -86,13 +86,13 @@ namespace VersionControl.Backend.P4
 			}
 			else if ( line.Contains( "reconcile to edit" ) ) {
 				// file is edited locally, but not checked out - bad user!
-				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
+//				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
 				versionControlStatus.fileStatus = VCFileStatus.Modified;
-				versionControlStatus.treeConflictStatus = VCTreeConflictStatus.TreeConflict;
+//				versionControlStatus.treeConflictStatus = VCTreeConflictStatus.TreeConflict;
 			}
 			else if ( line.Contains( "reconcile to delete" ) ) {
 				// file is versioned, but has been deleted locally
-				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
+//				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
 				versionControlStatus.fileStatus = VCFileStatus.Deleted;
 			}
 			/*
@@ -134,12 +134,12 @@ namespace VersionControl.Backend.P4
                     versionControlStatus.lockStatus = VCLockStatus.LockedHere;
                 }
             }
-            */
 
             if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
             {
                 versionControlStatus.bypassRevisionControl = true;
             }
+            */
             return versionControlStatus;
         }
 		
@@ -154,7 +154,7 @@ namespace VersionControl.Backend.P4
 					if ( unixPath.Contains( rootUnixDir ) ) {
 						var status = PopulateFromFstatData(fileData);
 						status.assetPath = assetPath;
-						statusDatabase[assetPath] = status;
+						statusDatabase[new ComposedString(assetPath)] = status;
 					}
 				}
 			}
@@ -235,12 +235,12 @@ namespace VersionControl.Backend.P4
 			versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
 /*			
             if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
-            */
 
             if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
             {
                 versionControlStatus.bypassRevisionControl = true;
             }
+            */
             return versionControlStatus;
         }
 

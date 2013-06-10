@@ -668,22 +668,34 @@ namespace VersionControl.Backend.P4
             }
             return success;
         }
+		
+		private void UpdateAfterOperation( IEnumerable<string> assets )
+		{
+			foreach ( var asset in assets ) AddToLocalStatusQueue( asset );
+			localStatusDirty = true;
+		}
 
         public bool Add(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("add", assets);
+            bool success = CreateAssetOperation("add", assets);
+			if ( success ) UpdateAfterOperation( assets );
+			return success;
         }
 
         public bool Revert(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("revert", assets);
+            bool success = CreateAssetOperation("revert", assets);
+			if ( success ) UpdateAfterOperation( assets );
+			return success;
         }
 
         public bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
 			// OperationMode.Force is not supported in p4
 			// TODO: can we detect when delete fails (i.e. trying to delete a file that is already opened for edit)?
-            return CreateAssetOperation("delete", assets);
+            bool success = CreateAssetOperation("delete", assets);
+			if ( success ) UpdateAfterOperation( assets );
+			return success;
         }
 
         public bool GetLock(IEnumerable<string> assets, OperationMode mode)
@@ -691,7 +703,9 @@ namespace VersionControl.Backend.P4
 			// OperationMode.Force is not supported in p4
 			// need to make sure the assets are opened for edit first...
 			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[a].fileStatus == VCFileStatus.Normal ));
-            return success & CreateAssetOperation("lock", assets);
+            success &= CreateAssetOperation("lock", assets);
+			if ( success ) UpdateAfterOperation( assets );
+			return success;
         }
 
         public bool ReleaseLock(IEnumerable<string> assets)
@@ -724,12 +738,16 @@ namespace VersionControl.Backend.P4
         {
             if (conflictResolution == ConflictResolution.Ignore) return true;
             string conflictparameter = conflictResolution == ConflictResolution.Theirs ? "-at" : "-ay";
-            return CreateAssetOperation("resolve " + conflictparameter, assets);
+            bool success = CreateAssetOperation("resolve " + conflictparameter, assets);
+			if ( success ) UpdateAfterOperation( assets );
+			return success;
         }
 
         public bool Move(string from, string to)
         {
-            return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
+            bool success = CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
+			if ( success ) UpdateAfterOperation( new string[] { to } );
+			return success;
         }
 
         public string GetBasePath(string assetPath)

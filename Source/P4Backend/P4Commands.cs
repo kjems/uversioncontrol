@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml;
 using CommandLineExecution;
+using System.Timers;
 
 namespace VersionControl.Backend.P4
 {
@@ -16,10 +17,13 @@ namespace VersionControl.Backend.P4
 		private string rootPath = "";
         private string versionNumber;
 		private Dictionary<string, string> depotToDir = null;
+		private bool localStatusDirty = true;
+		private bool remoteStatusDirty = true;
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
         private Thread refreshThread = null;
+		private System.Timers.Timer remoteRefreshTimer = null;
         private readonly object requestQueueLockToken = new object();
         private readonly object statusDatabaseLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
@@ -27,6 +31,7 @@ namespace VersionControl.Backend.P4
         private volatile bool active = false;
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
+        private FileSystemWatcher assetsWatcher = null;
 		
         public P4Commands(string cliEnding = "")
         {
@@ -87,7 +92,7 @@ namespace VersionControl.Backend.P4
         private void TerminateRefreshLoop()
         {
             active = false;
-            refreshLoopActive = false;
+            DeactivateRefreshLoop();
             requestRefreshLoopStop = true;
             if (currentExecutingOperation != null)
             {
@@ -110,15 +115,45 @@ namespace VersionControl.Backend.P4
         {
             active = false;
         }
+		
+		private void DestroyTimer()
+		{
+			// destroy timer if it already exists
+			if ( remoteRefreshTimer != null ) {
+				remoteRefreshTimer.Enabled = false;
+				remoteRefreshTimer.Elapsed -= new ElapsedEventHandler(OnTimerExpired);
+				remoteRefreshTimer.Stop();
+				remoteRefreshTimer = null;
+			}
+		}
 
         public void ActivateRefreshLoop()
         {
             refreshLoopActive = true;
+			
+			DestroyTimer();
+			
+			// only allow refreshing remote status every 15 seconds
+			remoteRefreshTimer = new System.Timers.Timer(15000);
+
+			// Hook up the Elapsed event for the timer.
+			remoteRefreshTimer.Elapsed += new ElapsedEventHandler(OnTimerExpired);
+			
+			remoteRefreshTimer.Start();
+			remoteRefreshTimer.Enabled = true;
+			remoteRefreshTimer.AutoReset = true;
         }
 
-        public void DeactivateRefreshLoop()
+	    private void OnTimerExpired(object source, ElapsedEventArgs e)
+	    {
+			remoteStatusDirty = true;
+			Status( StatusLevel.Remote, DetailLevel.Normal );
+	    }
+	
+		public void DeactivateRefreshLoop()
         {
             refreshLoopActive = false;
+			DestroyTimer();
         }
 
 
@@ -246,10 +281,46 @@ namespace VersionControl.Backend.P4
             return P4Util.Instance.P4Initialized;
         }
 
+		// Define the event handlers. 
+	    private void OnAssetsChanged(object source, FileSystemEventArgs e)
+	    {
+			AddToLocalStatusQueue( e.FullPath );
+			localStatusDirty = true;
+	    }
+	
+	    private void OnAssetsRenamed(object source, RenamedEventArgs e)
+	    {
+			AddToLocalStatusQueue( e.FullPath );
+			localStatusDirty = true;
+	    }
+			
         public void SetWorkingDirectory(string workingDirectory)
         {
             P4Util.Instance.Vars.workingDirectory = workingDirectory;
-        }
+			if ( assetsWatcher != null ) {
+		        // Stop watching.
+		        assetsWatcher.EnableRaisingEvents = false;
+
+				// Remove event handlers.
+		        assetsWatcher.Changed -= new FileSystemEventHandler(OnAssetsChanged);
+		        assetsWatcher.Created -= new FileSystemEventHandler(OnAssetsChanged);
+		        assetsWatcher.Deleted -= new FileSystemEventHandler(OnAssetsChanged);
+		        assetsWatcher.Renamed -= new RenamedEventHandler(OnAssetsRenamed);
+				
+				assetsWatcher = null;
+			}
+
+			assetsWatcher = new FileSystemWatcher(workingDirectory);
+
+			// Add event handlers.
+	        assetsWatcher.Changed += new FileSystemEventHandler(OnAssetsChanged);
+	        assetsWatcher.Created += new FileSystemEventHandler(OnAssetsChanged);
+	        assetsWatcher.Deleted += new FileSystemEventHandler(OnAssetsChanged);
+	        assetsWatcher.Renamed += new RenamedEventHandler(OnAssetsRenamed);
+	
+	        // Begin watching.
+	        assetsWatcher.EnableRaisingEvents = true;        
+		}
 
         public void SetUserCredentials(string userName, string password)
         {
@@ -278,61 +349,126 @@ namespace VersionControl.Backend.P4
                 return new List<VersionControlStatus>(statusDatabase.Values.Where(filter));
             }
         }
+		
+		public bool GetStatus(StatusLevel statusLevel, string fstatArgs, IEnumerable<string> assets = null)
+		{
+			// if nothing has changed locally or our minimum refresh time hasn't expired, don't do checks again
+			if ( (statusLevel == StatusLevel.Local && !localStatusDirty) || (statusLevel == StatusLevel.Remote && !remoteStatusDirty) ) {
+				if ( assets == null ) return true;
+				
+				// make sure all assets are already in the database
+				bool missedOne = false;
+				foreach( var asset in assets ) {
+					VersionControlStatus status = null;
+					if ( !statusDatabase.TryGetValue( new ComposedString(asset), out status ) ) {
+						missedOne = true;
+					}
+					else if ( (status.reflectionLevel == VCReflectionLevel.Local && statusLevel != StatusLevel.Local)
+						   || (status.reflectionLevel == VCReflectionLevel.Repository && statusLevel != StatusLevel.Remote)
+						   || (status.reflectionLevel == VCReflectionLevel.Pending) ) {
+						missedOne = true;
+					}
+				}
 
-        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
-        {
-            if (!active) return false;
-			
-            string arguments = "status -a -e -d ";
+				if ( !missedOne) return true;
+			}
+
+			string arguments = "status -aed ";
 //            if (statusLevel == StatusLevel.Remote) arguments += " -u";
 //            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
 
-            CommandLineOutput statusCommandLineOutput;
-            using (var p4StatusTask = P4Util.Instance.CreateP4CommandLine(arguments))
-            {
-                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4StatusTask);
-            }
+            CommandLineOutput statusCommandLineOutput = null;
+			if ( statusLevel == StatusLevel.Local ) {
+	            using (var p4StatusTask = P4Util.Instance.CreateP4CommandLine(arguments))
+	            {
+	                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4StatusTask);
+	            }
+			}
 			
-            arguments = "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...";
+            arguments = fstatArgs;
             CommandLineOutput fstatCommandLineOutput;
             using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
                 fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
             }
 
-			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
+			if ((statusCommandLineOutput != null && ( string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || statusCommandLineOutput.Failed )) || !active) return false;
 			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName);
+//				if ( statusCommandLineOutput != null ) D.Log(statusCommandLineOutput.OutputStr);
+//				D.Log("");
+//				D.Log(fstatCommandLineOutput.OutputStr);
+                var statusDB = statusCommandLineOutput != null ? P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName) : null;
                 var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, P4Util.Instance.Vars.workingDirectory);
                 lock (statusDatabaseLockToken)
                 {
-                    foreach (var statusIt in statusDB)
-                    {
-                        var status = statusIt.Value;
-                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[statusIt.Key] = status;
-                    }
+					if ( statusDB != null ) {
+	                    foreach (var statusIt in statusDB)
+	                    {
+	                        var status = statusIt.Value;
+	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+	                        statusDatabase[statusIt.Key] = status;
+	                    }
+					}
 
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-						if ( !statusDatabase.TryGetValue(statusIt.Key, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
+						statusDatabase.TryGetValue(statusIt.Key, out status);
+						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
+							// no previous status or previous status is pending, so set it here
 							status = statusIt.Value;
-	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[statusIt.Key] = status;
+						} else {
+							// probably got this status from the "status -a -e -d" command, merge it with whatever we got back from fstat
+							if ( status.fileStatus == VCFileStatus.Modified && statusIt.Value.remoteStatus == VCRemoteFileStatus.Modified ) {
+								// we have modified locally and file is out of date with server - mark as a conflict (might not be, but at
+								// least this will raise a flag with the user to make sure they get up to date before going any further)
+								status.fileStatus = VCFileStatus.Conflicted;
+								status.treeConflictStatus = VCTreeConflictStatus.TreeConflict;
+							}
 						}
+                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+                        statusDatabase[statusIt.Key] = status;
                     }
 				}
                 lock (requestQueueLockToken)
                 {
-                    foreach (var assetIt in statusDB.Keys)
+					if ( statusDB != null ) {
+	                    foreach (var assetIt in statusDB.Keys)
+	                    {
+	                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
+	                        localRequestQueue.Remove(assetIt.ToString());
+	                    }
+					}
+                    foreach (var assetIt in fstatDB.Keys)
                     {
                         if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
                         localRequestQueue.Remove(assetIt.ToString());
                     }
                 }
+				if ( assets != null ) {
+	                lock (statusDatabaseLockToken)
+	                {
+						// make sure there's a status item for each asset requested
+						foreach ( var assetIt in assets ) {
+	                        VersionControlStatus status = null;
+							ComposedString asset = new ComposedString(assetIt);
+							if ( !statusDatabase.TryGetValue(asset, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
+								//D.Log( "No status for " + assetIt + ", adding a default one..." );
+								status = new VersionControlStatus();
+				                status.assetPath = asset;
+								if ( !Directory.Exists( P4Util.Instance.Vars.workingDirectory + "/" + assetIt ) ) {
+									// this is not a directory, it's a file, so it must be ignored if we didn't get a status for it
+									status.fileStatus = VCFileStatus.Ignored;
+									//D.Log( "Ignoring " + status.assetPath.ToString() );
+								}
+								status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
+								statusDatabase[asset] = status;
+							}
+						}
+					}
+				}
                 OnStatusCompleted();
             }
             catch (Exception e)
@@ -340,11 +476,26 @@ namespace VersionControl.Backend.P4
                 D.ThrowException(e);
                 return false;
             }
-            return true;
+
+			// clear dirty statuses
+			localStatusDirty = false;
+			remoteStatusDirty = false;
+
+			return true;
+		}
+
+        public bool Status(StatusLevel statusLevel, DetailLevel detailLevel)
+        {
+            if (!active) return false;
+
+//			D.Log(statusLevel.ToString() + " " + detailLevel.ToString());
+
+			return GetStatus(statusLevel, "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...", null);
         }
 
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
+//			D.Log(statusLevel.ToString());
             if (!active) return false;
             if (statusLevel == StatusLevel.Previous)
             {
@@ -357,75 +508,10 @@ namespace VersionControl.Backend.P4
                     }
                 }
             }
+			
+			SetPending(assets);
 
-            if (statusLevel == StatusLevel.Remote) assets = RemoveFilesIfParentFolderInList(assets);
-            const int assetsPerStatus = 20;
-            if (assets.Count() > assetsPerStatus)
-            {
-                return Status(assets.Take(assetsPerStatus), statusLevel) && Status(assets.Skip(assetsPerStatus), statusLevel);
-            }
-
-            string arguments = "status -a -e -d";//--xml -q -v ";
-//            if (statusLevel == StatusLevel.Remote) arguments += "-u ";
-//            else arguments += " --depth=empty ";
-//            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
-
-            SetPending(assets);
-
-            CommandLineOutput statusCommandLineOutput;
-            using (var p4StatusTask = P4Util.Instance.CreateP4CommandLine(arguments))
-            {
-                statusCommandLineOutput = P4Util.Instance.ExecuteOperation(p4StatusTask);
-            }
-
-            arguments = "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...";
-            CommandLineOutput fstatCommandLineOutput;
-            using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
-            {
-                fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
-            }
-
-			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
-			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
-            try
-            {
-                var statusDB = P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName);
-                var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, P4Util.Instance.Vars.workingDirectory);
-                lock (statusDatabaseLockToken)
-                {
-                    foreach (var statusIt in statusDB)
-                    {
-                        var status = statusIt.Value;
-                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[statusIt.Key] = status;
-                    }
-
-                    foreach (var statusIt in fstatDB)
-                    {
-                        VersionControlStatus status = null;
-						if ( !statusDatabase.TryGetValue(statusIt.Key, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
-							status = statusIt.Value;
-	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[statusIt.Key] = status;
-						}
-                    }
-                }
-                lock (requestQueueLockToken)
-                {
-                    foreach (var assetIt in statusDB.Keys)
-                    {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
-                        localRequestQueue.Remove(assetIt.ToString());
-                    }
-                }
-                OnStatusCompleted();
-            }
-            catch (Exception e)
-            {
-                D.ThrowException(e);
-                return false;
-            }
-            return true;
+			return GetStatus(statusLevel, "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...", assets);
         }
 
         private bool CreateOperation(string arguments)
@@ -483,9 +569,10 @@ namespace VersionControl.Backend.P4
                 {
                     if (GetAssetStatus(assetIt).reflectionLevel != VCReflectionLevel.Pending)
                     {
-                        var status = statusDatabase[assetIt];
+						ComposedString asset = new ComposedString(assetIt);
+                        var status = statusDatabase[asset];
                         status.reflectionLevel = VCReflectionLevel.Pending;
-                        statusDatabase[assetIt] = status;
+                        statusDatabase[asset] = status;
                     }
                 }
                 //D.Log("Set Pending : " + assets.Aggregate((a, b) => a + ", " + b));
@@ -668,6 +755,8 @@ namespace VersionControl.Backend.P4
             lock (statusDatabaseLockToken)
             {
                 statusDatabase.Clear();
+				localStatusDirty = true;
+				remoteStatusDirty = true;
             }
         }
 
@@ -677,16 +766,9 @@ namespace VersionControl.Backend.P4
             {
                 foreach (var assetIt in assets)
                 {
-                    statusDatabase.Remove(assetIt);
+                    statusDatabase.Remove(new ComposedString(assetIt));
                 }
             }
-        }
-
-        IEnumerable<string> RemoveFilesIfParentFolderInList(IEnumerable<string> assets)
-        {
-            var folders = assets.Where(a => Directory.Exists(a));
-            assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
-            return assets.ToArray();
         }
 
         public event Action<string> ProgressInformation;

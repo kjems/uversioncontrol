@@ -13,7 +13,7 @@ namespace VersionControl.Backend.P4
 			public string clientSpec = "";
 			public string port = "";
 			public string configFile = ".p4config";
-			public string ignoreFile = ".gitignore"; 
+			public string ignoreFile = ".p4ignore"; 
 			public string workingDirectory = ".";
 			public string cliEnding = "";
 		}
@@ -83,6 +83,7 @@ namespace VersionControl.Backend.P4
 	            commandLineOutput = ExecuteCommandLine(commandLine);
 	        }
 			
+			//D.Log(commandLineOutput + " " + commandLine.ToString());
 			if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
 		        if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
 		        {

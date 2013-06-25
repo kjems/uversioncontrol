@@ -68,8 +68,11 @@ namespace VersionControl
 	  public List<string> IgnoreStrings {
 	      get { return ignoreStrings; }
 		  set { 
-			  ignoreStrings = new List<string>(value.Select(s => WildcardToRegexPattern(s)));
-              Refresh();
+			  if ( value != null ) {
+				  ignoreStrings = new List<string>();
+				  foreach ( string pattern in value ) { ignoreStrings.Add(WildcardToRegexPattern(pattern)); }
+	              Refresh();
+			  }
 		  }
 	  }
       

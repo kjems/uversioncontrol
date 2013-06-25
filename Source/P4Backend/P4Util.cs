@@ -1,5 +1,7 @@
 using System;
 using CommandLineExecution;
+using System.Collections.Generic;
+using System.Linq;
 using VersionControl;
 
 namespace VersionControl.Backend.P4
@@ -22,6 +24,7 @@ namespace VersionControl.Backend.P4
 
 		private readonly object operationActiveLockToken = new object();
 		private P4Vars p4Vars = new P4Vars();
+		private List<string> ignoreStrings = null;
 		
 		static public P4Util Instance {
 			get {
@@ -33,6 +36,12 @@ namespace VersionControl.Backend.P4
 		public P4Vars Vars {
 			get {
 				return p4Vars;
+			}
+		}
+		
+		public List<string> IgnoreStrings {
+			get {
+				return ignoreStrings;
 			}
 		}
 		
@@ -60,10 +69,10 @@ namespace VersionControl.Backend.P4
 	        CommandLineOutput commandLineOutput;
 	        using (var p4SetTask = CreateP4CommandLine("set " + key + "=" + value))
 	        {
-				D.Log("CMD: " + p4SetTask.ToString());
+				//D.Log("CMD: " + p4SetTask.ToString());
 	            commandLineOutput = ExecuteOperation(p4SetTask);
 				if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
-					D.Log("P4: " + commandLineOutput.OutputStr);
+					//D.Log("P4: " + commandLineOutput.OutputStr);
 				}
 			}
 		}
@@ -84,28 +93,24 @@ namespace VersionControl.Backend.P4
 	        }
 			
 			//D.Log(commandLineOutput + " " + commandLine.ToString());
-			if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
-		        if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
-		        {
-		            D.Log("ERROR: Test Exception cast due to ExceptionTest.txt being a part of arguments");
-		        }
-		        if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
-		        {
+			if ( commandLineOutput != null ) {
+				if ( !String.IsNullOrEmpty(commandLineOutput.ErrorStr) ) {
 		            var errStr = commandLineOutput.ErrorStr;
-		            if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		            if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		            if (errStr.Contains("W155007") || errStr.Contains("'" + p4Vars.workingDirectory + "'" + " is not a working copy"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		            if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		            if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'p4 cleanup'"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		            if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
-		                D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-					D.Log("ERROR: " + errStr + " " + commandLine.ToString());
-		        }
+					if ( errStr.Contains( " - no file(s) to reconcile." ) ) {
+						// this is not an error - put this text in the OutputStr and clear ErrorStr
+						commandLineOutput = new CommandLineOutput(commandLine.ToString(), "", errStr, "", 0);
+					}
+					else if ( errStr.Contains( " - no such file(s)." ) ) {
+						// this is not an error - put this text in the OutputStr and clear ErrorStr
+						commandLineOutput = new CommandLineOutput(commandLine.ToString(), "", errStr, "", 0);
+					}
+					else {
+						D.Log("ERROR: " + errStr + " " + commandLine.ToString());
+					}
+
+//					D.Log(commandLineOutput.OutputStr);
+				}
+				//D.Log(commandLineOutput.OutputStr);
 			}
 	        return commandLineOutput;
 	    }
@@ -133,11 +138,11 @@ namespace VersionControl.Backend.P4
 			// get connection info
 	        using (var p4StatusTask = CreateP4CommandLine("set"))
 	        {
-				D.Log("CMD: " + p4StatusTask.ToString());
+				//D.Log("CMD: " + p4StatusTask.ToString());
 	            commandLineOutput = ExecuteOperation(p4StatusTask);
 				if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
 					string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-					D.Log("P4: " + commandLineOutput.OutputStr);
+					//D.Log("P4: " + commandLineOutput.OutputStr);
 					// sample output:
 					// P4CLIENT=workspace_name (set)
 					// P4EDITOR=C:\Program Files (x86)\Notepad++\notepad++.exe (set)
@@ -186,6 +191,18 @@ namespace VersionControl.Backend.P4
 						}
 					}
 				}
+			}
+		}
+		
+		public void GetIgnoreStrings(string rootPath)
+		{
+			if ( !string.IsNullOrEmpty(p4Vars.ignoreFile) && !string.IsNullOrEmpty(p4Vars.clientSpec) ) {
+				if ( !rootPath.EndsWith("/") ) {
+					rootPath = rootPath + "/";
+				}
+				string ignorePath = rootPath + p4Vars.ignoreFile;
+				// build ignore strings list from ignore file if it's in the root
+				ignoreStrings = new List<string>(System.IO.File.ReadAllLines(ignorePath).Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("#")));
 			}
 		}
 	}

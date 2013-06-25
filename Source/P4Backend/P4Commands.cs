@@ -13,17 +13,26 @@ namespace VersionControl.Backend.P4
 
     public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
+		private class P4QueueItem {
+			public StatusLevel level;
+			public string path;
+			
+			public P4QueueItem( StatusLevel _level, string _path ) {
+				level = _level;
+				path  = _path;
+			}
+		}
+		
 		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
 		private string rootPath = "";
         private string versionNumber;
 		private Dictionary<string, string> depotToDir = null;
-		private bool localStatusDirty = true;
-		private bool remoteStatusDirty = true;
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
         private Thread refreshThread = null;
 		private System.Timers.Timer remoteRefreshTimer = null;
+        private readonly object p4QueueLockToken = new object();
         private readonly object requestQueueLockToken = new object();
         private readonly object statusDatabaseLockToken = new object();
         private readonly List<string> localRequestQueue = new List<string>();
@@ -31,7 +40,8 @@ namespace VersionControl.Backend.P4
         private volatile bool active = false;
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
-        private FileSystemWatcher assetsWatcher = null;
+		private DirectoryCrawler dirStatus = new DirectoryCrawler();
+		private List<P4QueueItem> p4OpQueue = new List<P4QueueItem>();	// not using a Queue<> because we need to insert high-priority items
 		
         public P4Commands(string cliEnding = "")
         {
@@ -67,6 +77,16 @@ namespace VersionControl.Backend.P4
 					{
 						// refresh status
 	                    if (active && refreshLoopActive) RefreshStatusDatabase();
+
+						lock ( p4QueueLockToken )
+						{
+							// run p4 ops
+							if (p4OpQueue.Count > 0) {
+								P4QueueItem item = p4OpQueue[0];
+								p4OpQueue.RemoveAt(0);
+								GetStatus(item.level, "fstat -T " + fstatAttributes, item.path);
+							}
+						}
 					}
                 }
             }
@@ -104,6 +124,10 @@ namespace VersionControl.Backend.P4
                 refreshThread.Abort();
                 refreshThread = null;
             }
+			lock ( p4QueueLockToken )
+			{
+				p4OpQueue.Clear();
+			}
         }
 
         public void Start()
@@ -133,8 +157,8 @@ namespace VersionControl.Backend.P4
 			
 			DestroyTimer();
 			
-			// only allow refreshing remote status every 15 seconds
-			remoteRefreshTimer = new System.Timers.Timer(15000);
+			// only allow refreshing remote status every 5 minutes
+			remoteRefreshTimer = new System.Timers.Timer(300000);
 
 			// Hook up the Elapsed event for the timer.
 			remoteRefreshTimer.Elapsed += new ElapsedEventHandler(OnTimerExpired);
@@ -146,7 +170,6 @@ namespace VersionControl.Backend.P4
 
 	    private void OnTimerExpired(object source, ElapsedEventArgs e)
 	    {
-			remoteStatusDirty = true;
 			Status( StatusLevel.Remote, DetailLevel.Normal );
 	    }
 	
@@ -267,6 +290,8 @@ namespace VersionControl.Backend.P4
 					}
 				}
             }
+			
+			P4Util.Instance.GetIgnoreStrings(rootPath);
 
 			return P4Util.Instance.P4Initialized;
 		}
@@ -281,45 +306,13 @@ namespace VersionControl.Backend.P4
             return P4Util.Instance.P4Initialized;
         }
 
-		// Define the event handlers. 
-	    private void OnAssetsChanged(object source, FileSystemEventArgs e)
-	    {
-			AddToLocalStatusQueue( e.FullPath );
-			localStatusDirty = true;
-	    }
-	
-	    private void OnAssetsRenamed(object source, RenamedEventArgs e)
-	    {
-			AddToLocalStatusQueue( e.FullPath );
-			localStatusDirty = true;
-	    }
-			
         public void SetWorkingDirectory(string workingDirectory)
         {
             P4Util.Instance.Vars.workingDirectory = workingDirectory;
-			if ( assetsWatcher != null ) {
-		        // Stop watching.
-		        assetsWatcher.EnableRaisingEvents = false;
-
-				// Remove event handlers.
-		        assetsWatcher.Changed -= new FileSystemEventHandler(OnAssetsChanged);
-		        assetsWatcher.Created -= new FileSystemEventHandler(OnAssetsChanged);
-		        assetsWatcher.Deleted -= new FileSystemEventHandler(OnAssetsChanged);
-		        assetsWatcher.Renamed -= new RenamedEventHandler(OnAssetsRenamed);
-				
-				assetsWatcher = null;
-			}
-
-			assetsWatcher = new FileSystemWatcher(workingDirectory);
-
-			// Add event handlers.
-	        assetsWatcher.Changed += new FileSystemEventHandler(OnAssetsChanged);
-	        assetsWatcher.Created += new FileSystemEventHandler(OnAssetsChanged);
-	        assetsWatcher.Deleted += new FileSystemEventHandler(OnAssetsChanged);
-	        assetsWatcher.Renamed += new RenamedEventHandler(OnAssetsRenamed);
-	
-	        // Begin watching.
-	        assetsWatcher.EnableRaisingEvents = true;        
+			dirStatus.SearchDepth = 2;
+			dirStatus.IgnoreStrings = P4Util.Instance.IgnoreStrings;
+			dirStatus.StoreRelativePaths = true;
+			dirStatus.Directory = workingDirectory.Replace ("/", Path.DirectorySeparatorChar.ToString());
 		}
 
         public void SetUserCredentials(string userName, string password)
@@ -346,36 +339,15 @@ namespace VersionControl.Backend.P4
         {
             lock (statusDatabaseLockToken)
             {
-                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter));
+                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.ToString())));
             }
         }
 		
-		public bool GetStatus(StatusLevel statusLevel, string fstatArgs, IEnumerable<string> assets = null)
+		public bool GetStatus(StatusLevel statusLevel, string fstatArgs, string path)
 		{
-			// if nothing has changed locally or our minimum refresh time hasn't expired, don't do checks again
-			if ( (statusLevel == StatusLevel.Local && !localStatusDirty) || (statusLevel == StatusLevel.Remote && !remoteStatusDirty) ) {
-				if ( assets == null ) return true;
-				
-				// make sure all assets are already in the database
-				bool missedOne = false;
-				foreach( var asset in assets ) {
-					VersionControlStatus status = null;
-					if ( !statusDatabase.TryGetValue( new ComposedString(asset), out status ) ) {
-						missedOne = true;
-					}
-					else if ( (status.reflectionLevel == VCReflectionLevel.Local && statusLevel != StatusLevel.Local)
-						   || (status.reflectionLevel == VCReflectionLevel.Repository && statusLevel != StatusLevel.Remote)
-						   || (status.reflectionLevel == VCReflectionLevel.Pending) ) {
-						missedOne = true;
-					}
-				}
+			//D.Log( "Processing " + path );
 
-				if ( !missedOne) return true;
-			}
-
-			string arguments = "status -aed ";
-//            if (statusLevel == StatusLevel.Remote) arguments += " -u";
-//            if (detailLevel == DetailLevel.Verbose) arguments += " -v";
+			string arguments = "status -aed \"" + path + "\"";
 
             CommandLineOutput statusCommandLineOutput = null;
 			if ( statusLevel == StatusLevel.Local ) {
@@ -385,7 +357,7 @@ namespace VersionControl.Backend.P4
 	            }
 			}
 			
-            arguments = fstatArgs;
+            arguments = fstatArgs + " \"" + path + "\"";
             CommandLineOutput fstatCommandLineOutput;
             using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
@@ -396,9 +368,6 @@ namespace VersionControl.Backend.P4
 			if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
-//				if ( statusCommandLineOutput != null ) D.Log(statusCommandLineOutput.OutputStr);
-//				D.Log("");
-//				D.Log(fstatCommandLineOutput.OutputStr);
                 var statusDB = statusCommandLineOutput != null ? P4StatusParser.P4ParseStatus(statusCommandLineOutput.OutputStr, P4Util.Instance.Vars.userName) : null;
                 var fstatDB = P4StatusParser.P4ParseFstat(fstatCommandLineOutput.OutputStr, P4Util.Instance.Vars.workingDirectory);
                 lock (statusDatabaseLockToken)
@@ -447,28 +416,6 @@ namespace VersionControl.Backend.P4
                         localRequestQueue.Remove(assetIt.ToString());
                     }
                 }
-				if ( assets != null ) {
-	                lock (statusDatabaseLockToken)
-	                {
-						// make sure there's a status item for each asset requested
-						foreach ( var assetIt in assets ) {
-	                        VersionControlStatus status = null;
-							ComposedString asset = new ComposedString(assetIt);
-							if ( !statusDatabase.TryGetValue(asset, out status) || status.reflectionLevel == VCReflectionLevel.Pending ) {
-								//D.Log( "No status for " + assetIt + ", adding a default one..." );
-								status = new VersionControlStatus();
-				                status.assetPath = asset;
-								if ( !Directory.Exists( P4Util.Instance.Vars.workingDirectory + "/" + assetIt ) ) {
-									// this is not a directory, it's a file, so it must be ignored if we didn't get a status for it
-									status.fileStatus = VCFileStatus.Ignored;
-									//D.Log( "Ignoring " + status.assetPath.ToString() );
-								}
-								status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-								statusDatabase[asset] = status;
-							}
-						}
-					}
-				}
                 OnStatusCompleted();
             }
             catch (Exception e)
@@ -477,10 +424,6 @@ namespace VersionControl.Backend.P4
                 return false;
             }
 
-			// clear dirty statuses
-			localStatusDirty = false;
-			remoteStatusDirty = false;
-
 			return true;
 		}
 
@@ -488,14 +431,36 @@ namespace VersionControl.Backend.P4
         {
             if (!active) return false;
 
-//			D.Log(statusLevel.ToString() + " " + detailLevel.ToString());
+			//D.Log(statusLevel.ToString() + " " + detailLevel.ToString() + " - ALL");
+			
+			string diffRootToWorking = P4Util.Instance.Vars.workingDirectory.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace( rootPath, "" );
+			
+			lock ( p4QueueLockToken )
+			{
+				// add all directories to p4 queue
+				foreach ( DirectoryCrawler.DirectoryData dd in dirStatus.Directories ) {
+					string p4Path = dd.fullName.Replace("\\", "/").Replace( P4Util.Instance.Vars.workingDirectory, "" );
+					if ( !string.IsNullOrEmpty(p4Path) && !p4Path.EndsWith("/") ) {
+						p4Path = p4Path + "/";
+					}
+					if ( dd.parent != null && dd.directories.Count == 0 ) {
+						// if this is a tree leaf, get status for it and everything below it
+						p4Path = p4Path + "...";
+					}
+					else if ( dd.parent == null || dd.directories.Count > 0 ) {
+						// if this is the root or a non-leaf directory, just get its non-recursive status
+						p4Path = p4Path + "*";
+					}
+					p4OpQueue.Add( new P4QueueItem( statusLevel, "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + p4Path ) );
+				}
+			}
 
-			return GetStatus(statusLevel, "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...", null);
+			return true;
         }
 
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-//			D.Log(statusLevel.ToString());
+			//D.Log(statusLevel.ToString());
             if (!active) return false;
             if (statusLevel == StatusLevel.Previous)
             {
@@ -511,7 +476,25 @@ namespace VersionControl.Backend.P4
 			
 			SetPending(assets);
 
-			return GetStatus(statusLevel, "fstat -T " + fstatAttributes + " //" + P4Util.Instance.Vars.clientSpec + "/...", assets);
+			string diffRootToWorking = P4Util.Instance.Vars.workingDirectory.Replace("\\", Path.DirectorySeparatorChar.ToString()).Replace( rootPath, "" );
+
+			lock ( p4QueueLockToken )
+			{
+				// add all assets to p4 queue (in reverse order since we're going to be inserting them at the beginning)
+				string []_assets = assets.ToArray();
+				for ( int i = _assets.Length - 1; i >= 0; i-- ) {
+					string a = _assets[i];
+					if ( a.StartsWith("/") ) a = a.Substring(1);
+					if ( Directory.Exists( rootPath + diffRootToWorking + "/" + a ) ) {
+						// only check files within the directory
+						a = a + "/*";
+					}
+					// this is a high-priority operation since specific assets are being asked for, put it at the front of the queue
+					p4OpQueue.Insert( 0, new P4QueueItem( statusLevel, "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + a.Replace("//", "/") ) );
+				}
+			}
+
+			return true;
         }
 
         private bool CreateOperation(string arguments)
@@ -672,7 +655,6 @@ namespace VersionControl.Backend.P4
 		private void UpdateAfterOperation( IEnumerable<string> assets )
 		{
 			foreach ( var asset in assets ) AddToLocalStatusQueue( asset );
-			localStatusDirty = true;
 		}
 
         public bool Add(IEnumerable<string> assets)
@@ -773,8 +755,6 @@ namespace VersionControl.Backend.P4
             lock (statusDatabaseLockToken)
             {
                 statusDatabase.Clear();
-				localStatusDirty = true;
-				remoteStatusDirty = true;
             }
         }
 

@@ -62,7 +62,10 @@ namespace VersionControl.Backend.P4
 						  + (String.IsNullOrEmpty(p4Vars.clientSpec) ? "" : " -c " + p4Vars.clientSpec)
 						  + " -p " + p4Vars.port + " " + arguments;
 	        }
-	        return new CommandLine("p4", arguments, p4Vars.workingDirectory, input, p4Vars.cliEnding);
+			Dictionary<string, string> envVars = new Dictionary<string, string>();
+			envVars.Add("P4CONFIG", p4Vars.configFile);
+			envVars.Add("P4IGNORE", p4Vars.ignoreFile);
+	        return new CommandLine("p4", arguments, p4Vars.workingDirectory, input, p4Vars.cliEnding, envVars);
 	    }
 
 		public void P4Set(string key, string value) {

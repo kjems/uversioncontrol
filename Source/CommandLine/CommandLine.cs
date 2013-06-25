@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
-
+using System.Collections.Generic;
 
 namespace CommandLineExecution
 {
@@ -32,13 +32,14 @@ namespace CommandLineExecution
 
     public sealed class CommandLine : IDisposable
     {
-        public CommandLine(string command, string arguments, string workingDirectory, string input = null, string cliEnding = "")
+        public CommandLine(string command, string arguments, string workingDirectory, string input = null, string cliEnding = "", Dictionary<string, string> _envVars = null)
         {
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
 			this.input = input;
 			this.cliEnding = cliEnding;
+			if ( _envVars != null ) this.envVars = new Dictionary<string, string>(_envVars);
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -84,6 +85,7 @@ namespace CommandLineExecution
         readonly string command;
         readonly string arguments;
         readonly string workingDirectory;
+		Dictionary<string, string> envVars = new Dictionary<string, string>();
         Process process;
 
         public CommandLineOutput Execute()
@@ -91,8 +93,7 @@ namespace CommandLineExecution
             aborted = false;
             try
             {
-                process = Process.Start(new ProcessStartInfo
-                {
+				ProcessStartInfo psi = new ProcessStartInfo() {
                     FileName = command,
                     Arguments = arguments,
                     WorkingDirectory = workingDirectory,
@@ -101,8 +102,11 @@ namespace CommandLineExecution
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     RedirectStandardInput = true,
-                    ErrorDialog = false,
-                });
+                    ErrorDialog = false
+				};
+				// set env vars
+				foreach ( KeyValuePair<string, string> kvp in envVars ) { psi.EnvironmentVariables.Add(kvp.Key, kvp.Value); }
+                process = Process.Start(psi);
                 
 				if ( !String.IsNullOrEmpty( input ) ) {
 					StreamWriter myStreamWriter = process.StandardInput;

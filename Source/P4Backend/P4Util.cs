@@ -199,14 +199,17 @@ namespace VersionControl.Backend.P4
 		
 		public void GetIgnoreStrings(string rootPath)
 		{
-			if ( !string.IsNullOrEmpty(p4Vars.ignoreFile) && !string.IsNullOrEmpty(p4Vars.clientSpec) ) {
+            if (!string.IsNullOrEmpty(p4Vars.ignoreFile) && !string.IsNullOrEmpty(p4Vars.clientSpec)) {
 				if ( !rootPath.EndsWith("/") ) {
 					rootPath = rootPath + "/";
 				}
 				string ignorePath = rootPath + p4Vars.ignoreFile;
-				// build ignore strings list from ignore file if it's in the root
-				ignoreStrings = new List<string>(System.IO.File.ReadAllLines(ignorePath).Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("#")));
-			}
+
+                if (System.IO.File.Exists(ignorePath)) {
+                    // build ignore strings list from ignore file if it's in the root
+                    ignoreStrings = new List<string>(System.IO.File.ReadAllLines(ignorePath).Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("#")));
+                }
+            }
 		}
 	}
 }

@@ -31,29 +31,30 @@ namespace VersionControl
 
     public static class ObjectUtilities
     {
-        public static void SetSceneObjectToAssetPathCallback(System.Func<Object, string> sceneObjectToAssetPath)
+        public static void SetObjectIndirectionCallback(System.Func<Object, Object> objectIndirectionCallback)
         {
-            ObjectUtilities.sceneObjectToAssetPath = sceneObjectToAssetPath;
+            indirection = objectIndirectionCallback;
         }
-        public static string SceneObjectToAssetPath(Object obj)
+        public static Object GetObjectIndirection(Object obj)
         {
-            return sceneObjectToAssetPath(obj);
+            return indirection(obj);
         }
-        private static System.Func<Object, string> sceneObjectToAssetPath = o => null;
+        private static System.Func<Object, Object> indirection = o => o;
 
         public static bool ChangesStoredInScene(Object obj)
         {
+            obj = GetObjectIndirection(obj);
             return obj.GetAssetPath() == EditorApplication.currentScene;
         }
         public static bool ChangesStoredInPrefab(Object obj)
         {
+            obj = GetObjectIndirection(obj);
             return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
         public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
         {
-            var redirectedAssetPath = SceneObjectToAssetPath(obj);
-            if (!string.IsNullOrEmpty(redirectedAssetPath)) return redirectedAssetPath;
+            obj = GetObjectIndirection(obj);
             if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
             return AssetDatabase.GetAssetOrScenePath(obj);
         }

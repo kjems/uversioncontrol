@@ -143,7 +143,7 @@ namespace VersionControl.Backend.P4
 	        {
 				//D.Log("CMD: " + p4StatusTask.ToString());
 	            commandLineOutput = ExecuteOperation(p4StatusTask);
-				if ( !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
+				if ( commandLineOutput != null && !String.IsNullOrEmpty(commandLineOutput.OutputStr) ) {
 					string[] output = commandLineOutput.OutputStr.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 					//D.Log("P4: " + commandLineOutput.OutputStr);
 					// sample output:
@@ -153,6 +153,7 @@ namespace VersionControl.Backend.P4
 					// P4PORT=192.168.1.1:1666
 					// P4USER=username
 					foreach( String line in output ) {
+
 						var cleaned = line.Trim();
 						// check for/remove (set) and (config) tags
 						if ( line.IndexOf("(set") != -1 ) {
@@ -199,14 +200,17 @@ namespace VersionControl.Backend.P4
 		
 		public void GetIgnoreStrings(string rootPath)
 		{
-			if ( !string.IsNullOrEmpty(p4Vars.ignoreFile) && !string.IsNullOrEmpty(p4Vars.clientSpec) ) {
+            if (!string.IsNullOrEmpty(p4Vars.ignoreFile) && !string.IsNullOrEmpty(p4Vars.clientSpec)) {
 				if ( !rootPath.EndsWith("/") ) {
 					rootPath = rootPath + "/";
 				}
 				string ignorePath = rootPath + p4Vars.ignoreFile;
-				// build ignore strings list from ignore file if it's in the root
-				ignoreStrings = new List<string>(System.IO.File.ReadAllLines(ignorePath).Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("#")));
-			}
+
+                if (System.IO.File.Exists(ignorePath)) {
+                    // build ignore strings list from ignore file if it's in the root
+                    ignoreStrings = new List<string>(System.IO.File.ReadAllLines(ignorePath).Where(s => !string.IsNullOrEmpty(s) && !s.StartsWith("#")));
+                }
+            }
 		}
 	}
 }

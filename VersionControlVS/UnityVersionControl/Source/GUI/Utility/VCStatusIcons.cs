@@ -39,9 +39,9 @@ namespace VersionControl.UserInterface
             var obj = EditorUtility.InstanceIDToObject(instanceID);
             string assetPath = obj.GetAssetPath();
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
-            bool guiLockForPrefabs = EditableManager.LockPrefab(obj.GetAssetPath());
+            bool guiLockForPrefabs = EditableManager.LockPrefab(assetPath);
 
-            if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || (changesStoredInPrefab && guiLockForPrefabs)))
+            if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || guiLockForPrefabs))
             {
                 VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
                 DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, obj);

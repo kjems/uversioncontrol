@@ -214,6 +214,10 @@ namespace VersionControl.Backend.P4
             using (var p4WhereTask = P4Util.Instance.CreateP4CommandLine("client -o"))
             {
                 commandLineOutput = P4Util.Instance.ExecuteOperation(p4WhereTask);
+                if(commandLineOutput == null || commandLineOutput.Failed)
+                {
+                    return false;
+                }
 				depotToDir = new Dictionary<string, string>();
 				// sample output:
 				//# A Perforce Client Specification.

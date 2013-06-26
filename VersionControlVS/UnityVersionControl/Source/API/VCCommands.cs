@@ -518,9 +518,5 @@ namespace VersionControl
         }
 
         #endregion
-        public void SetPersistentObjectCallback(Func<Object, string> persistentObjectCallback)
-        {
-            ObjectUtilities.SetSceneObjectToAssetPathCallback(persistentObjectCallback);
-        }
     }
 }

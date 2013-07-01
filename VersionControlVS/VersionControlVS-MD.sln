@@ -15,6 +15,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceTests", "Perform
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P4Backend", "P4Backend\P4Backend.csproj", "{376F39EA-5EFD-4D8A-8377-92128D336686}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoopBackend", "NoopBackend\NoopBackend.csproj", "{5C4771D4-946E-4125-88C7-7F8AA443F701}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29EA8602-966F-4586-9695-9A120BC1DC5D} = {29EA8602-966F-4586-9695-9A120BC1DC5D}
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{EDD08ADA-2879-406D-9515-CFD35146154F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityVersionControl", "UnityVersionControl\UnityVersionControl.csproj", "{671D912C-1CFB-4912-9D0D-39A8C633E537}"
@@ -25,11 +30,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendererInspectors", "RendererInspectors\RendererInspectors.csproj", "{7CE9869E-A980-4DB4-BEF4-ADE6BE023637}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamFeatures", "TeamFeatures\TeamFeatures.csproj", "{313120F7-487B-4D23-BCCF-C1DCA4BF6158}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoopBackend", "NoopBackend\NoopBackend.csproj", "{5C4771D4-946E-4125-88C7-7F8AA443F701}"
-	ProjectSection(ProjectDependencies) = postProject
-		{29EA8602-966F-4586-9695-9A120BC1DC5D} = {29EA8602-966F-4586-9695-9A120BC1DC5D}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -106,6 +106,16 @@ Global
 		{376F39EA-5EFD-4D8A-8377-92128D336686}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{376F39EA-5EFD-4D8A-8377-92128D336686}.Release|x86.ActiveCfg = Release|Any CPU
 		{376F39EA-5EFD-4D8A-8377-92128D336686}.Release|x86.Build.0 = Release|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|x86.ActiveCfg = Release|Any CPU
 		{671D912C-1CFB-4912-9D0D-39A8C633E537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{671D912C-1CFB-4912-9D0D-39A8C633E537}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{671D912C-1CFB-4912-9D0D-39A8C633E537}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -136,16 +146,6 @@ Global
 		{313120F7-487B-4D23-BCCF-C1DCA4BF6158}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{313120F7-487B-4D23-BCCF-C1DCA4BF6158}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{313120F7-487B-4D23-BCCF-C1DCA4BF6158}.Release|x86.ActiveCfg = Release|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{5C4771D4-946E-4125-88C7-7F8AA443F701}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

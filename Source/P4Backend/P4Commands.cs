@@ -70,21 +70,21 @@ namespace VersionControl.Backend.P4
             {
 				while (!requestRefreshLoopStop)
                 {
-                    Thread.Sleep(200);
-
-					// make sure p4 data is initialized
-					if ( P4Util.Instance.P4Initialized || InitializeP4Connection() )
-					{
-						// refresh status
-	                    if (active && refreshLoopActive) RefreshStatusDatabase();
-
-						lock ( p4QueueLockToken )
+					if (active && refreshLoopActive) {
+						// make sure p4 data is initialized
+						if ( P4Util.Instance.P4Initialized || InitializeP4Connection() )
 						{
-							// run p4 ops
-							if (p4OpQueue.Count > 0) {
-								P4QueueItem item = p4OpQueue[0];
-								p4OpQueue.RemoveAt(0);
-								GetStatus(item.level, "fstat -T " + fstatAttributes, item.path);
+							// refresh status
+							RefreshStatusDatabase();
+
+							lock ( p4QueueLockToken )
+							{
+								// run p4 ops
+								if (p4OpQueue.Count > 0) {
+									P4QueueItem item = p4OpQueue[0];
+									p4OpQueue.RemoveAt(0);
+									GetStatus(item.level, "fstat -T " + fstatAttributes, item.path);
+								}
 							}
 						}
 					}
@@ -124,10 +124,6 @@ namespace VersionControl.Backend.P4
                 refreshThread.Abort();
                 refreshThread = null;
             }
-			lock ( p4QueueLockToken )
-			{
-				p4OpQueue.Clear();
-			}
         }
 
         public void Start()
@@ -362,7 +358,7 @@ namespace VersionControl.Backend.P4
 			}
 			
             arguments = fstatArgs + " \"" + path + "\"";
-            CommandLineOutput fstatCommandLineOutput;
+            CommandLineOutput fstatCommandLineOutput = null;
             using (var p4FstatTask = P4Util.Instance.CreateP4CommandLine(arguments))
             {
                 fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);

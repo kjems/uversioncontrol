@@ -377,14 +377,15 @@ namespace VersionControl.Backend.P4
 	                    {
 	                        var status = statusIt.Value;
 	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[statusIt.Key] = status;
+	                        statusDatabase[statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "")] = status;
 	                    }
 					}
 
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-						statusDatabase.TryGetValue(statusIt.Key, out status);
+						string aPath = statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "");
+						statusDatabase.TryGetValue(aPath, out status);
 						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
 							// no previous status or previous status is pending, so set it here
 							status = statusIt.Value;
@@ -398,7 +399,7 @@ namespace VersionControl.Backend.P4
 							}
 						}
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[statusIt.Key] = status;
+                        statusDatabase[aPath] = status;
                     }
 				}
                 lock (requestQueueLockToken)

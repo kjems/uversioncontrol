@@ -309,6 +309,7 @@ namespace VersionControl.Backend.P4
         public void SetWorkingDirectory(string workingDirectory)
         {
             P4Util.Instance.Vars.workingDirectory = workingDirectory;
+			P4Util.Instance.Vars.unixWorkingDirectory = workingDirectory.Replace("\\", "/");
 			dirStatus.SearchDepth = 2;
 			dirStatus.IgnoreStrings = P4Util.Instance.IgnoreStrings;
 			dirStatus.StoreRelativePaths = true;
@@ -377,7 +378,7 @@ namespace VersionControl.Backend.P4
 	                    {
 	                        var status = statusIt.Value;
 	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "")] = status;
+	                        statusDatabase[new ComposedString(statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
 	                    }
 					}
 
@@ -399,7 +400,7 @@ namespace VersionControl.Backend.P4
 							}
 						}
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[aPath] = status;
+                        statusDatabase[new ComposedString(aPath)] = status;
                     }
 				}
                 lock (requestQueueLockToken)
@@ -685,7 +686,7 @@ namespace VersionControl.Backend.P4
         {
 			// OperationMode.Force is not supported in p4
 			// need to make sure the assets are opened for edit first...
-			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[a].fileStatus == VCFileStatus.Normal ));
+			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Normal ));
             success &= CreateAssetOperation("lock", assets);
 			if ( success ) UpdateAfterOperation( assets );
 			return success;

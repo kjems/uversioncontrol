@@ -98,7 +98,9 @@ namespace VersionControl.Backend.P4
 						ourLock = true;
 						break;
 					default:
-						D.LogError( String.Format( "p4 fstat line unrecognized: {0}", line ) );
+						if ( !line.EndsWith("- no such file(s).") ) {
+							D.LogError( String.Format( "p4 fstat line unrecognized: {0}", line ) );
+						}
 						break;
 					}
 				}

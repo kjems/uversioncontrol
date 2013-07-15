@@ -17,6 +17,7 @@ namespace VersionControl.Backend.P4
 			public string configFile = ".p4config";
 			public string ignoreFile = ".p4ignore"; 
 			public string workingDirectory = ".";
+			public string unixWorkingDirectory = ".";
 			public string cliEnding = "";
 		}
 		

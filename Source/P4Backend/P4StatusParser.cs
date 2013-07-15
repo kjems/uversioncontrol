@@ -57,10 +57,10 @@ namespace VersionControl.Backend.P4
 			var lines = p4Status.Split(new Char[] { '\r', '\n' } );
 			foreach( String line in lines ) {
 				if ( line.IndexOf(" - reconcile") == -1 ) continue;	// sometimes output may contain blank lines...
-                string assetPath = line.Substring( 0, line.IndexOf(" - reconcile") ).Replace( '\\', '/' ).Trim();
                 var status = ParseStatusLine(line, username);
-                status.assetPath = assetPath;
-                statusDatabase[new ComposedString(assetPath)] = status;
+                string assetPath = line.Substring( 0, line.IndexOf(" - reconcile") ).Replace( '\\', '/' ).Trim().Replace(P4Util.Instance.Vars.unixWorkingDirectory + "/", "");
+                status.assetPath = new ComposedString(assetPath);
+                statusDatabase[status.assetPath] = status;
 			}
 
 			return statusDatabase;

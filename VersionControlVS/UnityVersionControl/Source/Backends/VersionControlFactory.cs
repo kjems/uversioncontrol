@@ -19,17 +19,37 @@ namespace VersionControl
 			if ( Application.platform == RuntimePlatform.OSXEditor ) {
 				cliEnding = Environment.NewLine;
 			}
-            var p4Commands = AddDecorators(new P4Commands(cliEnding));
-            p4Commands.SetWorkingDirectory(workDirectory);
-
-            var svnCommands = AddDecorators(new SVNCommands(cliEnding));
-            svnCommands.SetWorkingDirectory(workDirectory);
+			
+            bool svnValid = true;
+            bool p4Valid = true;
+			
+			IVersionControlCommands p4Commands = null;
+			IVersionControlCommands svnCommands = null;
+			
+			try 
+			{
+				p4Commands = AddDecorators(new P4Commands(cliEnding));
+    	        p4Commands.SetWorkingDirectory(workDirectory);
+				p4Valid = p4Commands.HasValidLocalCopy();
+			}
+			catch (Exception)
+			{
+				p4Valid = false;
+			}
+			
+			try
+			{
+	            svnCommands = AddDecorators(new SVNCommands(cliEnding));
+    	        svnCommands.SetWorkingDirectory(workDirectory);
+	            svnValid = svnCommands.HasValidLocalCopy();
+			}
+			catch (Exception)
+			{
+				svnValid = false;
+			}
             
-            bool svnValid = svnCommands.HasValidLocalCopy();
-            bool p4Valid = p4Commands.HasValidLocalCopy();
             bool svnSelected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn;
             bool p4Selected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce;
-
 
             if (svnValid && !p4Valid)
             {

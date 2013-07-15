@@ -62,6 +62,7 @@ namespace VersionControl
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
         public event Action<OperationType> OperationCompleted;
+        public event Action<List<string>> PreCommit;
 
         public static bool Active
         {
@@ -504,6 +505,10 @@ namespace VersionControl
             if (assets.Contains(EditorApplication.currentScene))
             {
                 EditorApplication.SaveCurrentSceneIfUserWantsTo();
+            }
+            if(PreCommit != null)
+            {
+                PreCommit(assets.Concat(dependencies).Distinct().ToList());
             }
             if (showUserConfirmation || initialAssetCount < (assets.Count() + dependencies.Count()))
             {

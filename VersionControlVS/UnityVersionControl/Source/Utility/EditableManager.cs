@@ -12,12 +12,12 @@ namespace VersionControl
     using Extensions;
     public static class EditableManager
     {
-        private static bool IsEditable(Object obj)
+        public static bool IsEditable(Object obj)
         {
             return (obj.hideFlags & HideFlags.NotEditable) == 0;
         }
 
-        internal static void SetEditable(Object obj, bool editable)
+        public static void SetEditable(Object obj, bool editable)
         {
             //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
             if (obj != null && !AvoidGUILock(obj) && !string.IsNullOrEmpty(obj.GetAssetPath()))

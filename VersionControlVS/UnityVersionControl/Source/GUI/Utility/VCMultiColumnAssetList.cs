@@ -88,11 +88,11 @@ namespace VersionControl.UserInterface
 
             Func<GenericMenu> rowRightClickMenu = () =>
             {
-                var selected = multiColumnState.GetSelected().Select(status => status.assetPath);
+                var selected = multiColumnState.GetSelected().Select(status => status.assetPath.ToString());
                 if (!selected.Any()) return new GenericMenu();
                 GenericMenu menu = new GenericMenu();
                 if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First().ToString());
-                else VCGUIControls.CreateVCContextMenu(ref menu, selected.ToString());
+                else VCGUIControls.CreateVCContextMenu(ref menu, selected);
                 var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a.ToString())).ToArray();
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Show in Project"), false, () =>

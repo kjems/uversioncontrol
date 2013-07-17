@@ -686,7 +686,7 @@ namespace VersionControl.Backend.P4
         {
 			// OperationMode.Force is not supported in p4
 			// need to make sure the assets are opened for edit first...
-			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Normal ));
+			bool success = CreateAssetOperation("edit", assets.Where( a => statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Normal || statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Modified ));
             success &= CreateAssetOperation("lock", assets);
 			if ( success ) UpdateAfterOperation( assets );
 			return success;

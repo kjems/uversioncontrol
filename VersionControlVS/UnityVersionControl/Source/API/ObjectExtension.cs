@@ -1,0 +1,100 @@
+// Copyright (c) <2012> <Playdead>
+// This file is subject to the MIT License as seen in the trunk of this repository
+// Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+using System.Linq;
+
+namespace VersionControl
+{
+    using Extensions;
+    /*[InitializeOnLoad]
+    internal static class GameObjectToAssetPathCache
+    {
+        static GameObjectToAssetPathCache()
+        {
+            VCCommands.Instance.StatusCompleted += () => gameObjectToAssetPath.Clear();
+        }
+        private static readonly Dictionary<Object, string> gameObjectToAssetPath = new Dictionary<Object, string>();
+
+        public static bool TryGetValue(Object obj, out string assetPath)
+        {
+            return gameObjectToAssetPath.TryGetValue(obj, out assetPath);
+        }
+
+        public static void Add(Object obj, string assetPath)
+        {
+            if (!string.IsNullOrEmpty(assetPath)) gameObjectToAssetPath.Add(obj, assetPath);
+        }
+    }*/
+
+    public static class ObjectUtilities
+    {
+        public static void SetObjectIndirectionCallback(System.Func<Object, Object> objectIndirectionCallback)
+        {
+            indirection = objectIndirectionCallback;
+        }
+        public static Object GetObjectIndirection(Object obj)
+        {
+            return indirection(obj);
+        }
+        private static System.Func<Object, Object> indirection = o => o;
+
+        public static bool ChangesStoredInScene(Object obj)
+        {
+            obj = GetObjectIndirection(obj);
+            return obj.GetAssetPath() == EditorApplication.currentScene;
+        }
+        public static bool ChangesStoredInPrefab(Object obj)
+        {
+            obj = GetObjectIndirection(obj);
+            return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
+        }
+
+        public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
+        {
+            obj = GetObjectIndirection(obj);
+            if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
+            return AssetDatabase.GetAssetOrScenePath(obj);
+        }
+    }
+
+    namespace Extensions
+    {
+        public static class ObjectExtension
+        {
+            public static VersionControlStatus GetAssetStatus(this Object obj)
+            {
+                return VCCommands.Instance.GetAssetStatus(GetAssetPath(obj));
+            }
+
+            public static IEnumerable<string> ToAssetPaths(this IEnumerable<Object> objects)
+            {
+                return objects.Select<UnityEngine.Object, string>(GetAssetPath).ToList();
+            }
+
+            public static IEnumerable<string> ToAssetPaths(this Object obj)
+            {
+                return new[] { obj.GetAssetPath() };
+            }
+
+            // The caching of AssetPaths caused too many problems with cache getting out of date.
+            // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
+            public static string GetAssetPath(this Object obj)
+            {
+                return ObjectUtilities.ObjectToAssetPath(obj);
+                /*
+                if (obj == null) return "";
+                string assetPath;
+                if (!GameObjectToAssetPathCache.TryGetValue(obj, out assetPath))
+                {
+                    assetPath = ObjectToAssetPath(obj);
+                    GameObjectToAssetPathCache.Add(obj, assetPath);                
+                }
+                return assetPath;
+                */
+            }
+        }
+    }
+}

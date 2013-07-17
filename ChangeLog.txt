@@ -1,0 +1,13 @@
+UVersionControl Changelog
+=========================
+
+= Release 1.0.0.5 =
+== Features==
+ * A Version Control(VC) integration into Unity using SVN as backend
+ * GUI locks to avoid accidently modifing a resources without VC lock
+ * Overview window showing current status on relevant files in relation to VC
+ * Interactive icons on all assets in project- and hierarchy-view
+ * SceneView gui to quickly get the lock on the current open scene
+ * The concept of .meta files are abstracted away from the user
+
+== Bug Fix ==

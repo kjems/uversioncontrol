@@ -13,7 +13,7 @@ namespace VersionControl.Backend.P4
 
     public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
-		private class P4QueueItem {
+		internal class P4QueueItem {
 			public StatusLevel level;
 			public string path;
 			
@@ -21,6 +21,43 @@ namespace VersionControl.Backend.P4
 				level = _level;
 				path  = _path;
 			}
+		}
+		
+		// Custom comparer for the QueueItem class 
+		class P4QueueItemComparer : IEqualityComparer<P4QueueItem>
+		{
+		    // P4QueueItems are equal if their status levels and paths are equal. 
+		    public bool Equals(P4QueueItem x, P4QueueItem y)
+		    {
+		        //Check whether the compared objects reference the same data. 
+		        if (Object.ReferenceEquals(x, y)) return true;
+		
+		        //Check whether any of the compared objects is null. 
+		        if (Object.ReferenceEquals(x, null) || Object.ReferenceEquals(y, null))
+		            return false;
+		
+		        //Check whether the P4QueueItem's properties are equal. 
+		        return x.level == y.level && x.path == y.path;
+		    }
+		
+		    // If Equals() returns true for a pair of objects  
+		    // then GetHashCode() must return the same value for these objects. 
+		
+		    public int GetHashCode(P4QueueItem item)
+		    {
+		        //Check whether the object is null 
+		        if (Object.ReferenceEquals(item, null)) return 0;
+		
+		        //Get hash code for the path field if it is not null. 
+		        int hashItemPath = item.path == null ? 0 : item.path.GetHashCode();
+		
+		        //Get hash code for the level field. 
+		        int hashItemLevel = item.level.GetHashCode();
+		
+		        //Calculate the hash code for the product. 
+		        return hashItemPath ^ hashItemLevel;
+		    }
+		
 		}
 		
 		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
@@ -455,6 +492,7 @@ namespace VersionControl.Backend.P4
 					}
 					p4OpQueue.Add( new P4QueueItem( statusLevel, "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + p4Path ) );
 				}
+				p4OpQueue = new List<P4QueueItem>(p4OpQueue.Distinct(new P4QueueItemComparer()));
 			}
 
 			return true;
@@ -487,13 +525,61 @@ namespace VersionControl.Backend.P4
 				for ( int i = _assets.Length - 1; i >= 0; i-- ) {
 					string a = _assets[i];
 					if ( a.StartsWith("/") ) a = a.Substring(1);
-					if ( Directory.Exists( rootPath + diffRootToWorking + "/" + a ) ) {
+					if ( Directory.Exists( rootPath + diffRootToWorking + "/" + a ) ) 
+					{
 						// only check files within the directory
 						a = a + "/*";
+					}
+					else
+					{
+						// let all scenes through so that the scene view GUI is updated as quickly as possible
+						if ( !a.ToLower().EndsWith(".unity") )
+						{
+							// single file - make sure it's not already covered by a directory in the queue (or if it's a sibling of 
+							// something already in there, remove that item and check the whole directory instead)
+							string qItemPath = "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + a.Replace("//", "/");
+							int lastIndexOfSlash = qItemPath.LastIndexOf( "/" );
+							P4QueueItem itemToRemove = null;
+							bool found = false;
+							foreach ( P4QueueItem item in p4OpQueue )
+							{
+								if ( item.level == statusLevel )
+								{
+									if ( item.path.LastIndexOf( "/" ) == lastIndexOfSlash )
+									{
+										// same leaf node
+										if ( item.path.Contains( "*" ) || item.path.Contains( "..." ) )
+										{
+											// already covered by a directory entry
+											found = true;
+											break;
+										}
+										else
+										{
+											// this is a sibling of the desired item, flag it for removal
+											itemToRemove = item;
+	
+											// add the entire directory instead and continue (don't worry about duplicate adds, the 
+											// Distinct() call below will filter them out
+											a = "*";
+											found = true;
+											break;
+										}
+									}
+								}
+							}
+							
+							// if we need to remove an item, do so here after we're done with the loop
+							if ( itemToRemove != null ) p4OpQueue.Remove( itemToRemove );
+	
+							// don't insert if it's already in the queue
+							if ( found ) continue;
+						}
 					}
 					// this is a high-priority operation since specific assets are being asked for, put it at the front of the queue
 					p4OpQueue.Insert( 0, new P4QueueItem( statusLevel, "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + a.Replace("//", "/") ) );
 				}
+				p4OpQueue = new List<P4QueueItem>(p4OpQueue.Distinct(new P4QueueItemComparer()));
 			}
 
 			return true;

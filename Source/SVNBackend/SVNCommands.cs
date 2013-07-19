@@ -540,7 +540,11 @@ namespace VersionControl.Backend.SVN
             {
                 versionNumber = CreateSVNCommandLine("--version --quiet").Execute().OutputStr;
             }
-            if (versionNumber.StartsWith("1.7"))
+            if (versionNumber.StartsWith("1.6") || versionNumber.StartsWith("1.5"))
+            {
+                return Path.GetDirectoryName(assetPath) + "/.svn/text-base/" + Path.GetFileName(assetPath) + ".svn-base";
+            }
+            else
             {
                 var svnInfo = CreateSVNCommandLine("info --xml " + assetPath).Execute();
                 if (!svnInfo.Failed)
@@ -559,10 +563,6 @@ namespace VersionControl.Backend.SVN
                         if (File.Exists(basePath)) return basePath;
                     }
                 }
-            }
-            if (versionNumber.StartsWith("1.6"))
-            {
-                return Path.GetDirectoryName(assetPath) + "/.svn/text-base/" + Path.GetFileName(assetPath) + ".svn-base";
             }
             return "";
         }

@@ -561,8 +561,7 @@ namespace VersionControl.Backend.P4
 	
 											// add the entire directory instead and continue (don't worry about duplicate adds, the 
 											// Distinct() call below will filter them out
-											a = "*";
-											found = true;
+											a = a.Substring(0, a.LastIndexOf("/")+1) + "*";
 											break;
 										}
 									}

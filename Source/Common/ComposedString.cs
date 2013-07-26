@@ -74,7 +74,7 @@ namespace VersionControl
         }
         public static explicit operator string(ComposedString cstr)
         {
-            return cstr.ToString();
+            return cstr.GetString();
         }
         public static implicit operator ComposedString(string str)
         {
@@ -119,8 +119,8 @@ namespace VersionControl
                 hash = (hash * 7) + indices[i];
             }
             return hash;
-        }
-        public override string ToString()
+        } 
+        public string GetString()
         {
             StringBuilder sb = new StringBuilder(Length);
             for (int i = 0, length = indices.Count; i < length; ++i)

@@ -214,8 +214,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
-                        localRequestQueue.Remove(assetIt.ToString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
+                        localRequestQueue.Remove(assetIt.GetString());
                     }
                 }
                 OnStatusCompleted();
@@ -278,8 +278,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
-                        localRequestQueue.Remove(assetIt.ToString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
+                        localRequestQueue.Remove(assetIt.GetString());
                     }
                 }
                 OnStatusCompleted();

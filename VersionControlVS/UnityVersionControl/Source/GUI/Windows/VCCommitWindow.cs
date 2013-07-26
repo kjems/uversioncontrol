@@ -153,7 +153,7 @@ namespace VersionControl.UserInterface
                 {
                     if (vcMultiColumnAssetList.GetSelectedAssets().Count() != 0)
                     {
-                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.ToString()).ToList();
+                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.GetString()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
                             commitProgress = s + "\n" + commitProgress;

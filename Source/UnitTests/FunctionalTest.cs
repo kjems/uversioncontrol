@@ -63,7 +63,7 @@ namespace VersionControl.UnitTests
             
             vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             var status = vcc.GetAssetStatus(fileA);
-            Assert.IsTrue(status.assetPath.ToString() == fileA, "AssetPath mismatch: " + status.assetPath.ToString() + "!=" + fileA);
+            Assert.IsTrue(status.assetPath.GetString() == fileA, "AssetPath mismatch: " + status.assetPath.GetString() + "!=" + fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Unversioned, "Unversioned");
             
             vcc.Add(new[]{fileA});

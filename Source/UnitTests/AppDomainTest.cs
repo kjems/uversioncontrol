@@ -72,7 +72,7 @@ namespace VersionControl.UnitTests
                     return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
                 });
 
-            Logging(assets.Select(s => s.assetPath.ToString()).Aggregate((a,b) => a + "\n" + b));
+            Logging(assets.Select(s => s.assetPath.GetString()).Aggregate((a,b) => a + "\n" + b));
 
             Logging("Memory Used : " + GC.GetTotalMemory(true));
         }

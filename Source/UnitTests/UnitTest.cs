@@ -144,9 +144,9 @@ namespace VersionControl.UnitTests
             ComposedString cstr3 = new ComposedString(str3);
             ComposedString cstr4 = new ComposedString(str4);
             var cstr3meta = cstr3 + meta;
-            Assert.AreEqual(str1 , cstr1.ToString(), "compose/decompose mismatch");
+            Assert.AreEqual(str1 , cstr1.GetString(), "compose/decompose mismatch");
             Assert.AreEqual(cstr2 , cstr3, "equal ComposedString");
-            Assert.AreEqual(str3meta, cstr3meta.ToString(), "using operator + with string");
+            Assert.AreEqual(str3meta, cstr3meta.GetString(), "using operator + with string");
             Assert.True(cstr3meta.EndsWith(meta), "Endwith and implicit string conversion");
             Assert.False(cstr3meta.EndsWith(empty), "Endwith empty");
             Assert.False(cstr3meta.EndsWith(metaDot), "Endwith metaDot");

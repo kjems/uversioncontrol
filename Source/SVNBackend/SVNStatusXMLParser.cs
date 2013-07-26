@@ -96,7 +96,7 @@ namespace VersionControl.Backend.SVN
 
             foreach (var assetPathIt in new List<ComposedString>(statusDatabase.Keys))
             {
-                string assetPathStr = assetPathIt.ToString();
+                string assetPathStr = assetPathIt.GetString();
                 if (Directory.Exists(assetPathStr))
                 {
                     var status = statusDatabase[assetPathIt];

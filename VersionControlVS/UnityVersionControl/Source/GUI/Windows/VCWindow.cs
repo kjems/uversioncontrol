@@ -81,7 +81,7 @@ namespace VersionControl.UserInterface
 
         private List<string> GetSelectedAssets()
         {
-            return vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.ToString()).ToList();
+            return vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.GetString()).ToList();
         }
 
         virtual protected void OnEnable()

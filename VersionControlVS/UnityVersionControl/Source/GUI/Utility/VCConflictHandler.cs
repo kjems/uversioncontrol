@@ -19,10 +19,10 @@ namespace VersionControl
                 {
                     if (ignoredConflicts.Contains(conflictIt)) continue;
 
-                    int result = EditorUtility.DisplayDialogComplex("Conflict", "There is a conflict in the file '" + conflictIt.ToString() + "'. Use 'Theirs' or 'Mine'?", "Theirs", "Mine", "Ignore");
+                    int result = EditorUtility.DisplayDialogComplex("Conflict", "There is a conflict in the file '" + conflictIt.GetString() + "'. Use 'Theirs' or 'Mine'?", "Theirs", "Mine", "Ignore");
                     if (result == 0 || result == 1)
                     {
-                        VCCommands.Instance.Resolve(new[] { conflictIt.ToString() }, result == 0 ? ConflictResolution.Theirs : ConflictResolution.Mine);
+                        VCCommands.Instance.Resolve(new[] { conflictIt.GetString() }, result == 0 ? ConflictResolution.Theirs : ConflictResolution.Mine);
                     }
                     else
                     {

@@ -65,11 +65,11 @@ namespace VersionControl.UserInterface
             baseFilter = s => false;
             guiFilter = s => true;
 
-            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.ToString())); // TODO: Performance issue by running ToString every visual update
+            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.GetString())); // TODO: Performance issue by running ToString every visual update
             columnOwner = new MultiColumnState.Column(new GUIContent("Owner"), data => new GUIContent(data.owner, data.lockToken));
             columnFileStatus = new MultiColumnState.Column(new GUIContent("Status"), GetFileStatusContent);
             columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(data.MetaStatus()));
-            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.ToString()))); // TODO: Performance issue by running ToString every visual update
+            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.GetString()))); // TODO: Performance issue by running ToString every visual update
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
             columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist));
 
@@ -88,12 +88,12 @@ namespace VersionControl.UserInterface
 
             Func<GenericMenu> rowRightClickMenu = () =>
             {
-                var selected = multiColumnState.GetSelected().Select(status => status.assetPath.ToString());
+                var selected = multiColumnState.GetSelected().Select(status => status.assetPath.GetString());
                 if (!selected.Any()) return new GenericMenu();
                 GenericMenu menu = new GenericMenu();
-                if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First().ToString());
+                if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First());
                 else VCGUIControls.CreateVCContextMenu(ref menu, selected);
-                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a.ToString())).ToArray();
+                var selectedObjs = selected.Select(a => AssetDatabase.LoadMainAssetAtPath(a)).ToArray();
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Show in Project"), false, () =>
                 {
@@ -125,9 +125,9 @@ namespace VersionControl.UserInterface
                 doubleClickAction = status =>
                 {
                     if (VCUtility.IsTextAsset(status.assetPath) && VCUtility.ManagedByRepository(status))
-                        VCUtility.DiffWithBase(status.assetPath.ToString());
+                        VCUtility.DiffWithBase(status.assetPath.GetString());
                     else
-                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.ToString()));
+                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.GetString()));
                 }
             };
 

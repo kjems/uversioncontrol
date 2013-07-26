@@ -377,7 +377,7 @@ namespace VersionControl.Backend.P4
         {
             lock (statusDatabaseLockToken)
             {
-                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.ToString())));
+                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.GetString())));
             }
         }
 		
@@ -415,14 +415,14 @@ namespace VersionControl.Backend.P4
 	                    {
 	                        var status = statusIt.Value;
 	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[new ComposedString(statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
+	                        statusDatabase[new ComposedString(statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
 	                    }
 					}
 
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-						string aPath = statusIt.Key.ToString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "");
+						string aPath = statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "");
 						statusDatabase.TryGetValue(aPath, out status);
 						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
 							// no previous status or previous status is pending, so set it here
@@ -445,14 +445,14 @@ namespace VersionControl.Backend.P4
 					if ( statusDB != null ) {
 	                    foreach (var assetIt in statusDB.Keys)
 	                    {
-	                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
-	                        localRequestQueue.Remove(assetIt.ToString());
+	                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
+	                        localRequestQueue.Remove(assetIt.GetString());
 	                    }
 					}
                     foreach (var assetIt in fstatDB.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.ToString());
-                        localRequestQueue.Remove(assetIt.ToString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
+                        localRequestQueue.Remove(assetIt.GetString());
                     }
                 }
                 OnStatusCompleted();

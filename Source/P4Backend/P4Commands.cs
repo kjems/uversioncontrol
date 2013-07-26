@@ -422,7 +422,7 @@ namespace VersionControl.Backend.P4
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-						string aPath = statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", "");
+						ComposedString aPath = new ComposedString(statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""));
 						statusDatabase.TryGetValue(aPath, out status);
 						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
 							// no previous status or previous status is pending, so set it here
@@ -437,7 +437,7 @@ namespace VersionControl.Backend.P4
 							}
 						}
                         status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                        statusDatabase[new ComposedString(aPath)] = status;
+                        statusDatabase[aPath] = status;
                     }
 				}
                 lock (requestQueueLockToken)
@@ -784,6 +784,9 @@ namespace VersionControl.Backend.P4
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
+			if ( changelist == "bypass" ) {
+				return CreateAssetOperation("edit", assets);
+			}
             return CreateAssetOperation("reopen -c " + changelist, assets);
         }
 

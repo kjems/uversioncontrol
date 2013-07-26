@@ -134,13 +134,13 @@ namespace VersionControl.Backend.P4
                     versionControlStatus.lockStatus = VCLockStatus.LockedHere;
                 }
             }
-
+*/
             if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
             {
                 versionControlStatus.bypassRevisionControl = true;
             }
-            */
-            return versionControlStatus;
+
+			return versionControlStatus;
         }
 		
 		private static void AddItemToDatabase(string []fstatLines, int rootDirLength, string rootUnixDir, ref StatusDatabase statusDatabase) 
@@ -233,14 +233,14 @@ namespace VersionControl.Backend.P4
 			}
 
 			versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
-/*			
-            if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
+
+//			if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
 
             if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
             {
                 versionControlStatus.bypassRevisionControl = true;
             }
-            */
+
             return versionControlStatus;
         }
 

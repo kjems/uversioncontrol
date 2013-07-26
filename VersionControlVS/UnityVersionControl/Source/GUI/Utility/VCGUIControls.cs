@@ -150,11 +150,11 @@ namespace VersionControl.UserInterface
                     if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
                     if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
                     if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                    if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));
-                    if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
+                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));                    
                     if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                     if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
-                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));
+                    if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));
+                    if (showRevert) menu.AddItem(new GUIContent(Terminology.revert), false, () => Revert(assetPath, instance));
                 }
                 else
                 {

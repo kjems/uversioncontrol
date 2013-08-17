@@ -27,6 +27,7 @@ namespace VersionControl.UserInterface
         // State
         private bool showUnversioned = true;
         private bool showMeta = true;
+        private bool showModifiedNoLock = true;
         private float statusHeight = 1000;
         private bool updateInProgress = false;
         private bool refreshInProgress = false;
@@ -50,9 +51,10 @@ namespace VersionControl.UserInterface
             var metaStatus = vcStatus.MetaStatus();
             bool unversioned = vcStatus.fileStatus == VCFileStatus.Unversioned;
             bool meta = metaStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus == VCFileStatus.Normal;
+            bool modifiedNoLock = vcStatus.ModifiedWithoutLock();
 
-            bool rest = !unversioned && !meta;
-            return (showUnversioned && unversioned) || (showMeta && meta) || rest;
+            bool rest = !unversioned && !meta && !modifiedNoLock;
+            return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || rest;
         }
 
         // This is a performance critical function
@@ -88,6 +90,7 @@ namespace VersionControl.UserInterface
         {
             showUnversioned = EditorPrefs.GetBool("VCWindow/showUnversioned", true);
             showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
+            showModifiedNoLock = EditorPrefs.GetBool("VCWindow/showModifiedNoLock", true);
             statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 1000.0f);
 
 
@@ -111,6 +114,7 @@ namespace VersionControl.UserInterface
         {
             EditorPrefs.SetBool("VCWindow/showUnversioned", showUnversioned);
             EditorPrefs.SetBool("VCWindow/showMeta", showMeta);
+            EditorPrefs.SetBool("VCWindow/`", showModifiedNoLock);            
             EditorPrefs.SetFloat("VCWindow/statusHeight", statusHeight);
 
             VCCommands.Instance.StatusCompleted -= RefreshGUI;
@@ -227,6 +231,13 @@ namespace VersionControl.UserInterface
 
                 GUILayout.FlexibleSpace();
 
+                bool newShowModifiedNoLock = GUILayout.Toggle(showModifiedNoLock, "Modified Local" , EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(90) });
+                if (newShowModifiedNoLock != showModifiedNoLock)
+                {
+                    showModifiedNoLock = newShowModifiedNoLock;
+                    UpdateFilteringOfKeys();
+                }
+
                 bool newShowUnversioned = GUILayout.Toggle(showUnversioned, "Unversioned", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(80) });
                 if (newShowUnversioned != showUnversioned)
                 {
@@ -234,7 +245,7 @@ namespace VersionControl.UserInterface
                     UpdateFilteringOfKeys();
                 }
 
-                bool newShowMeta = GUILayout.Toggle(showMeta, "Meta", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(50) });
+                bool newShowMeta = GUILayout.Toggle(showMeta, "Meta", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(40) });
                 if (newShowMeta != showMeta)
                 {
                     showMeta = newShowMeta;

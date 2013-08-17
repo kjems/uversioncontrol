@@ -7,18 +7,22 @@ using VersionControl;
 
 public static class VersionControlStatusExtension
 {
-    public static readonly ComposedString bypassIdentifier = new ComposedString("bypass");
+    public static readonly ComposedString bypassIdentifier = new ComposedString(Terminology.bypass);
     private static readonly ComposedString meta = new ComposedString(VCCAddMetaFiles.meta);
     public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
     {
         return vcs.assetPath.EndsWith(meta) ? vcs : VCCommands.Instance.GetAssetStatus(vcs.assetPath + meta);
     }
+    public static bool ModifiedWithoutLock(this VersionControlStatus vcs)
+    {
+        return (vcs.fileStatus == VCFileStatus.Modified && vcs.lockStatus != VCLockStatus.LockedHere && !VCUtility.IsMergableTextAsset(vcs.assetPath));
+    }    
     public static bool BypassRevisionControl(this VersionControlStatus vcs)
     {
-        return 
-            (vcs.fileStatus == VCFileStatus.Modified && 
-            vcs.lockStatus != VCLockStatus.LockedHere && 
-            !VCUtility.IsMergableTextAsset(vcs.assetPath)) || 
-            vcs.changelist == bypassIdentifier;
+        return vcs.changelist == bypassIdentifier;
+    }
+    public static bool ModifiedOrBypassed(this VersionControlStatus vcs)
+    {
+        return ModifiedWithoutLock(vcs) || BypassRevisionControl(vcs);
     }
 }

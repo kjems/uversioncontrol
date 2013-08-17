@@ -20,6 +20,7 @@ namespace VersionControl.UserInterface
         private static readonly Color lockedColor = new Color(0.2f, 0.8f, 0.2f);
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = pastelBlue;
+        private static readonly Color modifiedNoLockColor = orange;
         private static readonly Color bypassColor = orange;
         private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 0.3f);
         private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
@@ -34,6 +35,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Missing) return missingColor;
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return ignoreColor;
             if (assetStatus.BypassRevisionControl()) return bypassColor;
+            if (assetStatus.ModifiedWithoutLock()) return modifiedNoLockColor;
             if (assetStatus.fileStatus == VCFileStatus.Added) return addedColor;
 
             if (includeLockStatus)
@@ -55,8 +57,8 @@ namespace VersionControl.UserInterface
         public static string GetStatusText(VersionControlStatus assetStatus)
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
-            if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
-            if (assetStatus.BypassRevisionControl()) return "Bypass Lock";
+            if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");            
+            if (assetStatus.ModifiedWithoutLock()) return "Modified!";
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'\nShift click to force open";            
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;

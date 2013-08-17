@@ -40,15 +40,6 @@ namespace VersionControl
     /// </summary>
     public sealed class VCCommands : IVersionControlCommands
     {
-        private VCCommands()
-        {
-            vcc = VersionControlFactory.CreateVersionControlCommands(Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal)));
-            vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
-            vcc.StatusCompleted += OnStatusCompleted;
-            OnNextUpdate.Do(Start);
-            EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
-        }
-
         private bool stopping = false;
         private bool updating = false;
         private bool pendingAssetDatabaseRefresh = false;
@@ -56,7 +47,7 @@ namespace VersionControl
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
 
-        private readonly IVersionControlCommands vcc;
+        private IVersionControlCommands vcc;
         private bool ignoreStatusRequests = false;
         private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
 
@@ -64,6 +55,23 @@ namespace VersionControl
         public event Action StatusCompleted;
         public event Action<OperationType> OperationCompleted;
         public event Action<List<string>> PreCommit;
+        public event Action Started;
+
+        private VCCommands()
+        {
+            VersionControlFactory.VersionControlBackendChanged += OnVersionControlBackendChanged;
+            VersionControlFactory.CreateVersionControlCommands(VCSettings.VersionControlBackend);
+        }
+
+        private void OnVersionControlBackendChanged(IVersionControlCommands newVcc)
+        {
+            if (vcc != null) vcc.Dispose();
+            vcc = newVcc;
+            vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
+            vcc.StatusCompleted += OnStatusCompleted;
+            OnNextUpdate.Do(Start);
+            EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
+        }
 
         public static bool Active
         {
@@ -90,6 +98,7 @@ namespace VersionControl
                 var detailLevel = remoteProjectReflection ? DetailLevel.Verbose : DetailLevel.Normal;
                 vcc.Start();
                 StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t => ActivateRefreshLoop());
+                if (Started != null) Started();
             }
         }
 
@@ -177,7 +186,7 @@ namespace VersionControl
                 });
             }
         }
-        
+
         private void FlushFiles()
         {
             if (ThreadUtility.IsMainThread())
@@ -352,7 +361,7 @@ namespace VersionControl
                 Status(assets.ToList(), StatusLevel.Local);
                 bool revertSuccess = vcc.Revert(assets);
                 RequestAssetDatabaseRefresh();
-                if(revertSuccess) OnOperationCompleted(OperationType.Revert);
+                if (revertSuccess) OnOperationCompleted(OperationType.Revert);
                 return revertSuccess;
             });
         }
@@ -412,7 +421,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.ReleaseLock(assets);
-                if(result) OnOperationCompleted(OperationType.ReleaseLock);
+                if (result) OnOperationCompleted(OperationType.ReleaseLock);
                 return result;
             });
         }
@@ -445,7 +454,7 @@ namespace VersionControl
                 FlushFiles();
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
-                if(moveSuccess) OnOperationCompleted(OperationType.Move);
+                if (moveSuccess) OnOperationCompleted(OperationType.Move);
                 return moveSuccess;
             });
         }
@@ -458,7 +467,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.CleanUp();
-                if(result) OnOperationCompleted(OperationType.CleanUp);
+                if (result) OnOperationCompleted(OperationType.CleanUp);
                 return result;
             });
         }
@@ -490,7 +499,7 @@ namespace VersionControl
                     OnNextUpdate.Do(() => OperationCompleted(operation));
             }
         }
-        
+
         public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();
@@ -507,7 +516,7 @@ namespace VersionControl
             {
                 EditorApplication.SaveCurrentSceneIfUserWantsTo();
             }
-            if(PreCommit != null)
+            if (PreCommit != null)
             {
                 PreCommit(assets.Concat(dependencies).Distinct().ToList());
             }

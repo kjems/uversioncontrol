@@ -144,6 +144,23 @@ namespace VersionControl
             }
         }
 
+        public static bool UserSelectedVersionControlSystem()
+        {            
+            if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.None)
+            {
+                int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "Perforce", "None");
+                if (response == 0) // SVN
+                {
+                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;                    
+                }
+                else if (response == 1) // Perforce
+                {
+                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Perforce;                 
+                }                
+            }
+            return VCSettings.VersionControlBackend != VCSettings.EVersionControlBackend.None;
+        }
+
         public static void VCDeleteWithConfirmation(Object obj, bool showConfirmation = true)
         {
             VCDeleteWithConfirmation(obj.ToAssetPaths(), showConfirmation);

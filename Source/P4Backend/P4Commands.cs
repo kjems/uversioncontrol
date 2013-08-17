@@ -249,7 +249,7 @@ namespace VersionControl.Backend.P4
                 commandLineOutput = P4Util.Instance.ExecuteOperation(p4WhereTask);
                 if(commandLineOutput == null || commandLineOutput.Failed)
                 {
-                    return false;
+                    throw new VCInitializationException("Perforce Initialization failed", commandLineOutput.ErrorStr);                    
                 }
 				depotToDir = new Dictionary<string, string>();
 				// sample output:

@@ -161,7 +161,7 @@ namespace VersionControl.UserInterface
                 if (ValidCommandLineClient(clientPath)) VCSettings.ClientPath = clientPath;
                 using (GUILayoutHelper.Horizontal())
                 {
-                    GUILayout.Label(new GUIContent("Prefered Version Control", "The selected Version Control will be used if a valid local copy can be found"));
+                    GUILayout.Label(new GUIContent("Version Control System", "The selected Version Control will be used if a valid local copy can be found"));
                     VCSettings.VersionControlBackend = (VCSettings.EVersionControlBackend)EditorGUILayout.EnumPopup(VCSettings.VersionControlBackend, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
             }

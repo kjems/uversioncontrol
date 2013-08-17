@@ -62,7 +62,7 @@ namespace VersionControl.UserInterface
 
             bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && vcStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus != VCFileStatus.Ignored;
             if (assetCriteria) return true;
-            
+
             bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;
             if (localLock) return true;
 
@@ -264,7 +264,7 @@ namespace VersionControl.UserInterface
                 {
                     if (GUILayout.Button(new GUIContent(vcsOn ? "On" : "Off", "Toggle Version Control"), EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(25) }))
                     {
-                        VCSettings.VCEnabled = !VCSettings.VCEnabled;
+                        VCSettings.VCEnabled = !VCSettings.VCEnabled;                        
                     }
                 }
 

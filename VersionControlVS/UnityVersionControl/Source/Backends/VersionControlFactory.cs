@@ -14,28 +14,54 @@ namespace VersionControl
     using Logging;
     public static class VersionControlFactory
     {
-        public static IVersionControlCommands CreateVersionControlCommands(string workDirectory)
+        public static event Action<IVersionControlCommands> VersionControlBackendChanged;
+
+        private static void OnVersionControlBackendChanged(IVersionControlCommands vcc)
         {
-            string cliEnding = (Application.platform == RuntimePlatform.OSXEditor) ? Environment.NewLine : "";          
-            bool svnSelected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn;
-            bool p4Selected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce;
-            IVersionControlCommands uvc = null;
+            if (VersionControlBackendChanged != null)
+            {
+                VersionControlBackendChanged(vcc);
+            }
+        }
+        public static IVersionControlCommands GetDefaultImplementation()
+        {
+            return new NoopCommands();
+        }
+        public static bool CreateVersionControlCommands(VCSettings.EVersionControlBackend backend)
+        {
+            string workDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
+            string cliEnding = (Application.platform == RuntimePlatform.OSXEditor) ? Environment.NewLine : "";
+            bool noopSelected = backend == VCSettings.EVersionControlBackend.None;
+            bool svnSelected = backend == VCSettings.EVersionControlBackend.Svn;
+            bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;            
+            IVersionControlCommands uvc = null;            
 
             if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(cliEnding), workDirectory, out uvc))
             {
-                return uvc; 
+                //D.Log(backend + " backend initialized successfully");
+                OnVersionControlBackendChanged(uvc);
+                return true;
             }
             else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(cliEnding), workDirectory, out uvc))
             {
-                return uvc;
+                //D.Log(backend + " backend initialized successfully");
+                OnVersionControlBackendChanged(uvc);
+                return true;
             }
-
-            D.LogWarning("No valid version control local copy found, so version control is inactive");
-            return new NoopCommands();
+            else if (noopSelected)
+            {
+                //D.Log(backend + " backend initialized successfully");
+                OnVersionControlBackendChanged(GetDefaultImplementation());
+                return true;
+            }
+            D.LogWarning(backend + " backend initialization failed!");
+            return false;
         }
 
         private static bool CreateVersionControl<T>(Func<T> factory, string workDirectory, out IVersionControlCommands uvc) where T : IVersionControlCommands
         {
+            var watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
             uvc = null;
             bool valid = false;
             try
@@ -52,6 +78,7 @@ namespace VersionControl
             {
                 if (!valid && uvc != null) uvc.Dispose();
             }
+            D.Log("CreateVersionControl took : " + watch.ElapsedMilliseconds + "ms");
             return valid;
         }
 

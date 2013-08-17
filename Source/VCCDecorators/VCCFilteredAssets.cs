@@ -8,6 +8,7 @@ using VersionControl.AssetFilters;
 
 namespace VersionControl
 {
+    using Logging;
     /// <summary>
     /// Responsibility: Decorate an underlying IVersionControlCommands with filtering of assets to 
     /// remove redundant or invalid calls.

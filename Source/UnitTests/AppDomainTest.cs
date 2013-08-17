@@ -12,6 +12,7 @@ using VersionControl.Backend.SVN;
 
 namespace VersionControl.UnitTests
 {
+    using Logging;
     [TestFixture]
     public class AppDomainTest
     {

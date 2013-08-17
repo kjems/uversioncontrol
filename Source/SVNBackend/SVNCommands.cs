@@ -11,7 +11,7 @@ using CommandLineExecution;
 
 namespace VersionControl.Backend.SVN
 {
-
+    using Logging;
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         private string workingDirectory = ".";

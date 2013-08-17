@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace VersionControl
 {
+    using Logging;
     using UnityEngine;
     using UnityEditor;
     using UserInterface;
@@ -519,7 +520,7 @@ namespace VersionControl
 
         public bool BypassRevision(IEnumerable<string> assets)
         {
-            return vcc.ChangeListAdd(assets, "bypass");
+            return vcc.ChangeListAdd(assets, VersionControlStatusExtension.bypassIdentifier.GetString());
         }
 
         #endregion

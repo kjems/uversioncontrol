@@ -11,79 +11,48 @@ using System;
 
 namespace VersionControl
 {
+    using Logging;
     public static class VersionControlFactory
     {
         public static IVersionControlCommands CreateVersionControlCommands(string workDirectory)
         {
-			string cliEnding = "";
-			if ( Application.platform == RuntimePlatform.OSXEditor ) {
-				cliEnding = Environment.NewLine;
-			}
-			
-            bool svnValid = true;
-            bool p4Valid = true;
-			
-			IVersionControlCommands p4Commands = null;
-			IVersionControlCommands svnCommands = null;
-			
-			try 
-			{
-				p4Commands = AddDecorators(new P4Commands(cliEnding));
-    	        p4Commands.SetWorkingDirectory(workDirectory);
-				p4Valid = p4Commands.HasValidLocalCopy();
-			}
-			catch (Exception)
-			{
-				p4Valid = false;
-			}
-			
-			try
-			{
-	            svnCommands = AddDecorators(new SVNCommands(cliEnding));
-    	        svnCommands.SetWorkingDirectory(workDirectory);
-	            svnValid = svnCommands.HasValidLocalCopy();
-			}
-			catch (Exception)
-			{
-				svnValid = false;
-			}
-            
+            string cliEnding = (Application.platform == RuntimePlatform.OSXEditor) ? Environment.NewLine : "";          
             bool svnSelected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn;
             bool p4Selected = VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce;
+            IVersionControlCommands uvc = null;
 
-            if (svnValid && !p4Valid)
+            if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(cliEnding), workDirectory, out uvc))
             {
-                if (svnSelected || PromptUserForBackend(VCSettings.EVersionControlBackend.Svn))
-                {
-                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;
-                    p4Commands.Dispose();
-                    return svnCommands;
-                }
+                return uvc; 
             }
-            if (!svnValid && p4Valid)
+            else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(cliEnding), workDirectory, out uvc))
             {
-                if (p4Selected || PromptUserForBackend(VCSettings.EVersionControlBackend.Perforce))
-                {
-                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Perforce;
-                    svnCommands.Dispose();
-                    return p4Commands;
-                }
+                return uvc;
             }
-            if (svnValid && p4Valid)
-            {
-                if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Svn)
-                {
-                    p4Commands.Dispose();
-                    return svnCommands;
-                }
-                if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.Perforce)
-                {
-                    svnCommands.Dispose();
-                    return p4Commands;
-                }
-            }
+
             D.LogWarning("No valid version control local copy found, so version control is inactive");
             return new NoopCommands();
+        }
+
+        private static bool CreateVersionControl<T>(Func<T> factory, string workDirectory, out IVersionControlCommands uvc) where T : IVersionControlCommands
+        {
+            uvc = null;
+            bool valid = false;
+            try
+            {
+                uvc = AddDecorators(factory());
+                uvc.SetWorkingDirectory(workDirectory);
+                valid = uvc.HasValidLocalCopy();
+            }
+            catch (Exception e)
+            {
+                D.LogWarning(e.Message);
+            }
+            finally
+            {
+                if (!valid && uvc != null) uvc.Dispose();
+            }
+            return valid;
         }
 
         private static bool PromptUserForBackend(VCSettings.EVersionControlBackend backend)

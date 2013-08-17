@@ -9,16 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace VersionControl
-{
-    public static class VersionControlStatusExtension
-    {
-        private static readonly ComposedString meta = new ComposedString(VCCAddMetaFiles.meta);
-        public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
-        {
-            return vcs.assetPath.EndsWith(meta) ? vcs : VCCommands.Instance.GetAssetStatus(vcs.assetPath + meta);
-        }
-    }
-
+{   
     [Serializable]
     public class VCCAddMetaFiles : VCCDecorator
     {

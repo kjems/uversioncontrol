@@ -37,9 +37,9 @@ namespace CommandLineExecution
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
-			this.input = input;
-			this.cliEnding = cliEnding;
-			if ( _envVars != null ) this.envVars = new Dictionary<string, string>(_envVars);
+            this.input = input;
+            this.cliEnding = cliEnding;
+            if (_envVars != null) this.envVars = new Dictionary<string, string>(_envVars);
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -78,14 +78,14 @@ namespace CommandLineExecution
 
         string output;
         string error;
-		string input;
-		string cliEnding;
+        string input;
+        string cliEnding;
         int exitcode;
         bool aborted;
         readonly string command;
         readonly string arguments;
         readonly string workingDirectory;
-		Dictionary<string, string> envVars = new Dictionary<string, string>();
+        Dictionary<string, string> envVars = new Dictionary<string, string>();
         Process process;
 
         public CommandLineOutput Execute()
@@ -93,7 +93,8 @@ namespace CommandLineExecution
             aborted = false;
             try
             {
-				ProcessStartInfo psi = new ProcessStartInfo() {
+                ProcessStartInfo psi = new ProcessStartInfo()
+                {
                     FileName = command,
                     Arguments = arguments,
                     WorkingDirectory = workingDirectory,
@@ -103,19 +104,20 @@ namespace CommandLineExecution
                     RedirectStandardOutput = true,
                     RedirectStandardInput = true,
                     ErrorDialog = false
-				};
-				// set env vars
-				foreach ( KeyValuePair<string, string> kvp in envVars ) { psi.EnvironmentVariables.Add(kvp.Key, kvp.Value); }
+                };
+                // set env vars
+                foreach (KeyValuePair<string, string> kvp in envVars) { psi.EnvironmentVariables.Add(kvp.Key, kvp.Value); }
                 process = Process.Start(psi);
-                
-				if ( !String.IsNullOrEmpty( input ) ) {
-					StreamWriter myStreamWriter = process.StandardInput;
-					BinaryWriter writer = new BinaryWriter(myStreamWriter.BaseStream);
-					writer.Write(System.Text.Encoding.UTF8.GetBytes(input));
-					myStreamWriter.Close();
-				}
-				
-				var sbOutput = new StringBuilder();
+
+                if (!String.IsNullOrEmpty(input))
+                {
+                    StreamWriter myStreamWriter = process.StandardInput;
+                    BinaryWriter writer = new BinaryWriter(myStreamWriter.BaseStream);
+                    writer.Write(System.Text.Encoding.UTF8.GetBytes(input));
+                    myStreamWriter.Close();
+                }
+
+                var sbOutput = new StringBuilder();
                 process.OutputDataReceived += (obj, de) =>
                 {
                     if (!string.IsNullOrEmpty(de.Data))

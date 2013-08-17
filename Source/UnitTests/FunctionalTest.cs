@@ -9,11 +9,12 @@ using VersionControl.Backend.SVN;
 
 namespace VersionControl.UnitTests
 {
+    using Logging;
     [TestFixture]
     public class FunctionalTest
     {
         private const string urlToEmptyRepo = @"svn://192.168.9.175:2345/unitysvn_root/FunctionalTest";
-        private const string workingDirectoryForSVNTests = @"c:\develop\VCUnitTest";
+        private const string workingDirectoryForSVNTests = @"c:\Develop\VCUnitTest";
         private IVersionControlCommands vcc;
         
         public FunctionalTest()
@@ -106,7 +107,7 @@ namespace VersionControl.UnitTests
             var folderAstatus = vcc.GetAssetStatus(folderA);
             Assert.That(folderAstatus.reflectionLevel, Is.EqualTo(VCReflectionLevel.Local), "The unversioned folder dirA has reflection level Local");
             Assert.That(folderAstatus.Reflected, Is.True, "The unversioned folder dirA is reflected, reflectionLevel: " + folderAstatus.reflectionLevel);
-            Assert.That(folderAstatus.assetPath, Is.EqualTo(folderA), "AssetPath mismatch");
+            Assert.That(folderAstatus.assetPath.GetString(), Is.EqualTo(folderA), "AssetPath mismatch");
             Assert.That(folderAstatus.fileStatus, Is.EqualTo(VCFileStatus.Unversioned), folderA);
 
             var fileAstatus = vcc.GetAssetStatus(fileA);

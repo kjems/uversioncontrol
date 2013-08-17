@@ -10,7 +10,7 @@ using System.Timers;
 
 namespace VersionControl.Backend.P4
 {
-
+    using Logging;
     public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
 		internal class P4QueueItem {
@@ -784,6 +784,7 @@ namespace VersionControl.Backend.P4
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
+            // TODO: Bypass was moved to the domain of Version Control in Unity and not in the general purpose version control
 			if ( changelist == "bypass" ) {
 				return CreateAssetOperation("edit", assets);
 			}

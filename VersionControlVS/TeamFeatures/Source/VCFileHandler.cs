@@ -9,6 +9,7 @@ using UnityEditor;
 
 namespace VersionControl
 {
+    using Logging;
     internal class VCFileHandler : AssetModificationProcessor
     {
 

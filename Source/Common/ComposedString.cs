@@ -12,8 +12,8 @@ namespace VersionControl
         private static readonly List<string> stringList = new List<string>();
         private static readonly Dictionary<string, int> stringToIndex = new Dictionary<string, int>();
         private static readonly Dictionary<string, List<int>> stringToIndicies = new Dictionary<string, List<int>>();
-
         private static readonly object constructorLockToken = new object();
+        public static readonly ComposedString empty = new ComposedString("");
 
         public static List<string> GetStringListCopy()
         {
@@ -22,6 +22,7 @@ namespace VersionControl
 
         // Instance
         private readonly List<int> indices;
+
 
         private ComposedString() { }
         private ComposedString(List<int> indices) { this.indices = indices; }

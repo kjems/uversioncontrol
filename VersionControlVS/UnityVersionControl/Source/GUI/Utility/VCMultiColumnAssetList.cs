@@ -57,7 +57,7 @@ namespace VersionControl.UserInterface
         {
             if (assetStatus.treeConflictStatus != VCTreeConflictStatus.Normal)
                 return new GUIContent(assetStatus.treeConflictStatus.ToString(), IconUtils.squareIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
-            return new GUIContent(assetStatus.fileStatus.ToString(), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
+            return new GUIContent(AssetStatusUtils.GetStatusText(assetStatus), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
         }
 
         private void Initialize()
@@ -71,7 +71,7 @@ namespace VersionControl.UserInterface
             columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(data.MetaStatus()));
             columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.GetString()))); // TODO: Performance issue by running ToString every visual update
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
-            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist));
+            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.GetString()));
 
             var editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
             multiColumnState = new MultiColumnState();

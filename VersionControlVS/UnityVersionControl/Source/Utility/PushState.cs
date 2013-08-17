@@ -3,7 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 
-internal class PushState : IDisposable
+internal struct PushState : IDisposable
 {
     readonly Action endAction;
     public PushState(Action startAction, Action endAction)
@@ -17,7 +17,7 @@ internal class PushState : IDisposable
     }
 }
 
-internal class PushState<T> : IDisposable
+internal struct PushState<T> : IDisposable
 {
     readonly T initialValue;
     readonly Action<T> setAction;

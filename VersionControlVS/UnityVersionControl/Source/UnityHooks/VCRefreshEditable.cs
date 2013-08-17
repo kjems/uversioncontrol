@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace VersionControl
 {
+    using Logging;
     [InitializeOnLoad]
     internal sealed class VCRefreshEditable
     {

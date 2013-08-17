@@ -6,6 +6,7 @@ using VersionControl;
 
 namespace VersionControl.Backend.P4
 {
+    using Logging;
 	public class P4Util
 	{
 		public class P4Vars 

@@ -13,6 +13,7 @@ using UnityEditor;
 
 namespace VersionControl
 {
+    using Logging;
     [InitializeOnLoad]
     public static class OnNextUpdate
     {

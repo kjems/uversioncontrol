@@ -7,6 +7,7 @@ using System;
 
 namespace VersionControl
 {
+    using Logging;
     [InitializeOnLoad]
     public class VCSettings
     {
@@ -17,7 +18,8 @@ namespace VersionControl
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);
             lockMaterials = EditorPrefs.GetBool("VCSSettings/lockMaterials", true);
             sceneviewGUI = EditorPrefs.GetBool("VCSSettings/sceneviewGUI", true);
-            materialGUI = EditorPrefs.GetBool("VCSSettings/materialGUI", true);
+            prefabGUI = EditorPrefs.GetBool("VCSSettings/prefabGUI", true);
+            materialGUI = EditorPrefs.GetBool("VCSSettings/materialGUI", true);            
             hierarchyIcons = EditorPrefs.GetBool("VCSSettings/hierarchyIcons", true);
             hierarchyReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/hierarchyReflectionMode", (int)EReflectionLevel.Remote);
             projectIcons = EditorPrefs.GetBool("VCSSettings/projectIcons", true);
@@ -42,6 +44,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/lockScenes", lockScenes);
                 EditorPrefs.SetBool("VCSSettings/lockMaterials", lockMaterials);
                 EditorPrefs.SetBool("VCSSettings/sceneviewGUI", sceneviewGUI);
+                EditorPrefs.SetBool("VCSSettings/prefabGUI", prefabGUI);
                 EditorPrefs.SetBool("VCSSettings/materialGUI", materialGUI);
                 EditorPrefs.SetBool("VCSSettings/hierarchyIcons", hierarchyIcons);
                 EditorPrefs.SetInt("VCSSettings/hierarchyReflectionMode", (int)hierarchyReflectionMode);
@@ -107,6 +110,10 @@ namespace VersionControl
         [SerializeField]
         private static bool sceneviewGUI;
         public static bool SceneviewGUI { get { return sceneviewGUI; } set { if (sceneviewGUI != value) { sceneviewGUI = value; OnSettingsChanged(); } } }
+        
+        [SerializeField]
+        private static bool prefabGUI;
+        public static bool PrefabGUI { get { return prefabGUI; } set { if (prefabGUI != value) { prefabGUI = value; OnSettingsChanged(); } } }
 
         [SerializeField]
         private static bool materialGUI;

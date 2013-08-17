@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,9 +6,10 @@ using System.Linq;
 using System.Text;
 using VersionControl;
 using VersionControl.Backend.SVN;
+using VersionControl.Logging;
 
 namespace PerformanceTests
-{
+{    
     class Program
     {
         static readonly IVersionControlCommands vcc = new VCCFilteredAssets(CreateSVNCommands());

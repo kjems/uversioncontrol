@@ -62,10 +62,15 @@ namespace VersionControl
         {
             bool editable = ShouleBeEditable(gameObject);
             bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(EditorApplication.currentScene);
-            SetEditable(gameObject, editable || (PrefabHelper.IsPrefabRoot(gameObject) && parentEditable));
+            bool prefabHeadEditable = PrefabHelper.IsPrefabRoot(gameObject) && parentEditable;
+            
+            if (prefabHeadEditable) SetEditable(gameObject, true);
+            else SetEditable(gameObject, editable);
+
             foreach (var componentIt in gameObject.GetComponents<Component>())
             {
-                RefreshEditableComponent(gameObject, componentIt);
+                if (prefabHeadEditable && componentIt == gameObject.transform) SetEditable(gameObject.transform, true);                
+                else RefreshEditableComponent(gameObject, componentIt);
             }
         }
 

@@ -509,7 +509,7 @@ namespace VersionControl.Backend.SVN
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return CreateAssetOperation("changelist " + changelist, assets);
+            return CreateAssetOperation( "changelist \"" + changelist + "\"", assets);
         }
 
         public bool ChangeListRemove(IEnumerable<string> assets)

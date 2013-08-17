@@ -784,8 +784,9 @@ namespace VersionControl.Backend.P4
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            // TODO: Bypass was moved to the domain of Version Control in Unity and not in the general purpose version control
-			if ( changelist == "bypass" ) {
+            // TODO: Bypass / Open Local, was moved to the domain of Version Control in Unity and not in the general purpose version control
+            if (changelist == "Open Local")
+            {
 				return CreateAssetOperation("edit", assets);
 			}
             return CreateAssetOperation("reopen -c " + changelist, assets);

@@ -8,7 +8,7 @@ namespace VersionControl
         public const string commit = "Commit";
         public const string add = "Add";
         public const string revert = "Revert";
-        public const string bypass = "Bypass Lock";
+        public const string bypass = "Open Local";
         public const string getlock = "Open";
         public const string lockedBy = "Opened by ";
         public const string update = "Update";

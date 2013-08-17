@@ -39,7 +39,7 @@ namespace VersionControl.UserInterface
             var obj = EditorUtility.InstanceIDToObject(instanceID);
             string assetPath = obj.GetAssetPath();
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
-            bool guiLockForPrefabs = EditableManager.LockPrefab(assetPath);
+            bool guiLockForPrefabs = VCSettings.PrefabGUI;
 
             if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || guiLockForPrefabs))
             {

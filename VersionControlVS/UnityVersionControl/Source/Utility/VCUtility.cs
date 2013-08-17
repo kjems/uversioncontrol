@@ -49,7 +49,7 @@ namespace VersionControl
         {
             PrefabHelper.ReconnectToLastPrefab(gameObject);
             PrefabUtility.RevertPrefabInstance(gameObject);
-            
+
             if (ShouldVCRevert(gameObject))
             {
                 bool success = VCCommands.Instance.Revert(gameObject.ToAssetPaths());
@@ -65,7 +65,7 @@ namespace VersionControl
             var material = obj as Material;
             return
                 material && ManagedByRepository(assetStatus) ||
-                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.bypassRevisionControl) && VCCommands.Instance.Ready) &&
+                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.BypassRevisionControl()) && VCCommands.Instance.Ready) &&
                 PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
@@ -95,7 +95,7 @@ namespace VersionControl
             var status = VCCommands.Instance.GetAssetStatus(assetpath);
             if (operationMode == OperationMode.Normal || EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
             {
-                return VCCommands.Instance.GetLock(new[] {assetpath}, operationMode);
+                return VCCommands.Instance.GetLock(new[] { assetpath }, operationMode);
             }
             return false;
         }
@@ -111,16 +111,17 @@ namespace VersionControl
             if (VCSettings.VCEnabled)
             {
                 VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-				if ( assetStatus.assetPath != null ) {
-	                if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
-	                {
-	                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Remote);
-	                }
-	                else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
-	                {
-	                    VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Previous);
-	                }
-				}
+                if (assetStatus.assetPath != null)
+                {
+                    if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
+                    {
+                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Remote);
+                    }
+                    else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
+                    {
+                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Previous);
+                    }
+                }
             }
         }
 
@@ -175,10 +176,15 @@ namespace VersionControl
         static readonly List<ComposedString> textPostfixTextSerialization = new List<ComposedString> { ".unity", ".prefab", ".mat" };
         public static bool IsTextAsset(ComposedString assetPath)
         {
-            bool textAsset = textPostfix.Any(assetPath.EndsWith);
+            bool textAsset = IsMergableTextAsset(assetPath);
             if (EditorSettings.serializationMode == SerializationMode.ForceText)
                 textAsset |= textPostfixTextSerialization.Any(assetPath.EndsWith);
             return textAsset;
+        }
+
+        public static bool IsMergableTextAsset(ComposedString assetPath)
+        {
+            return textPostfix.Any(assetPath.EndsWith);
         }
 
         public static bool HaveVCLock(VersionControlStatus assetStatus)
@@ -195,7 +201,7 @@ namespace VersionControl
 
         public static bool HaveAssetControl(VersionControlStatus assetStatus)
         {
-            return HaveVCLock(assetStatus) || assetStatus.bypassRevisionControl || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying;
+            return HaveVCLock(assetStatus) || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying || assetStatus.BypassRevisionControl();
         }
 
         public static bool HaveAssetControl(string assetPath)
@@ -207,7 +213,7 @@ namespace VersionControl
         {
             return HaveAssetControl(obj.GetAssetPath());
         }
-        
+
         public static bool ManagedByRepository(VersionControlStatus assetStatus)
         {
             return assetStatus.fileStatus != VCFileStatus.Unversioned && !ComposedString.IsNullOrEmpty(assetStatus.assetPath) && !Application.isPlaying;

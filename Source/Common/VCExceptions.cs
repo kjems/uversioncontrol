@@ -5,6 +5,7 @@ using System;
 
 namespace VersionControl
 {
+    using Logging;
     [Serializable]
     public class VCException : Exception
     {

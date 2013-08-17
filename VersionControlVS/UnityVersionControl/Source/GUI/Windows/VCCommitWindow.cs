@@ -9,6 +9,7 @@ using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
 namespace VersionControl.UserInterface
 {
+    using Logging;
     internal class VCCommitWindow : EditorWindow
     {
         // Const

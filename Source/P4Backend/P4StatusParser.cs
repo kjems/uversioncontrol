@@ -7,6 +7,7 @@ using System.Text;
 
 namespace VersionControl.Backend.P4
 {
+    using Logging;
     #region EnumMaps
     internal static class P4ToVersionControlStatusMap
     {
@@ -41,8 +42,6 @@ namespace VersionControl.Backend.P4
 
     public static class P4StatusParser
     {
-        private const string bypassIdentifier = "bypass";
-
         public static string DecodeFromUtf8(string utf8String)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(utf8String);
@@ -135,10 +134,6 @@ namespace VersionControl.Backend.P4
                 }
             }
 */
-            if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
-            {
-                versionControlStatus.bypassRevisionControl = true;
-            }
 
 			return versionControlStatus;
         }
@@ -236,10 +231,6 @@ namespace VersionControl.Backend.P4
 
 //			if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
 
-            if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
-            {
-                versionControlStatus.bypassRevisionControl = true;
-            }
 
             return versionControlStatus;
         }

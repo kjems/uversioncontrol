@@ -24,7 +24,7 @@ namespace VersionControl.AssetFilters
         }
         public static IEnumerable<string> OnChangeList(this IVersionControlCommands vcc, IEnumerable<string> assets)
         {
-            return assets.Where(a => !string.IsNullOrEmpty(vcc.GetAssetStatus(a).changelist));
+            return assets.Where(a => vcc.GetAssetStatus(a).changelist != null);
         }
         public static IEnumerable<string> Missing(this IVersionControlCommands vcc, IEnumerable<string> assets)
         {

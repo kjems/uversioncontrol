@@ -4,7 +4,7 @@
 using System;
 using System.Diagnostics;
 
-namespace VersionControl
+namespace VersionControl.Logging
 {
     public static class D
     {
@@ -61,17 +61,17 @@ namespace VersionControl
         /// <summary>
         /// An important condition is not met and the program is unable to continue in a reasonable state
         /// </summary>
-        public static void Assert(bool condition, string message)
+        public static void Assert(bool condition, Func<string> message)
         {
-            if(!condition) LogError(message);
+            if(!condition) LogError(message());
         }
 
         /// <summary>
         /// A recommended condition is not met but the program is able to continue
         /// </summary>
-        public static void Check(bool condition, string message)
+        public static void Check(bool condition, Func<string> message)
         {
-            if (!condition) LogWarning(message);
+            if (!condition) LogWarning(message());
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 
 namespace VersionControl.Backend.P4
 {
+    using Logging;
 	public class P4FStatData
 	{
 		// normally, we wouldn't make these public, but we're treating this class

@@ -32,7 +32,7 @@ namespace VersionControl.UserInterface
             VCUtility.RequestStatus(EditorApplication.currentScene, VCSettings.HierarchyReflectionMode);
 
             var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
-            buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 70};
+            buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 80};
 
             backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
             backgroundGuiStyle.padding = new RectOffset(4, 8, 1, 1);
@@ -102,7 +102,7 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.bypassRevisionControl && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
+                            if (vcSceneStatus.BypassRevisionControl() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.getlock, buttonStyle))

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace VersionControl.UserInterface
 {
+    using Logging;
     public static class IconUtils
     {
         // Const
@@ -83,7 +84,7 @@ namespace VersionControl.UserInterface
 
         private static Texture2D CreateTexture(System.IO.Stream resourceBitmap, int size, Color color)
         {
-            D.Assert(resourceBitmap != null, "Assuming the resource file is valid");
+            D.Assert(resourceBitmap != null, () => "Assuming the resource file is valid");
             byte[] bytes = new byte[(int)resourceBitmap.Length];
             resourceBitmap.Read(bytes, 0, (int)resourceBitmap.Length);
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };

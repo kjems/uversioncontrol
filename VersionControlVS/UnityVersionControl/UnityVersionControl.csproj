@@ -58,6 +58,7 @@
     <Compile Include="Source\API\VCCAddMetaFiles.cs" />
     <Compile Include="Source\API\VCCommands.cs" />
     <Compile Include="Source\API\VCSettings.cs" />
+    <Compile Include="Source\API\VerstionControlStatusExtension.cs" />
     <Compile Include="Source\Backends\VersionControlFactory.cs" />
     <Compile Include="Source\GUI\Menus\VCMenuItems.cs" />
     <Compile Include="Source\GUI\Utility\GUIControls.cs" />

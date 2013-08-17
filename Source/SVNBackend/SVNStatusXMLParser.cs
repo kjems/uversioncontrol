@@ -10,6 +10,7 @@ using System.Xml;
 
 namespace VersionControl.Backend.SVN
 {
+    using Logging;
     #region EnumMaps
     internal static class SVNToVersionControlStatusMap
     {
@@ -44,8 +45,6 @@ namespace VersionControl.Backend.SVN
 
     public static class SVNStatusXMLParser
     {
-        private const string bypassIdentifier = "bypass";
-
         public static string DecodeFromUtf8(string utf8String)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(utf8String);
@@ -85,11 +84,7 @@ namespace VersionControl.Backend.SVN
 
                     if (statusDatabase.ContainsKey(assetPath))
                     {
-                        statusDatabase[assetPath].changelist = changelist;
-                        if (changelist == bypassIdentifier)
-                        {
-                            statusDatabase[assetPath].bypassRevisionControl = true;
-                        }
+                        statusDatabase[assetPath].changelist = changelist;                        
                     }
                 }
             }
@@ -158,12 +153,7 @@ namespace VersionControl.Backend.SVN
                     if (lockStatus["token"] != null) versionControlStatus.lockToken = lockStatus["token"].InnerText;
                     versionControlStatus.lockStatus = VCLockStatus.LockedHere;
                 }
-            }
-
-            if (versionControlStatus.fileStatus == VCFileStatus.Modified && versionControlStatus.lockStatus != VCLockStatus.LockedHere && versionControlStatus.property != VCProperty.None)
-            {
-                versionControlStatus.bypassRevisionControl = true;
-            }
+            }            
             return versionControlStatus;
         }
 

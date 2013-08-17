@@ -5,6 +5,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using VersionControl;
+using VersionControl.Logging;
 
 internal static class FogbugzUtilities
 {

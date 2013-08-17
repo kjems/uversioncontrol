@@ -94,13 +94,12 @@ namespace VersionControl
         public VCProperty property = VCProperty.Normal;
         public VCTreeConflictStatus treeConflictStatus = VCTreeConflictStatus.Normal;
         public ComposedString assetPath;
+        public ComposedString changelist = ComposedString.empty;
         public string user;
         public string owner;
         public string lockToken;
-        public string changelist;
         public int revision;
         public int lastModifiedRevision;
-        public bool bypassRevisionControl;
         public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local || reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

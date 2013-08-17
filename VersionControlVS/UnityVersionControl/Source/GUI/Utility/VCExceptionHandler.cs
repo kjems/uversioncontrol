@@ -9,6 +9,7 @@ using UnityEditor;
 
 namespace VersionControl
 {
+    using Logging;
     [InitializeOnLoad]
     internal static class VCExceptionHandler
     {

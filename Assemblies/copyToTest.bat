@@ -16,6 +16,10 @@ pdb2mdb.exe %~dp0%1\TeamFeatures.dll
 pdb2mdb.exe %~dp0%1\RendererInspectors.dll
 xcopy /y %~dp0%1\*.dll %2
 xcopy /y %~dp0%1\*.mdb %2
+if "%3" NEQ "" xcopy /y /R %~dp0%1\*.dll %3
+if "%3" NEQ "" xcopy /y /R %~dp0%1\*.mdb %3
+if "%4" NEQ "" xcopy /y /R %~dp0%1\*.dll %4
+if "%4" NEQ "" xcopy /y /R %~dp0%1\*.mdb %4
 
 cd ..
 endlocal

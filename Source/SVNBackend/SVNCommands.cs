@@ -569,7 +569,13 @@ namespace VersionControl.Backend.SVN
 
         public bool HasValidLocalCopy()
         {
-            return string.IsNullOrEmpty(CreateSVNCommandLine("info").Execute().ErrorStr);
+            string error = CreateSVNCommandLine("info").Execute().ErrorStr;
+            if (!string.IsNullOrEmpty(error))
+            {
+                D.LogWarning(error);
+                return false;
+            }
+            return true;
         }
 
         public bool CleanUp()

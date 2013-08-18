@@ -60,7 +60,10 @@ namespace VersionControl
         private VCCommands()
         {
             VersionControlFactory.VersionControlBackendChanged += OnVersionControlBackendChanged;
-            VersionControlFactory.CreateVersionControlCommands(VCSettings.VersionControlBackend);
+            if(!VersionControlFactory.CreateVersionControlCommands(VCSettings.VersionControlBackend))
+            {
+                VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.None;
+            }
         }
 
         private void OnVersionControlBackendChanged(IVersionControlCommands newVcc)

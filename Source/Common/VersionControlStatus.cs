@@ -100,6 +100,7 @@ namespace VersionControl
         public string lockToken;
         public int revision;
         public int lastModifiedRevision;
+        public bool allowLocalEdit = false;
         public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local || reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

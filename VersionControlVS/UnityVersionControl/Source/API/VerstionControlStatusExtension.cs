@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using VersionControl;
 
 public static class VersionControlStatusExtension
-{
-    public static readonly ComposedString bypassIdentifier = new ComposedString(Terminology.bypass);
+{    
     private static readonly ComposedString meta = new ComposedString(VCCAddMetaFiles.meta);
     public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
     {
@@ -19,7 +18,7 @@ public static class VersionControlStatusExtension
     }    
     public static bool BypassRevisionControl(this VersionControlStatus vcs)
     {
-        return vcs.changelist == bypassIdentifier;
+        return vcs.allowLocalEdit;
     }
     public static bool ModifiedOrBypassed(this VersionControlStatus vcs)
     {

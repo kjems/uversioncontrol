@@ -84,7 +84,11 @@ namespace VersionControl.Backend.SVN
 
                     if (statusDatabase.ContainsKey(assetPath))
                     {
-                        statusDatabase[assetPath].changelist = changelist;                        
+                        statusDatabase[assetPath].changelist = changelist;
+                        if (changelist == SVNCommands.localEditChangeList)
+                        {
+                            statusDatabase[assetPath].allowLocalEdit = true;
+                        }
                     }
                 }
             }
@@ -109,7 +113,6 @@ namespace VersionControl.Backend.SVN
                     }
                 }
             }
-
             return statusDatabase;
         }
 

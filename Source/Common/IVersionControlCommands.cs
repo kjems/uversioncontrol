@@ -62,6 +62,7 @@ namespace VersionControl
         bool ChangeListRemove(IEnumerable<string> assets);
         bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution);
         bool Checkout(string url, string path = "");
+        bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
         string GetBasePath(string assetPath);
         bool CleanUp();

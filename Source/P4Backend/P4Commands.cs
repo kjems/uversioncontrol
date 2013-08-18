@@ -784,11 +784,6 @@ namespace VersionControl.Backend.P4
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            // TODO: Bypass / Open Local, was moved to the domain of Version Control in Unity and not in the general purpose version control
-            if (changelist == "Open Local")
-            {
-				return CreateAssetOperation("edit", assets);
-			}
             return CreateAssetOperation("reopen -c " + changelist, assets);
         }
 
@@ -806,6 +801,11 @@ namespace VersionControl.Backend.P4
 			// unsupported on p4
             // CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
 			return true;
+        }
+
+        public bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            return CreateAssetOperation("edit", assets);
         }
 
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)

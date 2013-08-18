@@ -14,11 +14,12 @@ namespace VersionControl.Backend.SVN
     using Logging;
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
+        internal const string localEditChangeList = "Open Local";
         private string workingDirectory = ".";
         private string userName;
         private string password;
         private string versionNumber;
-		private string cliEnding = "";
+        private string cliEnding = "";
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
@@ -35,7 +36,7 @@ namespace VersionControl.Backend.SVN
 
         public SVNCommands(string cliEnding = "")
         {
-			this.cliEnding = cliEnding;
+            this.cliEnding = cliEnding;
             vcc = new VCCFilteredAssets(this);
             StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
@@ -509,7 +510,7 @@ namespace VersionControl.Backend.SVN
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return CreateAssetOperation( "changelist \"" + changelist + "\"", assets);
+            return CreateAssetOperation("changelist \"" + changelist + "\"", assets);
         }
 
         public bool ChangeListRemove(IEnumerable<string> assets)
@@ -520,6 +521,11 @@ namespace VersionControl.Backend.SVN
         public bool Checkout(string url, string path = "")
         {
             return CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+        }
+
+        public bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            return ChangeListAdd(assets, localEditChangeList);
         }
 
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)

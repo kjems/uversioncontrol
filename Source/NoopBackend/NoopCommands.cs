@@ -88,6 +88,10 @@ namespace VersionControl.Backend.Noop
         {
             return true;
         }
+        public virtual bool AllowLocalEdit(IEnumerable<string> assets) 
+        {
+            return true;
+        }
         public virtual bool Move(string from, string to)
         {
             return true;

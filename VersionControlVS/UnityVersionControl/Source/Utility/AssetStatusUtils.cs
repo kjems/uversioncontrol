@@ -21,7 +21,7 @@ namespace VersionControl.UserInterface
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = pastelBlue;
         private static readonly Color modifiedNoLockColor = orange;
-        private static readonly Color bypassColor = new Color(1.0f, 0.9f, 0.1f);
+        private static readonly Color localEditColor = new Color(1.0f, 0.9f, 0.1f);
         private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 0.3f);
         private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
         private static readonly Color pendingColor = new Color(0.9f, 0.9f, 0.6f, 0.3f);
@@ -34,7 +34,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Conflicted) return conflictedColor;
             if (assetStatus.fileStatus == VCFileStatus.Missing) return missingColor;
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return ignoreColor;
-            if (assetStatus.BypassRevisionControl()) return bypassColor;
+            if (assetStatus.LocalEditAllowed()) return localEditColor;
             if (assetStatus.ModifiedWithoutLock()) return modifiedNoLockColor;
             if (assetStatus.fileStatus == VCFileStatus.Added) return addedColor;
 
@@ -58,7 +58,7 @@ namespace VersionControl.UserInterface
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
-            if (assetStatus.BypassRevisionControl()) return Terminology.bypass;
+            if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit;
             if (assetStatus.ModifiedWithoutLock()) return "Modified!";
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'\nShift click to force open";            
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
@@ -84,9 +84,9 @@ namespace VersionControl.UserInterface
                 else if (assetStatus.fileStatus == VCFileStatus.Replaced) lockMessage = "Replaced";
                 else lockMessage = VCUtility.ManagedByRepository(assetStatus) ? "Not " + Terminology.getlock : "Not on Version Control";
             }
-            if (assetStatus.BypassRevisionControl())
+            if (assetStatus.LocalEditAllowed())
             {
-                lockMessage = Terminology.bypass;
+                lockMessage = Terminology.allowLocalEdit;
                 if ((assetStatus.lockStatus == VCLockStatus.LockedOther))
                 {
                     lockMessage += " (" + Terminology.getlock + " By: " + assetStatus.owner + " )";

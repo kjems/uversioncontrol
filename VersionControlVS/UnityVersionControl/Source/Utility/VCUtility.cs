@@ -20,7 +20,7 @@ namespace VersionControl
         public static System.Action<Object> onHierarchyCommit;
         public static System.Action<Object> onHierarchyGetLock;
         public static System.Func<Object, bool> onHierarchyAllowGetLock;
-        public static System.Action<Object> onHierarchyBypass;
+        public static System.Action<Object> onHierarchyAllowLocalEdit;
 
         public static string GetCurrentVersion()
         {
@@ -65,7 +65,7 @@ namespace VersionControl
             var material = obj as Material;
             return
                 material && ManagedByRepository(assetStatus) ||
-                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrBypassed()) && VCCommands.Instance.Ready) &&
+                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrLocalEditAllowed()) && VCCommands.Instance.Ready) &&
                 PrefabHelper.IsPrefab(obj, true, false, true);
         }
 
@@ -100,10 +100,10 @@ namespace VersionControl
             return false;
         }
 
-        public static void BypassRevision(Object obj)
+        public static void AllowLocalEdit(Object obj)
         {
             VCCommands.Instance.AllowLocalEdit(obj.ToAssetPaths());
-            if (onHierarchyBypass != null) onHierarchyBypass(obj);
+            if (onHierarchyAllowLocalEdit != null) onHierarchyAllowLocalEdit(obj);
         }
 
         public static void RequestStatus(string assetPath, VCSettings.EReflectionLevel reflectionLevel)
@@ -218,7 +218,7 @@ namespace VersionControl
 
         public static bool HaveAssetControl(VersionControlStatus assetStatus)
         {
-            return HaveVCLock(assetStatus) || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying || assetStatus.BypassRevisionControl();
+            return HaveVCLock(assetStatus) || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying || assetStatus.LocalEditAllowed();
         }
 
         public static bool HaveAssetControl(string assetPath)

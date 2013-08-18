@@ -20,7 +20,7 @@ namespace VersionControl
         internal static IEnumerable<string> LocalModified(IEnumerable<string> assets)
         {
             return assets                
-                .Where(d => VCCommands.Instance.GetAssetStatus(d).ModifiedOrBypassed())                
+                .Where(d => VCCommands.Instance.GetAssetStatus(d).ModifiedOrLocalEditAllowed())                
                 .ToArray();
         }
 

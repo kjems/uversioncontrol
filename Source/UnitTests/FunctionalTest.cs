@@ -38,7 +38,7 @@ namespace VersionControl.UnitTests
             Directory.SetCurrentDirectory(workingDirectoryForSVNTests);
             vcc.ProgressInformation += s => D.Log(s);
             vcc.Start();
-            vcc.SetUserCredentials("kjems", "dingo");
+            vcc.SetUserCredentials("kjems", "dingo", true);
             vcc.Checkout(urlToEmptyRepo, workingDirectoryForSVNTests);
         }
 

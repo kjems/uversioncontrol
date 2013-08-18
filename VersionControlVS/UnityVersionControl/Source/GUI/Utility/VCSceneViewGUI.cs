@@ -102,7 +102,7 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.BypassRevisionControl() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
+                            if (vcSceneStatus.ModifiedOrBypassed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.getlock, buttonStyle))

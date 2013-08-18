@@ -5,7 +5,7 @@ namespace VersionControl.UserInterface
 {
     public static class AssetStatusUtils
     {
-        private static readonly Color orange = new Color(1.0f, 0.65f, 0.0f);
+        private static readonly Color orange = new Color(0.9f, 0.60f, 0.0f);
         private static readonly Color pastelRed = new Color(0.85f, 0.4f, 0.4f);
         private static readonly Color pastelBlue = new Color(0.3f, 0.55f, 0.85f);
         private static readonly Color lightgrey = new Color(0.55f, 0.55f, 0.55f);
@@ -13,7 +13,7 @@ namespace VersionControl.UserInterface
         private static readonly Color black = Color.black;
         private static readonly Color border = new Color(0.1f, 0.1f, 0.1f);
 
-        private static readonly Color addedColor = Color.blue;
+        private static readonly Color addedColor = new Color(0.2f, 0.2f, 0.9f);
         private static readonly Color conflictedColor = Color.red;
         private static readonly Color missingColor = new Color(1.0f, 0.2f, 1.0f);
         private static readonly Color normalColor = new Color(0.9f, 0.9f, 0.9f, 0.05f);
@@ -21,7 +21,7 @@ namespace VersionControl.UserInterface
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = pastelBlue;
         private static readonly Color modifiedNoLockColor = orange;
-        private static readonly Color bypassColor = orange;
+        private static readonly Color bypassColor = new Color(1.0f, 0.9f, 0.1f);
         private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 0.3f);
         private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
         private static readonly Color pendingColor = new Color(0.9f, 0.9f, 0.6f, 0.3f);
@@ -57,7 +57,8 @@ namespace VersionControl.UserInterface
         public static string GetStatusText(VersionControlStatus assetStatus)
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
-            if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");            
+            if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
+            if (assetStatus.BypassRevisionControl()) return Terminology.bypass;
             if (assetStatus.ModifiedWithoutLock()) return "Modified!";
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'\nShift click to force open";            
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";

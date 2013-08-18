@@ -44,7 +44,7 @@ namespace VersionControl
         bool IsReady();
         bool HasValidLocalCopy();
         void SetWorkingDirectory(string workingDirectory);
-        void SetUserCredentials(string userName, string password);
+        bool SetUserCredentials(string userName, string password, bool cacheCredentials);
         VersionControlStatus GetAssetStatus(string assetPath);
         VersionControlStatus GetAssetStatus(ComposedString assetPath);
         IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter);

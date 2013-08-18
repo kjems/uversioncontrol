@@ -27,9 +27,9 @@ namespace VersionControl.UserInterface
         {
             using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
             {
-                if (assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.BypassRevisionControl() || !VCUtility.ManagedByRepository(assetStatus))
+                if (assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrBypassed() || !VCUtility.ManagedByRepository(assetStatus))
                 {
-                    if (!assetStatus.BypassRevisionControl() && obj.GetAssetPath() != "" && showAddCommit)
+                    if (!assetStatus.ModifiedOrBypassed() && obj.GetAssetPath() != "" && showAddCommit)
                     {
                         if (GUILayout.Button((VCUtility.ManagedByRepository(assetStatus) ? Terminology.commit : Terminology.add), GetPrefabToolbarStyle(style, true)))
                         {
@@ -117,7 +117,7 @@ namespace VersionControl.UserInterface
                     bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                     bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
                     bool isFolder = Directory.Exists(assetPath);
-                    bool textAsset = VCUtility.IsTextAsset(assetPath);
+                    bool textAsset = VCUtility.IsMergableTextAsset(assetPath);
                     bool mergableTextAsset = VCUtility.IsMergableTextAsset(assetPath);
                     bool modifiedTextAsset = textAsset && assetStatus.fileStatus != VCFileStatus.Normal;
                     bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
@@ -137,7 +137,7 @@ namespace VersionControl.UserInterface
                     bool showAdd = ready && !pending && !ignored && unversioned;
                     bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || bypass);
                     bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
-                    bool showCommit = ready && !pending && !ignored && !bypass && (haveControl || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
+                    bool showCommit = ready && !pending && !ignored && !bypass && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
                     bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
                     bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
                     bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock && !mergableTextAsset;

@@ -58,9 +58,9 @@ namespace VersionControl
             vcc.SetWorkingDirectory(workingDirectory);
         }
 
-        public virtual void SetUserCredentials(string userName, string password)
+        public virtual bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
-            vcc.SetUserCredentials(userName, password);
+            return vcc.SetUserCredentials(userName, password, cacheCredentials);
         }
 
         public virtual VersionControlStatus GetAssetStatus(string assetPath)

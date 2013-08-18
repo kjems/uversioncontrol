@@ -26,7 +26,11 @@ namespace VersionControl
         public VCInitializationException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
         public VCInitializationException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
     }
-
+    public class VCMissingCredentialsException : VCException
+    {
+        public VCMissingCredentialsException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
+        public VCMissingCredentialsException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
+    }
     public class VCConnectionTimeoutException : VCException
     {
         public VCConnectionTimeoutException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }

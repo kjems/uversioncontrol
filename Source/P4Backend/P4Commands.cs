@@ -353,10 +353,11 @@ namespace VersionControl.Backend.P4
 			dirStatus.Directory = workingDirectory.Replace ("/", Path.DirectorySeparatorChar.ToString());
 		}
 
-        public void SetUserCredentials(string userName, string password)
+        public bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
             if (!string.IsNullOrEmpty(userName)) P4Util.Instance.Vars.userName = userName;
             if (!string.IsNullOrEmpty(password)) P4Util.Instance.Vars.password = password;
+            return true;
         }
 
         public VersionControlStatus GetAssetStatus(string assetPath)
@@ -753,7 +754,9 @@ namespace VersionControl.Backend.P4
 
         public bool Revert(IEnumerable<string> assets)
         {
-            bool success = CreateAssetOperation("revert", assets);
+            // need to make sure the assets are opened for edit first...
+            bool success = CreateAssetOperation("edit", assets.Where(a => statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Normal || statusDatabase[new ComposedString(a)].fileStatus == VCFileStatus.Modified));
+            success &= CreateAssetOperation("revert", assets);
 			if ( success ) UpdateAfterOperation( assets );
 			return success;
         }

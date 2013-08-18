@@ -73,6 +73,7 @@
     <Compile Include="Source\GUI\Windows\VCAboutWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCBugReportWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCCommitWindow.cs" />
+    <Compile Include="Source\GUI\Windows\VCCredentialsWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCSettingsWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCWindow.cs" />
     <Compile Include="Source\MultiColumnListView\MultiColumnState.cs" />

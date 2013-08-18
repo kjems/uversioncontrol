@@ -18,6 +18,7 @@ namespace VersionControl.Backend.SVN
         private string workingDirectory = ".";
         private string userName;
         private string password;
+        private bool allowCacheCredentials = false;
         private string versionNumber;
         private string cliEnding = "";
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
@@ -156,10 +157,13 @@ namespace VersionControl.Backend.SVN
             this.workingDirectory = workingDirectory;
         }
 
-        public void SetUserCredentials(string userName, string password)
+        public bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
-            if (!string.IsNullOrEmpty(userName)) this.userName = userName;
-            if (!string.IsNullOrEmpty(password)) this.password = password;
+            this.userName = userName;
+            this.password = password;
+            allowCacheCredentials = cacheCredentials;
+            string error = CreateSVNCommandLine("log -l 1").Execute().ErrorStr;
+            return string.IsNullOrEmpty(error);
         }
 
         public VersionControlStatus GetAssetStatus(string assetPath)
@@ -298,7 +302,7 @@ namespace VersionControl.Backend.SVN
             arguments = "--non-interactive " + arguments;
             if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(password))
             {
-                arguments = " --username " + userName + " --password " + password + " --no-auth-cache " + arguments;
+                arguments = " --username " + userName + " --password " + password + (allowCacheCredentials ? " " : " --no-auth-cache ") + arguments;
             }
             return new CommandLine("svn", arguments, workingDirectory);
         }
@@ -353,15 +357,15 @@ namespace VersionControl.Backend.SVN
                 commandLineOutput = ExecuteCommandLine(commandLine);
             }
 
-            if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
+            /*if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
             {
                 throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
-            }
+            }*/
             if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
             {
                 var errStr = commandLineOutput.ErrorStr;
-                if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
-                    throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
+                if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
+                    throw new VCMissingCredentialsException(errStr, commandLine.ToString());                
                 if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
                     throw new VCNewerVersionException(errStr, commandLine.ToString());
                 if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
@@ -372,6 +376,9 @@ namespace VersionControl.Backend.SVN
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
                 if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
+                if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
+                    throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
+                
                 throw new VCException(errStr, commandLine.ToString());
             }
             return commandLineOutput;

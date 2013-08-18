@@ -60,7 +60,7 @@ namespace VersionControl
         private VCCommands()
         {
             VersionControlFactory.VersionControlBackendChanged += OnVersionControlBackendChanged;
-            if(!VersionControlFactory.CreateVersionControlCommands(VCSettings.VersionControlBackend))
+            if (!VersionControlFactory.CreateVersionControlCommands(VCSettings.VersionControlBackend))
             {
                 VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.None;
             }
@@ -70,10 +70,10 @@ namespace VersionControl
         {
             if (vcc != null) vcc.Dispose();
             vcc = newVcc;
-            vcc.ProgressInformation += progress => 
-            { 
-                if (ProgressInformation != null) 
-                    OnNextUpdate.Do(() => ProgressInformation(progress)); 
+            vcc.ProgressInformation += progress =>
+            {
+                if (ProgressInformation != null)
+                    OnNextUpdate.Do(() => ProgressInformation(progress));
             };
             vcc.StatusCompleted += OnStatusCompleted;
             OnNextUpdate.Do(Start);
@@ -199,7 +199,7 @@ namespace VersionControl
             if (ThreadUtility.IsMainThread())
             {
                 ignoreStatusRequests = true;
-                D.Log("Flusing files");
+                //D.Log("Flusing files");
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
                 ignoreStatusRequests = false;
@@ -288,9 +288,9 @@ namespace VersionControl
         {
             vcc.SetWorkingDirectory(workingDirectory);
         }
-        public void SetUserCredentials(string userName, string password)
+        public bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
-            vcc.SetUserCredentials(userName, password);
+            return vcc.SetUserCredentials(userName, password, cacheCredentials);
         }
         public VersionControlStatus GetAssetStatus(string assetPath)
         {
@@ -518,14 +518,28 @@ namespace VersionControl
             dependencies = AssetpathsFilters.AddFilesInFolders(dependencies);
             dependencies = AssetpathsFilters.AddFolders(dependencies);
             dependencies = dependencies.Concat(AssetpathsFilters.AddDeletedInFolders(assets));
-
+            var allAssets = assets.Concat(dependencies).Distinct().ToList();
+            var localModified = AssetpathsFilters.LocalModified(allAssets);
             if (assets.Contains(EditorApplication.currentScene))
             {
                 EditorApplication.SaveCurrentSceneIfUserWantsTo();
             }
             if (PreCommit != null)
             {
-                PreCommit(assets.Concat(dependencies).Distinct().ToList());
+                PreCommit(allAssets);
+            }
+            if (localModified.Any())
+            {
+                string title = string.Format("{0} '{1}' files?", Terminology.getlock, Terminology.localModified);
+                string message = string.Format("You are trying to commit files which are '{0}'.\nDo you want to '{1}' these files first?", Terminology.localModified, Terminology.getlock);
+                if (EditorUtility.DisplayDialog(title, message, Terminology.getlock, "Abort"))
+                {
+                    GetLock(localModified);
+                }
+                else
+                {
+                    return false;
+                }
             }
             if (showUserConfirmation || initialAssetCount < (assets.Count() + dependencies.Count()))
             {

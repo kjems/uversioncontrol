@@ -19,7 +19,7 @@ namespace VersionControl.Backend.Noop
         public virtual bool IsReady() { return false; }
         public virtual bool HasValidLocalCopy() { return true; }
         public virtual void SetWorkingDirectory(string workingDirectory) { }
-        public virtual void SetUserCredentials(string userName, string password) { }
+        public virtual bool SetUserCredentials(string userName, string password, bool cacheCredentials) { return true; }
         public virtual VersionControlStatus GetAssetStatus(string assetPath)
         {
             return defaultStatus;

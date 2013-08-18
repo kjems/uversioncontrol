@@ -57,7 +57,7 @@ namespace VersionControl.UnitTests
         {
         }
 
-        public void SetUserCredentials(string userName, string password)
+        public bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
         }
 

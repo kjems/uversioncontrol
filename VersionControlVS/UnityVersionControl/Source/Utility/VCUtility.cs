@@ -65,7 +65,7 @@ namespace VersionControl
             var material = obj as Material;
             return
                 material && ManagedByRepository(assetStatus) ||
-                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.BypassRevisionControl()) && VCCommands.Instance.Ready) &&
+                ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrBypassed()) && VCCommands.Instance.Ready) &&
                 PrefabHelper.IsPrefab(obj, true, false, true);
         }
 

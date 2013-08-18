@@ -231,7 +231,7 @@ namespace VersionControl.UserInterface
 
                 GUILayout.FlexibleSpace();
 
-                bool newShowModifiedNoLock = GUILayout.Toggle(showModifiedNoLock, "Modified Local" , EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(90) });
+                bool newShowModifiedNoLock = GUILayout.Toggle(showModifiedNoLock, Terminology.localModified , EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(90) });
                 if (newShowModifiedNoLock != showModifiedNoLock)
                 {
                     showModifiedNoLock = newShowModifiedNoLock;

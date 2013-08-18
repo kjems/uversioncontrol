@@ -17,6 +17,13 @@ namespace VersionControl
                 .ToArray();
         }
 
+        internal static IEnumerable<string> LocalModified(IEnumerable<string> assets)
+        {
+            return assets                
+                .Where(d => VCCommands.Instance.GetAssetStatus(d).ModifiedOrBypassed())                
+                .ToArray();
+        }
+
         internal static IEnumerable<string> AddFilesInFolders(IEnumerable<string> assets)
         {
             foreach (var assetIt in new List<string>(assets))

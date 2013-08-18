@@ -28,6 +28,7 @@ namespace VersionControl
                 else if (e is VCNewerVersionException) HandleNewerVersion(e as VCNewerVersionException);
                 else if (e is VCOutOfDate) HandleOutOfDate(e as VCOutOfDate);
                 else if (e is VCCriticalException) HandleCritical(e as VCCriticalException);
+                else if (e is VCMissingCredentialsException) HandleUserCredentials();
                 else HandleBase(e);
             });
         }
@@ -72,6 +73,11 @@ namespace VersionControl
             {
                 VCSettings.VCEnabled = false;
             }
+        }
+
+        private static void HandleUserCredentials()
+        {
+            UserInterface.VCCredentialsWindow.Init();
         }
 
         private static void HandleBase(VCException e)

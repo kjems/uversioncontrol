@@ -214,7 +214,9 @@ namespace VersionControl.Backend.P4
 					versionControlStatus.owner = fileData.actionOwner;
 					break;
 				case "edit":
-					versionControlStatus.fileStatus = VCFileStatus.Modified;
+                    if (versionControlStatus.lockStatus == VCLockStatus.NoLock) {
+                        versionControlStatus.allowLocalEdit = true;
+                    }
 					versionControlStatus.owner = fileData.actionOwner;
 					break;
 				case "delete":

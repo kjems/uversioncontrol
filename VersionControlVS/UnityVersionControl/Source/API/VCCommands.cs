@@ -70,7 +70,11 @@ namespace VersionControl
         {
             if (vcc != null) vcc.Dispose();
             vcc = newVcc;
-            vcc.ProgressInformation += progress => { if (ProgressInformation != null) OnNextUpdate.Do(() => ProgressInformation(progress)); };
+            vcc.ProgressInformation += progress => 
+            { 
+                if (ProgressInformation != null) 
+                    OnNextUpdate.Do(() => ProgressInformation(progress)); 
+            };
             vcc.StatusCompleted += OnStatusCompleted;
             OnNextUpdate.Do(Start);
             EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
@@ -530,9 +534,9 @@ namespace VersionControl
             return Commit(assets, commitMessage);
         }
 
-        public bool BypassRevision(IEnumerable<string> assets)
+        public bool AllowLocalEdit(IEnumerable<string> assets)
         {
-            return vcc.ChangeListAdd(assets, VersionControlStatusExtension.bypassIdentifier.GetString());
+            return vcc.AllowLocalEdit(assets);
         }
 
         #endregion

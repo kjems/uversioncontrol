@@ -63,7 +63,7 @@ namespace VersionControl.UserInterface
                                 {
                                     VCUtility.GetLock(EditorApplication.currentScene, OperationMode.Force);
                                 }
-                                else VCCommands.Instance.BypassRevision(new[] {EditorApplication.currentScene});
+                                else VCCommands.Instance.AllowLocalEdit(new[] {EditorApplication.currentScene});
                             }
                         }
                         else if (vcSceneStatus.fileStatus == VCFileStatus.Added)
@@ -85,7 +85,7 @@ namespace VersionControl.UserInterface
                             numberOfButtons++;
                             if (GUILayout.Button(Terminology.bypass, buttonStyle))
                             {
-                                VCCommands.Instance.BypassRevision(new[] { EditorApplication.currentScene });
+                                VCCommands.Instance.AllowLocalEdit(new[] { EditorApplication.currentScene });
                             }
                         }
                     }

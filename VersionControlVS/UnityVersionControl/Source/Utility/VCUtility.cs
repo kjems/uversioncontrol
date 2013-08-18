@@ -102,7 +102,7 @@ namespace VersionControl
 
         public static void BypassRevision(Object obj)
         {
-            VCCommands.Instance.BypassRevision(obj.ToAssetPaths());
+            VCCommands.Instance.AllowLocalEdit(obj.ToAssetPaths());
             if (onHierarchyBypass != null) onHierarchyBypass(obj);
         }
 

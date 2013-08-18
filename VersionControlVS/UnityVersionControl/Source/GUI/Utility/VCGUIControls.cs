@@ -58,7 +58,7 @@ namespace VersionControl.UserInterface
                     {
                         if (GUILayout.Button(Terminology.bypass, GetPrefabToolbarStyle(style, true)))
                         {
-                            VCCommands.Instance.BypassRevision(obj.ToAssetPaths());
+                            VCCommands.Instance.AllowLocalEdit(obj.ToAssetPaths());
                         }
                     }
                 }
@@ -174,7 +174,7 @@ namespace VersionControl.UserInterface
         private static void BypassRevision(string assetPath, Object instance)
         {
             if (instance != null) VCUtility.BypassRevision(instance);
-            else VCCommands.Instance.BypassRevision(new[] { assetPath });
+            else VCCommands.Instance.AllowLocalEdit(new[] { assetPath });
         }
 
         private static void Commit(string assetPath, Object instance)

@@ -148,6 +148,11 @@ namespace VersionControl
             return vcc.Checkout(url, path);
         }
 
+        public virtual bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            return vcc.AllowLocalEdit(assets);
+        }
+
         public virtual bool Move(string from, string to)
         {
             return vcc.Move(from, to);

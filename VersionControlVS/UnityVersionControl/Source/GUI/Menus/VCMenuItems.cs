@@ -82,7 +82,7 @@ namespace VersionControl
         [MenuItem("Assets/UVC/" + Terminology.bypass)]
         public static void VCBypassLockProjectContext()
         {
-            VCCommands.Instance.BypassRevision(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.AllowLocalEdit(GetAssetPathsOfSelected().ToArray());
         }
 
         // Delete

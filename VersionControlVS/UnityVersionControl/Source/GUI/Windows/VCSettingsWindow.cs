@@ -51,7 +51,7 @@ namespace VersionControl.UserInterface
                 GUILayout.Label("GUI Settings", EditorStyles.boldLabel);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(new GUIContent("Inspector Lock", "Version Control allowed to lock Inspector GUI for items not " + Terminology.getlock), EditorStyles.boldLabel);
-                GUILayout.Space(130);
+                GUILayout.Space(92);
             }
             using (GUILayoutHelper.VerticalIdented(14))
             {

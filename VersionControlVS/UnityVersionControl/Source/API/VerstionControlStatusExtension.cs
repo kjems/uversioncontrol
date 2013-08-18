@@ -16,12 +16,16 @@ public static class VersionControlStatusExtension
     {
         return (vcs.fileStatus == VCFileStatus.Modified && vcs.lockStatus != VCLockStatus.LockedHere && !VCUtility.IsMergableTextAsset(vcs.assetPath));
     }    
-    public static bool BypassRevisionControl(this VersionControlStatus vcs)
+    public static bool LocalEditAllowed(this VersionControlStatus vcs)
     {
         return vcs.allowLocalEdit;
     }
-    public static bool ModifiedOrBypassed(this VersionControlStatus vcs)
+    public static bool ModifiedOrLocalEditAllowed(this VersionControlStatus vcs)
     {
-        return ModifiedWithoutLock(vcs) || BypassRevisionControl(vcs);
+        return ModifiedWithoutLock(vcs) || LocalEditAllowed(vcs);
+    }
+    public static bool ModifiedWithoutRights(this VersionControlStatus vcs)
+    {
+        return ModifiedWithoutLock(vcs) && !LocalEditAllowed(vcs);
     }
 }

@@ -57,7 +57,7 @@ namespace VersionControl.UserInterface
                         if (vcSceneStatus.lockStatus == VCLockStatus.LockedOther)
                         {
                             numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent(Terminology.bypass, "Shift-click to steal lock"), buttonStyle))
+                            if (GUILayout.Button(new GUIContent(Terminology.allowLocalEdit, "Shift-click to steal lock"), buttonStyle))
                             {
                                 if (Event.current.shift)
                                 {
@@ -83,7 +83,7 @@ namespace VersionControl.UserInterface
                                 VCCommands.Instance.GetLockTask(new[] {EditorApplication.currentScene});
                             }
                             numberOfButtons++;
-                            if (GUILayout.Button(Terminology.bypass, buttonStyle))
+                            if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
                             {
                                 VCCommands.Instance.AllowLocalEdit(new[] { EditorApplication.currentScene });
                             }
@@ -102,7 +102,7 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.ModifiedOrBypassed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
+                            if (vcSceneStatus.ModifiedOrLocalEditAllowed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.getlock, buttonStyle))

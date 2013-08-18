@@ -116,7 +116,7 @@ namespace VersionControl
                     }
                     else
                     {
-                        EditorUtility.DisplayDialog("Version Control Selection failed", "Unable to initialize '" + value + "' backend. Look in the console for potential errors", "OK");
+                        EditorUtility.DisplayDialog("Version Control Selection failed", "Unable to initialize '" + value + "'. Look in the console for potential errors", "OK");
                     }
                 } 
             } 

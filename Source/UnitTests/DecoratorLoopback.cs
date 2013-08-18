@@ -59,6 +59,7 @@ namespace VersionControl.UnitTests
 
         public bool SetUserCredentials(string userName, string password, bool cacheCredentials)
         {
+            return true;
         }
 
         public VersionControlStatus GetAssetStatus(string assetPath)
@@ -161,6 +162,12 @@ namespace VersionControl.UnitTests
 
         public bool Checkout(string url, string path = "")
         {
+            return true;
+        }
+
+        public bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            dataCarrier.assets = assets.ToList();
             return true;
         }
 

@@ -21,7 +21,7 @@ namespace VersionControl
 
         [MenuItem("Assets/UVC/" + Terminology.add, true)]
         [MenuItem("Assets/UVC/" + Terminology.delete, true)]
-        [MenuItem("Assets/UVC/" + Terminology.bypass, true)]
+        [MenuItem("Assets/UVC/" + Terminology.allowLocalEdit, true)]
         [MenuItem("Assets/UVC/" + Terminology.revert, true)]
         [MenuItem("Assets/UVC/" + Terminology.commit, true)]
         [MenuItem("Assets/UVC/Open", true)]
@@ -79,8 +79,8 @@ namespace VersionControl
             VCCommands.Instance.Revert(GetAssetPathsOfSelected().ToArray());
         }
 
-        [MenuItem("Assets/UVC/" + Terminology.bypass)]
-        public static void VCBypassLockProjectContext()
+        [MenuItem("Assets/UVC/" + Terminology.allowLocalEdit)]
+        public static void VCAllowLocalEditProjectContext()
         {
             VCCommands.Instance.AllowLocalEdit(GetAssetPathsOfSelected().ToArray());
         }

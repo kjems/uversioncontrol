@@ -23,13 +23,13 @@ namespace VersionControl.UserInterface
             return vcStyle;
         }
 
-        public static void VersionControlStatusGUI(GUIStyle style, VersionControlStatus assetStatus, Object obj, bool showAddCommit, bool showLockBypass, bool showRevert, bool confirmRevert = false)
+        public static void VersionControlStatusGUI(GUIStyle style, VersionControlStatus assetStatus, Object obj, bool showAddCommit, bool showLockAndAllowLocalEdit, bool showRevert, bool confirmRevert = false)
         {
             using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
             {
-                if (assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrBypassed() || !VCUtility.ManagedByRepository(assetStatus))
+                if (assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrLocalEditAllowed() || !VCUtility.ManagedByRepository(assetStatus))
                 {
-                    if (!assetStatus.ModifiedOrBypassed() && obj.GetAssetPath() != "" && showAddCommit)
+                    if (!assetStatus.ModifiedOrLocalEditAllowed() && obj.GetAssetPath() != "" && showAddCommit)
                     {
                         if (GUILayout.Button((VCUtility.ManagedByRepository(assetStatus) ? Terminology.commit : Terminology.add), GetPrefabToolbarStyle(style, true)))
                         {
@@ -38,7 +38,7 @@ namespace VersionControl.UserInterface
                     }
                 }
 
-                if (!VCUtility.HaveVCLock(assetStatus) && VCUtility.ManagedByRepository(assetStatus) && showLockBypass)
+                if (!VCUtility.HaveVCLock(assetStatus) && VCUtility.ManagedByRepository(assetStatus) && showLockAndAllowLocalEdit)
                 {
                     if (assetStatus.fileStatus == VCFileStatus.Added)
                     {
@@ -54,9 +54,9 @@ namespace VersionControl.UserInterface
                             VCCommands.Instance.GetLockTask(obj.ToAssetPaths());
                         }
                     }
-                    if (!assetStatus.BypassRevisionControl())
+                    if (!assetStatus.LocalEditAllowed())
                     {
-                        if (GUILayout.Button(Terminology.bypass, GetPrefabToolbarStyle(style, true)))
+                        if (GUILayout.Button(Terminology.allowLocalEdit, GetPrefabToolbarStyle(style, true)))
                         {
                             VCCommands.Instance.AllowLocalEdit(obj.ToAssetPaths());
                         }
@@ -131,25 +131,25 @@ namespace VersionControl.UserInterface
                     bool managedByRep = VCUtility.ManagedByRepository(assetStatus);
                     bool haveControl = VCUtility.HaveAssetControl(assetStatus);
                     bool haveLock = VCUtility.HaveVCLock(assetStatus);
-                    bool bypass = assetStatus.BypassRevisionControl();
+                    bool allowLocalEdit = assetStatus.LocalEditAllowed();
                     bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
 
                     bool showAdd = ready && !pending && !ignored && unversioned;
-                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || bypass);
+                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit);
                     bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
-                    bool showCommit = ready && !pending && !ignored && !bypass && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
+                    bool showCommit = ready && !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
                     bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
                     bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
-                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && !haveLock && !mergableTextAsset;
-                    bool showUnlock = ready && !pending && !ignored && !bypass && haveLock;
+                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset;
+                    bool showUnlock = ready && !pending && !ignored && !allowLocalEdit && haveLock;
                     bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
-                    bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !bypass && !unversioned && !added && lockedByOther && Event.current.shift;
+                    bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
                     bool showDisconnect = isPrefab && !isPrefabParent;
 
                     if (showDiff) menu.AddItem(new GUIContent(Terminology.diff), false, () => VCUtility.DiffWithBase(assetPath));
                     if (showAdd) menu.AddItem(new GUIContent(Terminology.add), false, () => VCCommands.Instance.Add(new[] { assetPath }));
                     if (showOpen) menu.AddItem(new GUIContent(Terminology.getlock), false, () => GetLock(assetPath, instance));
-                    if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.bypass), false, () => BypassRevision(assetPath, instance));
+                    if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.allowLocalEdit), false, () => AllowLocalEdit(assetPath, instance));
                     if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
                     if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
                     if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));                    
@@ -171,9 +171,9 @@ namespace VersionControl.UserInterface
             else VCCommands.Instance.GetLock(new[] { assetPath }, operationMode);
         }
 
-        private static void BypassRevision(string assetPath, Object instance)
+        private static void AllowLocalEdit(string assetPath, Object instance)
         {
-            if (instance != null) VCUtility.BypassRevision(instance);
+            if (instance != null) VCUtility.AllowLocalEdit(instance);
             else VCCommands.Instance.AllowLocalEdit(new[] { assetPath });
         }
 

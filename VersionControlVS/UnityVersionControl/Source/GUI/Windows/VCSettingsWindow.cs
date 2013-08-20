@@ -136,6 +136,7 @@ namespace VersionControl.UserInterface
             {
                 VCSettings.AutoCloseAfterSuccess = GUILayout.Toggle(VCSettings.AutoCloseAfterSuccess, new GUIContent("Auto Close", "Auto close commit window on successful commit\nDefault: Off"));
                 VCSettings.IncludeDepedenciesAsDefault = GUILayout.Toggle(VCSettings.IncludeDepedenciesAsDefault, new GUIContent("Select Dependencies", "Should dependencies automatically be selected when opening the commit window\nDefault: On"));
+                VCSettings.RequireLockBeforeCommit = GUILayout.Toggle(VCSettings.RequireLockBeforeCommit, new GUIContent("Require " + Terminology.getlock + " on commit", "It will be enforced that all non-mergable files are " + Terminology.getlock + " before commit\nDefault: Off"));
             }
             GUILayout.Label("Debug", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))

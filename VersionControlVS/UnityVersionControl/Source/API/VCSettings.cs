@@ -33,6 +33,7 @@ namespace VersionControl
             ClientPath = EditorPrefs.GetString("VCSSettings/clientPath"); // using ClientPath property instead of field by intention
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
+            requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
 
             OnSettingsChanged();
@@ -59,6 +60,7 @@ namespace VersionControl
                 EditorPrefs.SetString("VCSSettings/clientPath", clientPath);
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
+                EditorPrefs.SetBool("VCSSettings/requireLockBeforeCommit", requireLockBeforeCommit);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
             };
         }
@@ -189,6 +191,11 @@ namespace VersionControl
 
         private static bool includeDepedenciesAsDefault;
         public static bool IncludeDepedenciesAsDefault { get { return includeDepedenciesAsDefault; } set { if (includeDepedenciesAsDefault != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
+
+        private static bool requireLockBeforeCommit;
+        public static bool RequireLockBeforeCommit { get { return requireLockBeforeCommit; } set { if (requireLockBeforeCommit != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
+
+        
 
 
         private static string clientPath;

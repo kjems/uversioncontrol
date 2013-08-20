@@ -87,6 +87,16 @@ namespace VersionControl
             return AssetMoveResult.DidNotMove;
         }
 
+        private static string[] OnWillSaveAssets(string[] assets)
+        {
+            if (VCSettings.PreventSaveNoLock)
+            {
+                assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
+                //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
+            }
+            return assets;
+        }
+
         /* // Would be possible to auto Add new files to Version Control, but it feels a bit aggressive
         private static void OnWillCreateAsset(string assetPath)
         {            

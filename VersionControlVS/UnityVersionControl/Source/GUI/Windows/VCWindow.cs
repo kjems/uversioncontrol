@@ -51,7 +51,7 @@ namespace VersionControl.UserInterface
             var metaStatus = vcStatus.MetaStatus();
             bool unversioned = vcStatus.fileStatus == VCFileStatus.Unversioned;
             bool meta = metaStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus == VCFileStatus.Normal;
-            bool modifiedNoLock = vcStatus.ModifiedWithoutLock();
+            bool modifiedNoLock = vcStatus.ModifiedOrLocalEditAllowed();
 
             bool rest = !unversioned && !meta && !modifiedNoLock;
             return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || rest;
@@ -62,7 +62,7 @@ namespace VersionControl.UserInterface
         {
             if (!vcStatus.Reflected) return false;
 
-            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && vcStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus != VCFileStatus.Ignored;
+            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal) && vcStatus.fileStatus != VCFileStatus.Ignored;
             if (assetCriteria) return true;
 
             bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;

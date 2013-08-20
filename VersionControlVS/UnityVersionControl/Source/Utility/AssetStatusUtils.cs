@@ -58,7 +58,7 @@ namespace VersionControl.UserInterface
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
-            if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit;
+            if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit + (assetStatus.fileStatus == VCFileStatus.Modified ? "*" : "");
             if (assetStatus.ModifiedWithoutLock()) return "Modified!";
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'\nShift click to force open";            
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";

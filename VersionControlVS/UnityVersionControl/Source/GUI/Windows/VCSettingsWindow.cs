@@ -153,8 +153,8 @@ namespace VersionControl.UserInterface
             {                
                 using (GUILayoutHelper.Horizontal())
                 {
-                    GUILayout.Label(new GUIContent(string.Format("Only save {0} files", Terminology.getlock), string.Format("Only save files that are either {0} or {1} \nDefault: Off", Terminology.allowLocalEdit, Terminology.getlock)));
-                    VCSettings.PreventSaveNoLock = GUILayout.Toggle(VCSettings.PreventSaveNoLock, "", GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                    GUILayout.Label(new GUIContent(string.Format("Who Controls Asset Saves", Terminology.getlock), string.Format("Select {0} to only let Unity save files that are either {1} or {2} \nDefault: {3}", VCSettings.ESaveAssetsStrategy.VersionControl.ToString(), Terminology.allowLocalEdit, Terminology.getlock, VCSettings.ESaveAssetsStrategy.Unity.ToString())));
+                    VCSettings.SaveStrategy = (VCSettings.ESaveAssetsStrategy)EditorGUILayout.EnumPopup(VCSettings.SaveStrategy, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
                 if (clientPath == null) clientPath = VCSettings.ClientPath;
                 var textColor = ValidCommandLineClient(clientPath) ? new Color(0.0f, 0.6f, 0.0f) : new Color(0.6f, 0.0f, 0.0f);

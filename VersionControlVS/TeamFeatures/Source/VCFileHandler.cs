@@ -89,7 +89,7 @@ namespace VersionControl
 
         private static string[] OnWillSaveAssets(string[] assets)
         {
-            if (VCSettings.PreventSaveNoLock)
+            if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
             {
                 assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
                 //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));

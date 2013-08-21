@@ -34,7 +34,7 @@ namespace VersionControl
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
             requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
-            preventSaveNoLock = EditorPrefs.GetBool("VCSSettings/preventSaveNoLock", false);
+            saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/preventSaveNoLock", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
 
             OnSettingsChanged();
@@ -62,7 +62,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
                 EditorPrefs.SetBool("VCSSettings/requireLockBeforeCommit", requireLockBeforeCommit);
-                EditorPrefs.SetBool("VCSSettings/preventSaveNoLock", preventSaveNoLock);
+                EditorPrefs.SetInt("VCSSettings/saveStrategy", (int)saveStrategy);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
             };
         }
@@ -70,6 +70,7 @@ namespace VersionControl
         public enum EBugReportMode { Automatic, Manual }
         public enum EReflectionLevel { Local, Remote }
         public enum EVersionControlBackend { None, Svn, Perforce }
+        public enum ESaveAssetsStrategy { Unity, VersionControl }
 
         public static event Action SettingChanged;        
         
@@ -197,8 +198,8 @@ namespace VersionControl
         private static bool requireLockBeforeCommit;
         public static bool RequireLockBeforeCommit { get { return requireLockBeforeCommit; } set { if (requireLockBeforeCommit != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
 
-        private static bool preventSaveNoLock;
-        public static bool PreventSaveNoLock { get { return preventSaveNoLock; } set { if (preventSaveNoLock != value) { preventSaveNoLock = value; OnSettingsChanged(); } } }
+        private static ESaveAssetsStrategy saveStrategy;
+        public static ESaveAssetsStrategy SaveStrategy { get { return saveStrategy; } set { if (saveStrategy != value) { saveStrategy = value; OnSettingsChanged(); } } }
         
         
 

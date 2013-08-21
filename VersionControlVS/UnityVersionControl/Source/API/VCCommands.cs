@@ -49,7 +49,7 @@ namespace VersionControl
 
         private IVersionControlCommands vcc;
         private bool ignoreStatusRequests = false;
-        private Action<Object> saveSceneCallback = o => EditorApplication.SaveScene();
+        private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
 
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
@@ -126,6 +126,10 @@ namespace VersionControl
             vcc.DeactivateRefreshLoop();
         }
 
+        public void SetImportAssetDatabaseSynchronousCallback(Action refreshSynchronous)
+        {
+            refreshAssetDatabaseSynchronous = refreshSynchronous;
+        }
 
         #region Private methods
 
@@ -181,7 +185,7 @@ namespace VersionControl
             return true;
         }
 
-        private void RefreshAssetDatabaseAfterStatusUpdate()
+        private void RefreshAssetDatabase()
         {
             if (pendingAssetDatabaseRefresh)
             {
@@ -189,7 +193,7 @@ namespace VersionControl
                 OnNextUpdate.Do(() =>
                 {
                     VCConflictHandler.HandleConflicts();
-                    AssetDatabase.Refresh();
+                    refreshAssetDatabaseSynchronous();
                 });
             }
         }
@@ -376,6 +380,7 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
+                bool filesOSDeleted = false;
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
                 {
@@ -391,26 +396,30 @@ namespace VersionControl
                         {
                             File.SetAttributes(metaAsset, FileAttributes.Normal);
                             File.Delete(metaAsset);
+                            filesOSDeleted = true;
                         }
                         if (File.Exists(assetIt))
                         {
                             File.SetAttributes(assetIt, FileAttributes.Normal);
                             File.Delete(assetIt);
+                            filesOSDeleted = true;
                         }
                         if (Directory.Exists(assetIt))
                         {
                             foreach (var subDirFile in Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories))
                             {
                                 File.SetAttributes(subDirFile, FileAttributes.Normal);
-                                File.Delete(subDirFile);
+                                File.Delete(subDirFile);                                
                             }
                             Directory.Delete(assetIt, true);
+                            filesOSDeleted = true;
                         }
                     }
                 }
                 bool result = vcc.Delete(deleteAssets, mode);
                 RequestAssetDatabaseRefresh();
-                if (result) OnOperationCompleted(OperationType.Delete);
+                if (filesOSDeleted) OnStatusCompleted();
+                if (result || filesOSDeleted) OnOperationCompleted(OperationType.Delete);
                 return result;
             });
         }
@@ -488,12 +497,12 @@ namespace VersionControl
             vcc.RemoveFromDatabase(assets);
             OnStatusCompleted();
         }
-
+                
         private void OnStatusCompleted()
         {
-            //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
+            //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));            
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
-            RefreshAssetDatabaseAfterStatusUpdate();
+            RefreshAssetDatabase();
         }
 
         private void OnOperationCompleted(OperationType operation)

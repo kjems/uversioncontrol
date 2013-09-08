@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace VersionControl.Backend.Noop
 {
-
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class NoopCommands : IVersionControlCommands
     {
         readonly VersionControlStatus defaultStatus = new VersionControlStatus();

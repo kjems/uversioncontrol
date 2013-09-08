@@ -33,7 +33,7 @@ namespace VersionControl
             string cliEnding = (Application.platform == RuntimePlatform.OSXEditor) ? Environment.NewLine : "";
             bool noopSelected = backend == VCSettings.EVersionControlBackend.None;
             bool svnSelected = backend == VCSettings.EVersionControlBackend.Svn;
-            bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;            
+            bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;
             IVersionControlCommands uvc = null;            
 
             if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(cliEnding), workDirectory, out uvc))

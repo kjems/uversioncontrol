@@ -14,6 +14,7 @@ using VersionControl.Backend.SVN;
 namespace VersionControl.UnitTests
 {
     using Logging;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     [TestFixture]
     public class TestCommandLine
     {
@@ -122,14 +123,16 @@ namespace VersionControl.UnitTests
     [TestFixture]
     public class TestComposedString
     {
-        string str1 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush1.cs";
-        string str2 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
-        string str3 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
-        string str4 = "Assets/_Tests/Kjems/Test_Anim/Huddle@run.fbx";
-        string meta = ".meta";
-        string metaDot = ".meta.";
-        string empty = "";
-        string str3meta = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs.meta";
+        const string str1 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush1.cs";
+        const string str2 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
+        const string str3 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
+        const string str4 = "Assets/_Tests/Kjems/Test_Anim/Huddle@run.fbx";
+        const string meta = ".meta";
+        const string metaDot = ".meta.";
+        const string empty = "";
+        const string str3meta = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs.meta";
+
+        static readonly ComposedString cstr1 = new ComposedString(str1);
 
         [SetUp]
         public void Init()
@@ -140,18 +143,17 @@ namespace VersionControl.UnitTests
         [Test]
         public void TestComposeAndDecompose()
         {
-            ComposedString cstr1 = new ComposedString(str1);
             ComposedString cstr2 = new ComposedString(str2);
             ComposedString cstr3 = new ComposedString(str3);
             ComposedString cstr4 = new ComposedString(str4);
             var cstr3meta = cstr3 + meta;
-            Assert.AreEqual(str1 , cstr1.GetString(), "compose/decompose mismatch");
+            Assert.AreEqual(str1, cstr1.Compose(), "compose/decompose mismatch");
             Assert.AreEqual(cstr2 , cstr3, "equal ComposedString");
-            Assert.AreEqual(str3meta, cstr3meta.GetString(), "using operator + with string");
+            Assert.AreEqual(str3meta, cstr3meta.Compose(), "using operator + with string");
             Assert.True(cstr3meta.EndsWith(meta), "Endwith and implicit string conversion");
             Assert.False(cstr3meta.EndsWith(empty), "Endwith empty");
             Assert.False(cstr3meta.EndsWith(metaDot), "Endwith metaDot");
-            Assert.True(cstr4.EndsWith("@run.fbx"), "Endwith");
+            Assert.True(cstr4.EndsWith("@run.fbx"), "Endwith @run.fbx");
             Assert.AreEqual(cstr3, cstr3meta.TrimEnd(meta), "Trim End");
             Assert.AreEqual(cstr3meta, cstr3 + meta, "Trim End does not modify original");
         }

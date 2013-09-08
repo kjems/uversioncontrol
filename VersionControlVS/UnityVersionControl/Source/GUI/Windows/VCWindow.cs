@@ -83,7 +83,7 @@ namespace VersionControl.UserInterface
 
         private List<string> GetSelectedAssets()
         {
-            return vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.GetString()).ToList();
+            return vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.Compose()).ToList();
         }
 
         virtual protected void OnEnable()
@@ -100,12 +100,9 @@ namespace VersionControl.UserInterface
             vcMultiColumnAssetList.SetGUIFilter(GUIFilter);
 
             VCCommands.Instance.StatusCompleted += RefreshGUI;
-            VCSettings.SettingChanged += Repaint;
-            VCCommands.Instance.ProgressInformation += s =>
-            {
-                commandInProgress = s + "\n" + commandInProgress;
-                Repaint();
-            };
+            VCCommands.Instance.OperationCompleted += OperationComplete;
+            VCCommands.Instance.ProgressInformation += ProgressInformation;
+            VCSettings.SettingChanged += Repaint;            
 
             rect = new Rect(0, statusHeight, position.width, 10.0f);
         }
@@ -118,8 +115,26 @@ namespace VersionControl.UserInterface
             EditorPrefs.SetFloat("VCWindow/statusHeight", statusHeight);
 
             VCCommands.Instance.StatusCompleted -= RefreshGUI;
+            VCCommands.Instance.OperationCompleted -= OperationComplete;
+            VCCommands.Instance.ProgressInformation -= ProgressInformation;
             VCSettings.SettingChanged -= Repaint;
+
             vcMultiColumnAssetList.Dispose();
+        }
+
+        private void ProgressInformation(string progress)
+        {
+            commandInProgress = progress + "\n" + commandInProgress;
+            Repaint();
+        }
+
+        private void OperationComplete(OperationType operation)
+        {
+            if (operation == OperationType.Update)
+            {
+                updateInProgress = false;
+                RefreshGUI();
+            }
         }
 
         private void RefreshGUI()
@@ -201,11 +216,7 @@ namespace VersionControl.UserInterface
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
                         updateInProgress = true;
-                        VCCommands.Instance.UpdateTask().ContinueWithOnNextUpdate(t =>
-                        {
-                            updateInProgress = false;
-                            RefreshGUI();
-                        });
+                        VCCommands.Instance.UpdateTask();
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))
                     {

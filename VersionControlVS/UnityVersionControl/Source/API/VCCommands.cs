@@ -13,6 +13,7 @@ namespace VersionControl
     using UnityEngine;
     using UnityEditor;
     using UserInterface;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 
     [InitializeOnLoad]
     public class VCCommandsOnLoad
@@ -342,9 +343,9 @@ namespace VersionControl
             if (updateResult)
             {
                 RequestAssetDatabaseRefresh();
+                OnOperationCompleted(OperationType.Update);
                 Status(StatusLevel.Local, DetailLevel.Normal);
             }
-            if (updateResult) OnOperationCompleted(OperationType.Update);
             return updateResult;
         }
 
@@ -372,7 +373,11 @@ namespace VersionControl
                 Status(assets.ToList(), StatusLevel.Local);
                 bool revertSuccess = vcc.Revert(assets);
                 RequestAssetDatabaseRefresh();
-                if (revertSuccess) OnOperationCompleted(OperationType.Revert);
+                if (revertSuccess)
+                {
+                    RefreshAssetDatabase();
+                    OnOperationCompleted(OperationType.Revert);
+                }
                 return revertSuccess;
             });
         }
@@ -384,7 +389,7 @@ namespace VersionControl
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
                 {
-                    var metaAsset = assetIt + VCCAddMetaFiles.meta;
+                    var metaAsset = assetIt + VCCAddMetaFiles.metaStr;
                     if (GetAssetStatus(assetIt).fileStatus != VCFileStatus.Unversioned)
                     {
                         deleteAssets.Add(metaAsset);
@@ -418,7 +423,7 @@ namespace VersionControl
                 }
                 bool result = vcc.Delete(deleteAssets, mode);
                 RequestAssetDatabaseRefresh();
-                if (filesOSDeleted) OnStatusCompleted();
+                if (filesOSDeleted) RefreshAssetDatabase();
                 if (result || filesOSDeleted) OnOperationCompleted(OperationType.Delete);
                 return result;
             });

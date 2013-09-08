@@ -13,6 +13,7 @@ using System.Linq;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Extensions;
     public static class VCUtility
     {
@@ -115,11 +116,11 @@ namespace VersionControl
                 {
                     if (reflectionLevel == VCSettings.EReflectionLevel.Remote && assetStatus.reflectionLevel != VCReflectionLevel.Pending && assetStatus.reflectionLevel != VCReflectionLevel.Repository)
                     {
-                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Remote);
+                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.Compose(), StatusLevel.Remote);
                     }
                     else if (reflectionLevel == VCSettings.EReflectionLevel.Local && assetStatus.reflectionLevel == VCReflectionLevel.None)
                     {
-                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.GetString(), StatusLevel.Previous);
+                        VCCommands.Instance.RequestStatus(assetStatus.assetPath.Compose(), StatusLevel.Previous);
                     }
                 }
             }

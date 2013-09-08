@@ -10,6 +10,7 @@ using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 namespace VersionControl.UserInterface
 {
     using Logging;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCCommitWindow : EditorWindow
     {
         // Const
@@ -65,7 +66,7 @@ namespace VersionControl.UserInterface
                                     vcStatus.lockStatus == VCLockStatus.LockedHere;
 
                 if (!interresting) return false;
-                var key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);
+                ComposedString key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);
                 return (assetPaths.Contains(key) || depedencyAssetPaths.Contains(key));
             }
         }
@@ -154,7 +155,7 @@ namespace VersionControl.UserInterface
                 {
                     if (vcMultiColumnAssetList.GetSelectedAssets().Count() != 0)
                     {
-                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.GetString()).ToList();
+                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.Compose()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
                             commitProgress = s + "\n" + commitProgress;

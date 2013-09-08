@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class StatusDatabase : Dictionary<ComposedString, VersionControlStatus>
     {
         public StatusDatabase() { }

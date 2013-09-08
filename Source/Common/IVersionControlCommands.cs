@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
+
     public enum ConflictResolution
     {
         Mine,

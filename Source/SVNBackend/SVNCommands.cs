@@ -12,6 +12,8 @@ using CommandLineExecution;
 namespace VersionControl.Backend.SVN
 {
     using Logging;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
+
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         internal const string localEditChangeList = "Open Local";
@@ -219,8 +221,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
-                        localRequestQueue.Remove(assetIt.GetString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.Compose());
+                        localRequestQueue.Remove(assetIt.Compose());
                     }
                 }
                 OnStatusCompleted();
@@ -283,8 +285,8 @@ namespace VersionControl.Backend.SVN
                 {
                     foreach (var assetIt in db.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
-                        localRequestQueue.Remove(assetIt.GetString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.Compose());
+                        localRequestQueue.Remove(assetIt.Compose());
                     }
                 }
                 OnStatusCompleted();
@@ -400,6 +402,11 @@ namespace VersionControl.Backend.SVN
             return commitMessage.Replace('"', '\'');
         }
 
+        private static string UnifyLineEndingsChar(string commitMessage)
+        {
+            return commitMessage.Replace("\r\n", "\n");
+        }
+
         private IEnumerable<string> RemoveWorkingDirectoryFromPath(IEnumerable<string> assets)
         {
             return assets.Select(a => a.Replace(workingDirectory, ""));
@@ -481,7 +488,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            return CreateAssetOperation("commit -m \"" + ReplaceCommentChar(commitMessage) + "\"", assets);
+            return CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
         }
 
         public bool Add(IEnumerable<string> assets)

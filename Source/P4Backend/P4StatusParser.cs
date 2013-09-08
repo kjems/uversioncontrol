@@ -8,6 +8,7 @@ using System.Text;
 namespace VersionControl.Backend.P4
 {
     using Logging;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     #region EnumMaps
     internal static class P4ToVersionControlStatusMap
     {

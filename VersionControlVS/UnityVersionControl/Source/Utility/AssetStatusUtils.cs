@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace VersionControl.UserInterface
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static class AssetStatusUtils
     {
         private static readonly Color orange = new Color(0.9f, 0.60f, 0.0f);
@@ -65,6 +66,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;
             if (assetStatus.fileStatus == VCFileStatus.Added) return "Added";
             if (assetStatus.fileStatus == VCFileStatus.Conflicted) return "Conflicted";
+            if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
             if (assetStatus.fileStatus == VCFileStatus.Replaced) return "Replaced";
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return "Ignored";
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return "Modified on server";

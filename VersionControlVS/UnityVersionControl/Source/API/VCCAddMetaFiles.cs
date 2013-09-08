@@ -1,4 +1,4 @@
-﻿// Copyright (c) <2012> <Playdead>
+// Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 // This file is with a few exceptions handling everything relating to Unity .meta files.
@@ -9,11 +9,12 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace VersionControl
-{   
-    [Serializable]
+{
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class VCCAddMetaFiles : VCCDecorator
     {
-        public const string meta = ".meta";
+        public const string metaStr = ".meta";
+        public static readonly ComposedString meta = new ComposedString(metaStr);
         private const string assetsFolder = "Assets/";
 
         public VCCAddMetaFiles(IVersionControlCommands vcc) : base(vcc) { }
@@ -58,9 +59,14 @@ namespace VersionControl
             return base.GetLock(AddMeta(assets), mode);
         }
 
+        public override bool ReleaseLock(IEnumerable<string> assets)
+        {
+            return base.ReleaseLock(AddMeta(assets));
+        }
+
         public override bool Move(string from, string to)
         {
-            return base.Move(from, to) && base.Move(from + meta, to + meta);
+            return base.Move(from, to) && base.Move(from + metaStr, to + metaStr);
         }
 
         public override bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
@@ -82,8 +88,8 @@ namespace VersionControl
         {
             if (assets == null || !assets.Any()) return assets;
             return assets
-                .Where(ap => !ap.EndsWith(meta) && ap.StartsWith(assetsFolder))
-                .Select(ap => ap + meta)
+                .Where(ap => !ap.EndsWith(metaStr) && ap.StartsWith(assetsFolder))
+                .Select(ap => ap + metaStr)
                 .Concat(assets)
                 .Distinct()
                 .OrderBy(s => s.Length)

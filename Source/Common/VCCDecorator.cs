@@ -6,6 +6,8 @@ using System.Collections.Generic;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
+
     [Serializable]
     public class VCCDecorator : IVersionControlCommands
     {

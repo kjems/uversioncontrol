@@ -10,6 +10,7 @@ using System.Timers;
 
 namespace VersionControl.Backend.P4
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Logging;
     public class P4Commands : MarshalByRefObject, IVersionControlCommands
     {
@@ -378,7 +379,7 @@ namespace VersionControl.Backend.P4
         {
             lock (statusDatabaseLockToken)
             {
-                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.GetString())));
+                return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.Compose())));
             }
         }
 		
@@ -416,14 +417,14 @@ namespace VersionControl.Backend.P4
 	                    {
 	                        var status = statusIt.Value;
 	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-	                        statusDatabase[new ComposedString(statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
+                            statusDatabase[new ComposedString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
 	                    }
 					}
 
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-						ComposedString aPath = new ComposedString(statusIt.Key.GetString().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""));
+                        ComposedString aPath = new ComposedString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""));
 						statusDatabase.TryGetValue(aPath, out status);
 						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
 							// no previous status or previous status is pending, so set it here
@@ -446,14 +447,14 @@ namespace VersionControl.Backend.P4
 					if ( statusDB != null ) {
 	                    foreach (var assetIt in statusDB.Keys)
 	                    {
-	                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
-	                        localRequestQueue.Remove(assetIt.GetString());
+                            if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.Compose());
+                            localRequestQueue.Remove(assetIt.Compose());
 	                    }
 					}
                     foreach (var assetIt in fstatDB.Keys)
                     {
-                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.GetString());
-                        localRequestQueue.Remove(assetIt.GetString());
+                        if (statusLevel == StatusLevel.Remote) remoteRequestQueue.Remove(assetIt.Compose());
+                        localRequestQueue.Remove(assetIt.Compose());
                     }
                 }
                 OnStatusCompleted();

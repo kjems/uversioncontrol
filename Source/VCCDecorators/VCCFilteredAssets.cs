@@ -8,6 +8,7 @@ using VersionControl.AssetFilters;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Logging;
     /// <summary>
     /// Responsibility: Decorate an underlying IVersionControlCommands with filtering of assets to 
@@ -32,7 +33,7 @@ namespace VersionControl
 
         public override VersionControlStatus GetAssetStatus(string assetPath)
         {
-            if (vcc.InUnversionedParentFolder(assetPath)) return new VersionControlStatus() {assetPath = assetPath, fileStatus = VCFileStatus.Unversioned};
+            if (vcc.InUnversionedParentFolder(assetPath)) return new VersionControlStatus() {assetPath = new ComposedString(assetPath), fileStatus = VCFileStatus.Unversioned};
             return vcc.GetAssetStatus(assetPath);
         }
 
@@ -114,7 +115,7 @@ namespace VersionControl
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
             assets = vcc.Versioned(vcc.OnChangeList(NonEmpty(assets)));
-            return assets.Any() ? base.ChangeListRemove(vcc.Versioned(vcc.OnChangeList(assets))) && Status(assets, StatusLevel.Local) : false;
+            return assets.Any() ? base.ChangeListRemove(vcc.Versioned(vcc.OnChangeList(FilesExist(assets)))) && Status(assets, StatusLevel.Local) : false;
         }
 
         public override bool Move(string from, string to)

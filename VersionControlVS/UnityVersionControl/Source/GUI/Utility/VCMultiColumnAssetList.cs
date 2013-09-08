@@ -12,6 +12,7 @@ using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<VersionContr
 
 namespace VersionControl.UserInterface
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCMultiColumnAssetList : IDisposable
     {
         private IEnumerable<VersionControlStatus> interrestingStatus;
@@ -65,13 +66,13 @@ namespace VersionControl.UserInterface
             baseFilter = s => false;
             guiFilter = s => true;
 
-            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.GetString())); // TODO: Performance issue by running ToString every visual update
+            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.Compose())); // TODO: Performance issue by running ToString every visual update
             columnOwner = new MultiColumnState.Column(new GUIContent("Owner"), data => new GUIContent(data.owner, data.lockToken));
             columnFileStatus = new MultiColumnState.Column(new GUIContent("Status"), GetFileStatusContent);
             columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(data.MetaStatus()));
-            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.GetString()))); // TODO: Performance issue by running ToString every visual update
+            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.Compose()))); // TODO: Performance issue by running ToString every visual update
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
-            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.GetString()));
+            columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.Compose()));
 
             var editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
             multiColumnState = new MultiColumnState();
@@ -88,7 +89,7 @@ namespace VersionControl.UserInterface
 
             Func<GenericMenu> rowRightClickMenu = () =>
             {
-                var selected = multiColumnState.GetSelected().Select(status => status.assetPath.GetString());
+                var selected = multiColumnState.GetSelected().Select(status => status.assetPath.Compose());
                 if (!selected.Any()) return new GenericMenu();
                 GenericMenu menu = new GenericMenu();
                 if (selected.Count() == 1) VCGUIControls.CreateVCContextMenu(ref menu, selected.First());
@@ -125,9 +126,9 @@ namespace VersionControl.UserInterface
                 doubleClickAction = status =>
                 {
                     if (VCUtility.IsTextAsset(status.assetPath) && VCUtility.ManagedByRepository(status))
-                        VCUtility.DiffWithBase(status.assetPath.GetString());
+                        VCUtility.DiffWithBase(status.assetPath.Compose());
                     else
-                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.GetString()));
+                        AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.Compose()));
                 }
             };
 

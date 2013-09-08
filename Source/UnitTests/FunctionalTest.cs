@@ -64,7 +64,7 @@ namespace VersionControl.UnitTests
             
             vcc.Status(StatusLevel.Local, DetailLevel.Normal);
             var status = vcc.GetAssetStatus(fileA);
-            Assert.IsTrue(status.assetPath.GetString() == fileA, "AssetPath mismatch: " + status.assetPath.GetString() + "!=" + fileA);
+            Assert.IsTrue(status.assetPath.Compose() == fileA, "AssetPath mismatch: " + status.assetPath.Compose() + "!=" + fileA);
             Assert.IsTrue(status.fileStatus == VCFileStatus.Unversioned, "Unversioned");
             
             vcc.Add(new[]{fileA});
@@ -107,7 +107,7 @@ namespace VersionControl.UnitTests
             var folderAstatus = vcc.GetAssetStatus(folderA);
             Assert.That(folderAstatus.reflectionLevel, Is.EqualTo(VCReflectionLevel.Local), "The unversioned folder dirA has reflection level Local");
             Assert.That(folderAstatus.Reflected, Is.True, "The unversioned folder dirA is reflected, reflectionLevel: " + folderAstatus.reflectionLevel);
-            Assert.That(folderAstatus.assetPath.GetString(), Is.EqualTo(folderA), "AssetPath mismatch");
+            Assert.That(folderAstatus.assetPath.Compose(), Is.EqualTo(folderA), "AssetPath mismatch");
             Assert.That(folderAstatus.fileStatus, Is.EqualTo(VCFileStatus.Unversioned), folderA);
 
             var fileAstatus = vcc.GetAssetStatus(fileA);

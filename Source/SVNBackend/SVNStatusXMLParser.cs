@@ -11,6 +11,7 @@ using System.Xml;
 namespace VersionControl.Backend.SVN
 {
     using Logging;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     #region EnumMaps
     internal static class SVNToVersionControlStatusMap
     {
@@ -95,7 +96,7 @@ namespace VersionControl.Backend.SVN
 
             foreach (var assetPathIt in new List<ComposedString>(statusDatabase.Keys))
             {
-                string assetPathStr = assetPathIt.GetString();
+                string assetPathStr = assetPathIt.Compose();
                 if (Directory.Exists(assetPathStr))
                 {
                     var status = statusDatabase[assetPathIt];

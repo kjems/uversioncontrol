@@ -8,13 +8,14 @@ using System.Linq;
 
 namespace VersionControl
 {
+    using Logging;
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
         private static List<string> removedAssets = new List<string>();
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            //D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
+            D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
             changedAssets.AddRange(importedAssets);
             changedAssets.AddRange(movedAssets);
             if (changedAssets.Count > 0)

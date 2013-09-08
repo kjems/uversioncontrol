@@ -4,13 +4,14 @@
 using System;
 using System.Threading.Tasks;
 using VersionControl;
+using ComposedString = VersionControl.ComposedSet<string, VersionControl.FilesAndFoldersComposedStringDatabase>;
 
 public static class VersionControlStatusExtension
-{    
-    private static readonly ComposedString meta = new ComposedString(VCCAddMetaFiles.meta);
+{
+    
     public static VersionControlStatus MetaStatus(this VersionControlStatus vcs)
     {
-        return vcs.assetPath.EndsWith(meta) ? vcs : VCCommands.Instance.GetAssetStatus(vcs.assetPath + meta);
+        return vcs.assetPath.EndsWith(VCCAddMetaFiles.meta) ? vcs : VCCommands.Instance.GetAssetStatus(vcs.assetPath + VCCAddMetaFiles.meta);
     }
     public static bool ModifiedWithoutLock(this VersionControlStatus vcs)
     {

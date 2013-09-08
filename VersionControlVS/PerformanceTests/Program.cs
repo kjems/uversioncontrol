@@ -9,7 +9,8 @@ using VersionControl.Backend.SVN;
 using VersionControl.Logging;
 
 namespace PerformanceTests
-{    
+{
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     class Program
     {
         static readonly IVersionControlCommands vcc = new VCCFilteredAssets(CreateSVNCommands());

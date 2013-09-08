@@ -5,6 +5,8 @@ using System;
 
 namespace VersionControl
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
+
     #region Enums
     public enum VCFileStatus
     {

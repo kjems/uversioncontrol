@@ -8,6 +8,7 @@ using System.Linq;
 
 namespace VersionControl.UnitTests
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class DataCarrier
     {
         public List<string> assets;

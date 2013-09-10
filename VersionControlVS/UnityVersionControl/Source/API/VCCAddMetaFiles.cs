@@ -84,6 +84,11 @@ namespace VersionControl
             base.RemoveFromDatabase(AddMeta(assets));
         }
 
+        public override bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            return base.AllowLocalEdit(AddMeta(assets));
+        }
+
         private static IEnumerable<string> AddMeta(IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return assets;

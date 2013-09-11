@@ -55,7 +55,7 @@ namespace VersionControl
 
         internal static void RefreshEditableMaterial(Material material)
         {
-            SetEditable(material, !LockMaterial(material.GetAssetPath()));
+            SetEditable(material, VCUtility.HaveAssetControl(material) || !LockMaterial(material.GetAssetPath()));
         }
 
         internal static void RefreshEditableObject(GameObject gameObject)

@@ -1,4 +1,4 @@
-// Copyright (c) <2012> <Playdead>
+﻿// Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-
+using VersionControl.Logging;
 using MultiColumnState = MultiColumnState<VersionControl.VersionControlStatus, UnityEngine.GUIContent>;
 using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<VersionControl.VersionControlStatus>;
 
@@ -15,10 +15,13 @@ namespace VersionControl.UserInterface
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCMultiColumnAssetList : IDisposable
     {
+        private HashSet<VersionControlStatus> masterSelection = new HashSet<VersionControlStatus>();
+        private bool showMasterSelection = false;
         private IEnumerable<VersionControlStatus> interrestingStatus;
         private MultiColumnState multiColumnState;
         private MultiColumnViewOption options;
 
+        private MultiColumnState.Column columnSelection;
         private MultiColumnState.Column columnAssetPath;
         private MultiColumnState.Column columnOwner;
         private MultiColumnState.Column columnFileStatus;
@@ -40,12 +43,12 @@ namespace VersionControl.UserInterface
             return VCCommands.Instance.GetAssetStatus(assetPath).MetaStatus();
         }
 
-        public VCMultiColumnAssetList()
+        public VCMultiColumnAssetList(bool showMasterSelection = false)
         {
+            this.showMasterSelection = showMasterSelection;
             Initialize();
             VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
-
         }
 
         public void Dispose()
@@ -61,16 +64,18 @@ namespace VersionControl.UserInterface
             return new GUIContent(AssetStatusUtils.GetStatusText(assetStatus), IconUtils.circleIcon.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true)));
         }
 
+
         private void Initialize()
         {
             baseFilter = s => false;
             guiFilter = s => true;
 
-            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.Compose())); // TODO: Performance issue by running ToString every visual update
+            columnSelection = new MultiColumnState.Column(new GUIContent("[]"), data => new GUIContent(masterSelection.Contains(data) ? " ☑" : " ☐"));
+            columnAssetPath = new MultiColumnState.Column(new GUIContent("AssetPath"), data => new GUIContent(data.assetPath.Compose()));
             columnOwner = new MultiColumnState.Column(new GUIContent("Owner"), data => new GUIContent(data.owner, data.lockToken));
             columnFileStatus = new MultiColumnState.Column(new GUIContent("Status"), GetFileStatusContent);
             columnMetaStatus = new MultiColumnState.Column(new GUIContent("Meta"), data => GetFileStatusContent(data.MetaStatus()));
-            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.Compose()))); // TODO: Performance issue by running ToString every visual update
+            columnFileType = new MultiColumnState.Column(new GUIContent("Type"), data => new GUIContent(GetFileType(data.assetPath.Compose())));
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
             columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.Compose()));
 
@@ -116,12 +121,43 @@ namespace VersionControl.UserInterface
                 return menu;
             };
 
+            // Return value of true steals the click from normal selection, false does not.
+            Func<MultiColumnState.Row, MultiColumnState.Column, bool> cellClickAction = (row, column) =>
+            {
+                if (column == columnSelection)
+                {
+                    var currentSelection = multiColumnState.GetSelected();
+                    if (currentSelection.Contains(row.data))
+                    {
+                        bool currentRowSelection = masterSelection.Contains(row.data);
+                        foreach (var selectionIt in currentSelection)
+                        {
+                            if (currentRowSelection)
+                                masterSelection.Remove(selectionIt);
+                            else
+                                masterSelection.Add(selectionIt);
+                        }
+                    }
+                    else
+                    {
+                        if (masterSelection.Contains(row.data))
+                            masterSelection.Remove(row.data);
+                        else
+                            masterSelection.Add(row.data);
+                    }
+                    return true;
+                }
+                return false;
+                //D.Log(row.data.assetPath.Compose() + " : "  + column.GetContent(row.data).text);
+            };
+
             options = new MultiColumnViewOption
             {
                 headerStyle = editorSkin.button,
                 rowStyle = editorSkin.label,
                 rowRightClickMenu = rowRightClickMenu,
                 headerRightClickMenu = headerRightClickMenu,
+                cellClickAction = cellClickAction,
                 widths = new float[] { 200 },
                 doubleClickAction = status =>
                 {
@@ -134,6 +170,12 @@ namespace VersionControl.UserInterface
 
             options.headerStyle.fixedHeight = 20.0f;
             options.rowStyle.onNormal.background = IconUtils.CreateSquareTexture(4, 1, new Color(0.24f, 0.5f, 0.87f, 0.75f));
+
+            if (showMasterSelection)
+            {
+                multiColumnState.AddColumn(columnSelection);
+                options.widthTable.Add(columnSelection.GetHeader().text, 25);
+            }
 
             multiColumnState.AddColumn(columnAssetPath);
             options.widthTable.Add(columnAssetPath.GetHeader().text, 500);
@@ -191,9 +233,22 @@ namespace VersionControl.UserInterface
             Profiler.EndSample();
         }
 
-        public IEnumerable<ComposedString> GetSelectedAssets()
+        public IEnumerable<VersionControlStatus> GetSelection()
         {
-            return multiColumnState.GetSelected().Select(status => status.assetPath);
+            return multiColumnState.GetSelected();
+        }
+
+        public IEnumerable<VersionControlStatus> GetMasterSelection()
+        {
+            return masterSelection;
+        }
+
+        public void SetMasterSelection(VersionControlStatus status, bool selected)
+        {
+            if (selected)
+                masterSelection.Add(status);
+            else
+                masterSelection.Remove(status);
         }
 
         public void ForEachRow(Action<MultiColumnState.Row> action)

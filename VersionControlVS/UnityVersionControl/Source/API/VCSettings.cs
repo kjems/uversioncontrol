@@ -34,6 +34,7 @@ namespace VersionControl
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
             requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
+            selectiveCommit = EditorPrefs.GetBool("VCSSettings/selectiveCommit", false);
             saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/preventSaveNoLock", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
 
@@ -62,6 +63,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
                 EditorPrefs.SetBool("VCSSettings/requireLockBeforeCommit", requireLockBeforeCommit);
+                EditorPrefs.SetBool("VCSSettings/selectiveCommit", selectiveCommit);
                 EditorPrefs.SetInt("VCSSettings/saveStrategy", (int)saveStrategy);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
             };
@@ -196,7 +198,11 @@ namespace VersionControl
         public static bool IncludeDepedenciesAsDefault { get { return includeDepedenciesAsDefault; } set { if (includeDepedenciesAsDefault != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
 
         private static bool requireLockBeforeCommit;
-        public static bool RequireLockBeforeCommit { get { return requireLockBeforeCommit; } set { if (requireLockBeforeCommit != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
+        public static bool RequireLockBeforeCommit { get { return requireLockBeforeCommit; } set { if (requireLockBeforeCommit != value) { requireLockBeforeCommit = value; OnSettingsChanged(); } } }
+
+        private static bool selectiveCommit;
+        public static bool SelectiveCommit { get { return selectiveCommit; } set { if (selectiveCommit != value) { selectiveCommit = value; OnSettingsChanged(); } } }
+        
 
         private static ESaveAssetsStrategy saveStrategy;
         public static ESaveAssetsStrategy SaveStrategy { get { return saveStrategy; } set { if (saveStrategy != value) { saveStrategy = value; OnSettingsChanged(); } } }

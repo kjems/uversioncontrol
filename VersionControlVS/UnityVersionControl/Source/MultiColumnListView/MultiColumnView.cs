@@ -18,6 +18,7 @@ internal static class MultiColumnView
         public GUIStyle rowStyle;
         public Func<MultiColumnState<TD,TC>.Column, GenericMenu> headerRightClickMenu;
         public Func<GenericMenu> rowRightClickMenu;
+        public Func<MultiColumnState<TD, TC>.Row, MultiColumnState<TD, TC>.Column, bool> cellClickAction;
         public float[] widths;
         public Vector2 scrollbarPos;
         public readonly Dictionary<string, float> widthTable = new Dictionary<string, float>();
@@ -53,7 +54,7 @@ internal static class MultiColumnView
 
         GUI.BeginGroup(new Rect(0, 0, rect.width - scrollbarWidth, rect.height));
         var headers = multiColumnState.GetColumns().Select(c => c.GetHeader());
-        var widths = from content in headers select mvcOption.widthTable[content.text];
+        var widths = headers.Select(c => mvcOption.widthTable[c.text]).ToArray();
         float maxWidth = widths.Sum();
 
         var headerRect = new Rect(0, 0, maxWidth, headerHeight);
@@ -143,39 +144,37 @@ internal static class MultiColumnView
             bool bHover = r.Contains(Event.current.mousePosition);
             Action<Vector2> dragAction = v => { mvcOption.widthTable[cell.text] = Mathf.Max(mvcOption.widthTable[cell.text] + v.x, dragResize); };
 
-            ListViewCell(r, () => action(columnIt), dragAction, selectedFunc, bHover, cell, mvcOption.headerStyle, () => mvcOption.headerRightClickMenu(columnIt));
+            ListViewCell<TD>(r, () => action(columnIt), dragAction, selectedFunc, bHover, cell, mvcOption.headerStyle, () => mvcOption.headerRightClickMenu(columnIt), () => false);
             x += width;
         }
     }
 
-    static void ListViewRow<TD>(Rect rect, Action action, Func<bool> selectedFunc, MultiColumnState<TD, TC>.Row row, IEnumerable<float> widths, MultiColumnViewOption<TD> mvcOption)
+    static void ListViewRow<TD>(Rect rect, Action action, Func<bool> selectedFunc, MultiColumnState<TD, TC>.Row row, float[] widths, MultiColumnViewOption<TD> mvcOption)
     {
         //int id = GUIUtility.GetControlID(listViewCellHash, FocusType.Native);
-        var cells = row.Cells;
+        var columns = row.Columns.ToArray();
         bool bHover = rect.Contains(Event.current.mousePosition);
         float x = rect.x;
-
-        var widthIt = widths.GetEnumerator();
-        var contentIt = cells.GetEnumerator();
-        while (contentIt.MoveNext() && widthIt.MoveNext())
+                
+        for (int i = 0; i < widths.Length && i < columns.Length; ++i)
         {
-            var width = widthIt.Current;
-            var content = contentIt.Current;
+            var width = widths[i];
+            var column = columns[i];
 
             var r = new Rect(x, rect.y, width, rect.height);
-            ListViewCell(r, action, _ => { }, selectedFunc, bHover, content, mvcOption.rowStyle, mvcOption.rowRightClickMenu);
+            ListViewCell<TD>(r, action, _ => { }, selectedFunc, bHover, column.GetContent(row.data), mvcOption.rowStyle, mvcOption.rowRightClickMenu, () => mvcOption.cellClickAction(row, column));
             x += width;
         }
     }
 
-    static void ListViewCell(Rect rect, Action action, Action<Vector2> dragAction, Func<bool> selectedFunc, bool bHover, GUIContent content, GUIStyle style, Func<GenericMenu> contextMenu)
+    static void ListViewCell<TD>(Rect rect, Action action, Action<Vector2> dragAction, Func<bool> selectedFunc, bool bHover, GUIContent content, GUIStyle style, Func<GenericMenu> contextMenu, Func<bool> cellClickAction)
     {
         int id = GUIUtility.GetControlID(listViewCellHash, FocusType.Native);
         Event e = Event.current;
         switch (e.GetTypeForControl(id))
         {
             case EventType.ContextClick: ListViewCellContext(id, e, rect, contextMenu()); break;
-            case EventType.MouseDown: ListViewCellMouseDown(id, e, rect, action); break;
+            case EventType.MouseDown: ListViewCellMouseDown(id, e, rect, action, cellClickAction); break;
             case EventType.MouseUp: ListViewCellMouseUp(id, e, rect, action); break;
             case EventType.MouseDrag: ListViewCellMouseDrag(id, e, rect, dragAction); break;
             case EventType.Repaint: ListViewCellRepaint(id, e, rect, selectedFunc, bHover, content, style); break;
@@ -192,7 +191,7 @@ internal static class MultiColumnView
         }
     }
 
-    static void ListViewCellMouseDown(int id, Event e, Rect rect, Action action)
+    static void ListViewCellMouseDown(int id, Event e, Rect rect, Action action, Func<bool> cellClickAction)
     {
         if (rect.Contains(e.mousePosition) && e.button == 0)
         {
@@ -204,7 +203,8 @@ internal static class MultiColumnView
             else
             {
                 dragTypeControl = DragType.Normal;
-                action();
+                if(!cellClickAction())
+                    action();
             }
             GUIUtility.hotControl = id;
             Event.current.Use();

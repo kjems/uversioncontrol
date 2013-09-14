@@ -52,7 +52,7 @@ namespace VersionControl.UserInterface
             assetPaths = assets.Select(s => new ComposedString(s)).ToList();
             depedencyAssetPaths = dependencies.Select(s => new ComposedString(s)).ToList();
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
+            RefreshSelection();
             Profiler.EndSample();
         }
 
@@ -70,10 +70,17 @@ namespace VersionControl.UserInterface
                 return (assetPaths.Contains(key) || depedencyAssetPaths.Contains(key));
             }
         }
-        
-        private void StatusCompleted()
+
+        private void RefreshSelection()
         {
-            vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
+            if (VCSettings.SelectiveCommit)
+            {
+                vcMultiColumnAssetList.ForEachRow(r => vcMultiColumnAssetList.SetMasterSelection(r.data, VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath)));
+            }
+            else
+            {
+                vcMultiColumnAssetList.ForEachRow(r => r.selected = VCSettings.IncludeDepedenciesAsDefault || assetPaths.Contains(r.data.assetPath));
+            }
             Repaint();
         }
 
@@ -82,8 +89,8 @@ namespace VersionControl.UserInterface
             minSize = new Vector2(250, 100);
             commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 1000.0f);
             rect = new Rect(0, commitMessageHeight, position.width, 10.0f);
-            vcMultiColumnAssetList = new VCMultiColumnAssetList();
-            VCCommands.Instance.StatusCompleted += StatusCompleted;
+            vcMultiColumnAssetList = new VCMultiColumnAssetList(VCSettings.SelectiveCommit);
+            VCCommands.Instance.StatusCompleted += RefreshSelection;
         }
 
         private void OnDisable()
@@ -119,6 +126,7 @@ namespace VersionControl.UserInterface
         {
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeVertical);
             rect = GUIControls.DragButton(rect, GUIContent.none, null);
+            rect.y = position.height - rect.y;
             rect.x = 0.0f;
             rect.width = position.width;
             commitMessageHeight = rect.y = Mathf.Clamp(rect.y, minimumControlHeight, position.height - minimumControlHeight);
@@ -153,9 +161,10 @@ namespace VersionControl.UserInterface
             {
                 if (GUILayout.Button(Terminology.commit, GUILayout.Width(100)))
                 {
-                    if (vcMultiColumnAssetList.GetSelectedAssets().Count() != 0)
-                    {
-                        var selectedAssets = vcMultiColumnAssetList.GetSelectedAssets().Select(cstr => cstr.Compose()).ToList();
+                    var selection = VCSettings.SelectiveCommit ? vcMultiColumnAssetList.GetMasterSelection() : vcMultiColumnAssetList.GetSelection();
+                    if (selection.Count() != 0)
+                    {                        
+                        var selectedAssets = selection.Select(status => status.assetPath).Select(cstr => cstr.Compose()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
                             commitProgress = s + "\n" + commitProgress;
@@ -186,7 +195,7 @@ namespace VersionControl.UserInterface
                 }
             }
             EditorGUILayout.EndHorizontal();
-            if (vcMultiColumnAssetList.GetSelectedAssets().Any())
+            if (vcMultiColumnAssetList.GetSelection().Any())
             {
                 RemoveNotification();
             }

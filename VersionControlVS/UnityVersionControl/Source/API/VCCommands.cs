@@ -18,7 +18,10 @@ namespace VersionControl
     [InitializeOnLoad]
     public class VCCommandsOnLoad
     {
-        static VCCommandsOnLoad() { OnNextUpdate.Do(VCCommands.Initialize); }
+        static VCCommandsOnLoad() 
+        {
+            OnNextUpdate.Do(VCCommands.Initialize); 
+        }
     }
 
     public enum OperationType
@@ -51,10 +54,16 @@ namespace VersionControl
         private IVersionControlCommands vcc;
         private bool ignoreStatusRequests = false;
         private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
+        private Action<bool> allowAutoRefresh = allow => {
+            if (allow)
+                EditorApplication.LockReloadAssemblies();
+            else
+                EditorApplication.UnlockReloadAssemblies();
+        };
 
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
-        public event Action<OperationType> OperationCompleted;
+        public event Action<OperationType, bool> OperationCompleted;
         public event Action<List<string>> PreCommit;
         public event Action Started;
 
@@ -93,7 +102,7 @@ namespace VersionControl
         public bool Ready { get { return Active && vcc.IsReady(); } }
 
         public void Dispose()
-        {
+        {            
             vcc.Dispose();
         }
 
@@ -129,7 +138,12 @@ namespace VersionControl
 
         public void SetImportAssetDatabaseSynchronousCallback(Action refreshSynchronous)
         {
-            refreshAssetDatabaseSynchronous = refreshSynchronous;
+            this.refreshAssetDatabaseSynchronous = refreshSynchronous;
+        }
+
+        public void SetAllowAutoRefreshCallback(Action<bool> allowAutoRefresh)
+        {
+            this.allowAutoRefresh = allowAutoRefresh;
         }
 
         #region Private methods
@@ -246,9 +260,9 @@ namespace VersionControl
         public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
-            EditorApplication.LockReloadAssemblies();
+            allowAutoRefresh(false);
             var updateTask = StartTask(() => Update(assets));
-            updateTask.ContinueWithOnNextUpdate(t => EditorApplication.UnlockReloadAssemblies());
+            updateTask.ContinueWithOnNextUpdate(t => allowAutoRefresh(true));
             return updateTask;
         }
 
@@ -340,12 +354,9 @@ namespace VersionControl
             updating = true;
             bool updateResult = vcc.Update(assets);
             updating = false;
-            if (updateResult)
-            {
-                RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Update);
-                Status(StatusLevel.Local, DetailLevel.Normal);
-            }
+            if (updateResult) RequestAssetDatabaseRefresh();
+            OnOperationCompleted(OperationType.Update, updateResult);
+            if (updateResult) Status(StatusLevel.Local, DetailLevel.Normal);
             return updateResult;
         }
 
@@ -357,7 +368,7 @@ namespace VersionControl
                 Status(assets, StatusLevel.Local);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 RequestAssetDatabaseRefresh();
-                if (commitSuccess) OnOperationCompleted(OperationType.Commit);
+                OnOperationCompleted(OperationType.Commit, commitSuccess);
                 return commitSuccess;
             });
         }
@@ -375,9 +386,9 @@ namespace VersionControl
                 RequestAssetDatabaseRefresh();
                 if (revertSuccess)
                 {
-                    RefreshAssetDatabase();
-                    OnOperationCompleted(OperationType.Revert);
+                    RefreshAssetDatabase();                    
                 }
+                OnOperationCompleted(OperationType.Revert, revertSuccess);
                 return revertSuccess;
             });
         }
@@ -424,7 +435,7 @@ namespace VersionControl
                 bool result = vcc.Delete(deleteAssets, mode);
                 RequestAssetDatabaseRefresh();
                 if (filesOSDeleted) RefreshAssetDatabase();
-                if (result || filesOSDeleted) OnOperationCompleted(OperationType.Delete);
+                OnOperationCompleted(OperationType.Delete, result || filesOSDeleted);
                 return result;
             });
         }
@@ -433,7 +444,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool getlockSuccess = vcc.GetLock(assets, mode);
-                if (getlockSuccess) OnOperationCompleted(OperationType.GetLock);
+                OnOperationCompleted(OperationType.GetLock, getlockSuccess);
                 return getlockSuccess;
             });
         }
@@ -442,7 +453,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.ReleaseLock(assets);
-                if (result) OnOperationCompleted(OperationType.ReleaseLock);
+                OnOperationCompleted(OperationType.ReleaseLock, result);
                 return result;
             });
         }
@@ -464,7 +475,7 @@ namespace VersionControl
             {
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
                 RequestAssetDatabaseRefresh();
-                if (resolveSuccess) OnOperationCompleted(OperationType.Resolve);
+                OnOperationCompleted(OperationType.Resolve, resolveSuccess);
                 return resolveSuccess;
             });
         }
@@ -475,7 +486,7 @@ namespace VersionControl
                 FlushFiles();
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
-                if (moveSuccess) OnOperationCompleted(OperationType.Move);
+                OnOperationCompleted(OperationType.Move, moveSuccess);
                 return moveSuccess;
             });
         }
@@ -488,7 +499,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.CleanUp();
-                if (result) OnOperationCompleted(OperationType.CleanUp);
+                OnOperationCompleted(OperationType.CleanUp, result);
                 return result;
             });
         }
@@ -510,14 +521,14 @@ namespace VersionControl
             RefreshAssetDatabase();
         }
 
-        private void OnOperationCompleted(OperationType operation)
+        private void OnOperationCompleted(OperationType operation, bool success)
         {
             if (OperationCompleted != null)
             {
                 if (ThreadUtility.IsMainThread())
-                    OperationCompleted(operation);
+                    OperationCompleted(operation, success);
                 else
-                    OnNextUpdate.Do(() => OperationCompleted(operation));
+                    OnNextUpdate.Do(() => OperationCompleted(operation, success));
             }
         }
 

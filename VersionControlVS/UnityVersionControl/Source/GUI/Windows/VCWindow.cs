@@ -28,13 +28,14 @@ namespace VersionControl.UserInterface
         private bool showUnversioned = true;
         private bool showMeta = true;
         private bool showModifiedNoLock = true;
-        private float statusHeight = 1000;
+        private float statusHeight = 1000;        
         private bool updateInProgress = false;
         private bool refreshInProgress = false;
         private string commandInProgress = "";
         private VCMultiColumnAssetList vcMultiColumnAssetList;
         private VCSettingsWindow settingsWindow;
         private Rect rect;
+        private int updateCounter = 0;
 
         // Cache
         private Vector2 statusScroll = Vector2.zero;
@@ -120,20 +121,25 @@ namespace VersionControl.UserInterface
             VCSettings.SettingChanged -= Repaint;
 
             vcMultiColumnAssetList.Dispose();
+            if (updateInProgress) EditorUtility.ClearProgressBar();
         }
 
         private void ProgressInformation(string progress)
         {
             commandInProgress = progress + "\n" + commandInProgress;
+            updateCounter++;
+            EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", progress, 0.25f + updateCounter * 0.1f);
             Repaint();
         }
 
-        private void OperationComplete(OperationType operation)
+        private void OperationComplete(OperationType operation, bool success)
         {
             if (operation == OperationType.Update)
             {
-                updateInProgress = false;
+                updateInProgress = false;                
                 RefreshGUI();
+                EditorUtility.ClearProgressBar();
+                updateCounter = 0;
             }
         }
 
@@ -194,7 +200,7 @@ namespace VersionControl.UserInterface
             VCCommands.Instance.StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t =>
             {
                 VCCommands.Instance.ActivateRefreshLoop();
-                refreshInProgress = false;
+                refreshInProgress = false;                
                 RefreshGUI();
             });
 
@@ -216,7 +222,8 @@ namespace VersionControl.UserInterface
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
                         updateInProgress = true;
-                        VCCommands.Instance.UpdateTask();
+                        EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", "", 0.25f);
+                        VCCommands.Instance.UpdateTask();                        
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))
                     {

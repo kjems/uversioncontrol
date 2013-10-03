@@ -51,8 +51,7 @@ namespace VersionControl
                     }
                     catch (Exception e)
                     {
-                        string message = string.Format("Exception cast in OnNextUpdate : {0}\n{1}", e.Message, e.StackTrace);
-                        D.LogError(message);
+                        D.ThrowException(e);
                     }
                     finally
                     {

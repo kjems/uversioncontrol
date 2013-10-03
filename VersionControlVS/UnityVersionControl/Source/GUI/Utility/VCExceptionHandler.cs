@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEditor;
 
 
+
 namespace VersionControl
 {
     using Logging;
@@ -21,8 +22,17 @@ namespace VersionControl
 
         public static void HandleException(VCException e)
         {
-            OnNextUpdate.Do(() =>
+            if (e.InnerException is AggregateException)
             {
+                var aggregateException = e.InnerException as AggregateException;
+                foreach(var exception in aggregateException.InnerExceptions)
+                {
+                    if (exception is VCException) HandleException((VCException)exception);
+                    else HandleException(new VCException(exception.Message, exception.StackTrace, exception));
+                }
+            }
+            OnNextUpdate.Do(() =>
+            {                
                 if (e is VCConnectionTimeoutException) HandleConnectionTimeOut(e as VCConnectionTimeoutException);
                 else if (e is VCLocalCopyLockedException) HandleLocalCopyLocked(e as VCLocalCopyLockedException);
                 else if (e is VCNewerVersionException) HandleNewerVersion(e as VCNewerVersionException);

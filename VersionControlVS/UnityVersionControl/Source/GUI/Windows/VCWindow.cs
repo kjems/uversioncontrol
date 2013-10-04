@@ -126,9 +126,12 @@ namespace VersionControl.UserInterface
 
         private void ProgressInformation(string progress)
         {
-            commandInProgress = progress + "\n" + commandInProgress;
-            updateCounter++;
-            EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", progress, 0.25f + updateCounter * 0.1f);
+            if (updateInProgress)
+            {
+                updateCounter++;
+                EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", progress, 1.0f - (1 / updateCounter));
+            }
+            commandInProgress = progress + "\n" + commandInProgress;                        
             Repaint();
         }
 
@@ -222,7 +225,7 @@ namespace VersionControl.UserInterface
                     if (GUILayout.Button(Terminology.update, EditorStyles.toolbarButton, buttonLayout))
                     {
                         updateInProgress = true;
-                        EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", "", 0.25f);
+                        EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", "", 0.0f);
                         VCCommands.Instance.UpdateTask();                        
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))

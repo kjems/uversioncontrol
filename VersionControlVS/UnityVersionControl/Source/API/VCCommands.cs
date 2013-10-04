@@ -54,12 +54,6 @@ namespace VersionControl
         private IVersionControlCommands vcc;
         private bool ignoreStatusRequests = false;
         private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
-        private Action<bool> allowAutoRefresh = allow => {
-            if (allow)
-                EditorApplication.LockReloadAssemblies();
-            else
-                EditorApplication.UnlockReloadAssemblies();
-        };
 
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
@@ -99,7 +93,12 @@ namespace VersionControl
             }
         }
 
-        public bool Ready { get { return Active && vcc.IsReady(); } }
+        public bool Ready { 
+            get 
+            {
+                return Active && vcc.IsReady() && !EditorApplication.isCompiling; 
+            } 
+        }
 
         public void Dispose()
         {            
@@ -124,6 +123,7 @@ namespace VersionControl
             vcc.Stop();
             vcc.DeactivateRefreshLoop();
             vcc.ClearDatabase();
+            EditorUtility.ClearProgressBar();
         }
 
         public void ActivateRefreshLoop()
@@ -139,11 +139,6 @@ namespace VersionControl
         public void SetImportAssetDatabaseSynchronousCallback(Action refreshSynchronous)
         {
             this.refreshAssetDatabaseSynchronous = refreshSynchronous;
-        }
-
-        public void SetAllowAutoRefreshCallback(Action<bool> allowAutoRefresh)
-        {
-            this.allowAutoRefresh = allowAutoRefresh;
         }
 
         #region Private methods
@@ -226,6 +221,16 @@ namespace VersionControl
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
 
+        private void DisableAutoRefresh()
+        {
+            EditorPrefs.SetBool("kAutoRefresh", false);
+        }
+
+        private void EnableAutoRefresh()
+        {
+            EditorPrefs.SetBool("kAutoRefresh", true);
+        }
+
         private static bool OpenCommitDialogWindow(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
             var commitWindow = ScriptableObject.CreateInstance<VCCommitWindow>();
@@ -260,9 +265,9 @@ namespace VersionControl
         public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
-            allowAutoRefresh(false);
+            DisableAutoRefresh();
             var updateTask = StartTask(() => Update(assets));
-            updateTask.ContinueWithOnNextUpdate(t => allowAutoRefresh(true));
+            updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
             return updateTask;
         }
 

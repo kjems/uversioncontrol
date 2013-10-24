@@ -68,6 +68,7 @@ namespace VersionControl
             {
                 VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.None;
             }
+            EnableAutoRefresh();
         }
 
         private void OnVersionControlBackendChanged(IVersionControlCommands newVcc)
@@ -223,12 +224,15 @@ namespace VersionControl
 
         private void DisableAutoRefresh()
         {
+            EditorPrefs.SetBool("VCCommands/kAutoRefresh", EditorPrefs.GetBool("kAutoRefresh", true));
             EditorPrefs.SetBool("kAutoRefresh", false);
+            //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
         }
 
         private void EnableAutoRefresh()
         {
-            EditorPrefs.SetBool("kAutoRefresh", true);
+            EditorPrefs.SetBool("kAutoRefresh", EditorPrefs.GetBool("VCCommands/kAutoRefresh", true));
+            //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
         }
 
         private static bool OpenCommitDialogWindow(IEnumerable<string> assets, IEnumerable<string> dependencies)

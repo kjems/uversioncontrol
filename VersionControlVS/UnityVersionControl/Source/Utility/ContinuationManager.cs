@@ -8,36 +8,44 @@ using UnityEditor;
 
 internal static class ContinuationManager
 {
-    private class Job
+    private sealed class Job
     {
-        public Job(Func<bool> completed, Action continueWith)
+        public Job(System.Func<bool> completed, System.Action continueWith)
         {
             Completed = completed;
             ContinueWith = continueWith;
         }
-        public Func<bool> Completed { get; private set; }
-        public Action ContinueWith { get; private set; }
+        public System.Func<bool> Completed { get; private set; }
+        public System.Action ContinueWith { get; private set; }
     }
 
     private static readonly List<Job> jobs = new List<Job>();
 
-    public static void Add(Func<bool> completed, Action continueWith)
+    public static void Add(System.Func<bool> completed, System.Action continueWith)
     {
-        if (!jobs.Any()) EditorApplication.update += Update;
+        if (jobs.Count == 0)
+            EditorApplication.update += Update;
         jobs.Add(new Job(completed, continueWith));
     }
 
     private static void Update()
     {
-        for (int i = 0; i >= 0; --i)
+        try
         {
-            var jobIt = jobs[i];
-            if (jobIt.Completed())
+            for (int i = jobs.Count - 1; i >= 0; --i)
             {
-                jobIt.ContinueWith();
-                jobs.RemoveAt(i);
+                var jobIt = jobs[i];
+                if (jobIt.Completed())
+                {
+                    jobs.RemoveAt(i);
+                    jobIt.ContinueWith();
+                }
             }
         }
-        if (!jobs.Any()) EditorApplication.update -= Update;
+        finally
+        {
+            if (jobs.Count == 0)
+                EditorApplication.update -= Update;
+        }
     }
 }

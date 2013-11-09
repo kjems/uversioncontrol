@@ -79,7 +79,7 @@ namespace VersionControl.UserInterface
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
             columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.Compose()));
 
-            var editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
+            var guiSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
             multiColumnState = new MultiColumnState();
 
             multiColumnState.Comparer = (r1, r2, c) =>
@@ -153,8 +153,8 @@ namespace VersionControl.UserInterface
 
             options = new MultiColumnViewOption
             {
-                headerStyle = editorSkin.button,
-                rowStyle = editorSkin.label,
+                headerStyle = guiSkin.button,
+                rowStyle = guiSkin.label,
                 rowRightClickMenu = rowRightClickMenu,
                 headerRightClickMenu = headerRightClickMenu,
                 cellClickAction = cellClickAction,
@@ -170,6 +170,9 @@ namespace VersionControl.UserInterface
 
             options.headerStyle.fixedHeight = 20.0f;
             options.rowStyle.onNormal.background = IconUtils.CreateSquareTexture(4, 1, new Color(0.24f, 0.5f, 0.87f, 0.75f));
+            options.rowStyle.margin = new RectOffset(2, 2, 2, 1);
+            options.rowStyle.border = new RectOffset(0, 0, 0, 0);
+            options.rowStyle.padding = new RectOffset(0, 0, 0, 0);
 
             if (showMasterSelection)
             {

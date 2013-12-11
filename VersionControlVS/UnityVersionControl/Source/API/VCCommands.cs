@@ -68,7 +68,7 @@ namespace VersionControl
             {
                 VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.None;
             }
-            EnableAutoRefresh();
+            VerifyAutoRefresh();
         }
 
         private void OnVersionControlBackendChanged(IVersionControlCommands newVcc)
@@ -222,17 +222,47 @@ namespace VersionControl
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
 
+        private void VerifyAutoRefresh()
+        {
+            EnableAutoRefresh();
+            if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) > 0 && EditorPrefs.GetBool("kAutoRefresh", false))
+            {
+                EditorPrefs.SetInt("kAutoRefreshDisableCount", 0);
+                D.Log("Resetting kAutoRefreshDisableCount");
+            }
+            if(EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) < 0)
+            {
+                EditorPrefs.SetInt("kAutoRefreshDisableCount", 0);
+                EditorPrefs.SetBool("kAutoRefresh", true);
+                D.Log("Resetting kAutoRefreshDisableCount");
+            }
+        }
+
         private void DisableAutoRefresh()
         {
-            EditorPrefs.SetBool("VCCommands/kAutoRefresh", EditorPrefs.GetBool("kAutoRefresh", true));
-            EditorPrefs.SetBool("kAutoRefresh", false);
-            //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+            if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) == 0)
+            {
+                EditorPrefs.SetBool("kAutoRefresh", false);
+                D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+            }
+            EditorPrefs.SetInt("kAutoRefreshDisableCount", EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) + 1);
+            EditorPrefs.SetBool("VCCommands/kAutoRefreshOwner", true);
+            //D.Log("kAutoRefreshDisableCount : " + EditorPrefs.GetInt("kAutoRefreshDisableCount", 0));
         }
 
         private void EnableAutoRefresh()
         {
-            EditorPrefs.SetBool("kAutoRefresh", EditorPrefs.GetBool("VCCommands/kAutoRefresh", true));
-            //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+            if (EditorPrefs.GetBool("VCCommands/kAutoRefreshOwner", false))
+            {
+                EditorPrefs.SetBool("VCCommands/kAutoRefreshOwner", false);
+                EditorPrefs.SetInt("kAutoRefreshDisableCount", EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) - 1);
+                if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) == 0)
+                {
+                    EditorPrefs.SetBool("kAutoRefresh", true);
+                    D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+                }
+                //D.Log("kAutoRefreshDisableCount : " + EditorPrefs.GetInt("kAutoRefreshDisableCount", 0));
+            }
         }
 
         private static bool OpenCommitDialogWindow(IEnumerable<string> assets, IEnumerable<string> dependencies)

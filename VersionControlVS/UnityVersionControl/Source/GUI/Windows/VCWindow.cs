@@ -112,7 +112,7 @@ namespace VersionControl.UserInterface
         {
             EditorPrefs.SetBool("VCWindow/showUnversioned", showUnversioned);
             EditorPrefs.SetBool("VCWindow/showMeta", showMeta);
-            EditorPrefs.SetBool("VCWindow/`", showModifiedNoLock);            
+            EditorPrefs.SetBool("VCWindow/showModifiedNoLock", showModifiedNoLock);            
             EditorPrefs.SetFloat("VCWindow/statusHeight", statusHeight);
 
             VCCommands.Instance.StatusCompleted -= RefreshGUI;
@@ -139,9 +139,9 @@ namespace VersionControl.UserInterface
         {
             if (operation == OperationType.Update)
             {
-                updateInProgress = false;                
-                RefreshGUI();
                 EditorUtility.ClearProgressBar();
+                updateInProgress = false;
+                RefreshGUI();
                 updateCounter = 0;
             }
         }

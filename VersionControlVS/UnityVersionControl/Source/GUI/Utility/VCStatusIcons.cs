@@ -37,6 +37,8 @@ namespace VersionControl.UserInterface
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
+            var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
+
             string assetPath = obj.GetAssetPath();
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
             bool guiLockForPrefabs = VCSettings.PrefabGUI;
@@ -44,7 +46,7 @@ namespace VersionControl.UserInterface
             if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || guiLockForPrefabs))
             {
                 VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-                DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, obj);
+                DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, objectIndirection);
             }
         }
 

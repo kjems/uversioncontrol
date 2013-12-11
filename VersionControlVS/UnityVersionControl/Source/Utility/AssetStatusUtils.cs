@@ -37,6 +37,7 @@ namespace VersionControl.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return ignoreColor;
             if (assetStatus.LocalEditAllowed()) return localEditColor;
             if (assetStatus.ModifiedWithoutLock()) return modifiedNoLockColor;
+            if (assetStatus.fileStatus == VCFileStatus.Deleted) return deletedColor;
             if (assetStatus.fileStatus == VCFileStatus.Added) return addedColor;
 
             if (includeLockStatus)
@@ -47,7 +48,6 @@ namespace VersionControl.UserInterface
 
             if (assetStatus.fileStatus == VCFileStatus.Modified) return modifiedColor;
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return pendingColor;
-            if (assetStatus.fileStatus == VCFileStatus.Deleted) return deletedColor;
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return unversionedColor;
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return remoteModifiedColor;
             if (assetStatus.fileStatus == VCFileStatus.Normal) return normalColor;
@@ -58,15 +58,15 @@ namespace VersionControl.UserInterface
         public static string GetStatusText(VersionControlStatus assetStatus)
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
+            if (assetStatus.fileStatus == VCFileStatus.Conflicted) return "Conflicted";
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
             if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit + (assetStatus.fileStatus == VCFileStatus.Modified ? "*" : "");
             if (assetStatus.ModifiedWithoutLock()) return "Modified!";
-            if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'\nShift click to force open";            
+            if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
+            if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'";
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;
             if (assetStatus.fileStatus == VCFileStatus.Added) return "Added";
-            if (assetStatus.fileStatus == VCFileStatus.Conflicted) return "Conflicted";
-            if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
             if (assetStatus.fileStatus == VCFileStatus.Replaced) return "Replaced";
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return "Ignored";
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return "Modified on server";

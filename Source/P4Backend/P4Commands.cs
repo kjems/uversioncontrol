@@ -317,14 +317,17 @@ namespace VersionControl.Backend.P4
 						rootPath = line.Substring( "Root:".Length ).Trim().Replace("\\", "/");
 					}
 					else if ( line.Trim().StartsWith( "//" ) ) {
-						string repoPath = line.Substring( 0, line.IndexOf("...") ).Trim();
-						//D.Log( "Repo Path: " + repoPath );
-						int clientPathStart = repoPath.Length + "...".Length + 1;
-						string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
-						//D.Log( "Client Path: " + clientPath );
-						string localPath = clientPath.Replace( "//" + P4Util.Instance.Vars.clientSpec, rootPath );
-						//D.Log( "Local Path: " + localPath );
-						depotToDir.Add( repoPath, localPath );
+						if ( line.IndexOf("...") != -1 )
+						{
+							string repoPath = line.Substring( 0, line.IndexOf("...") ).Trim();
+							//D.Log( "Repo Path: " + repoPath );
+							int clientPathStart = repoPath.Length + "...".Length + 1;
+							string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
+							//D.Log( "Client Path: " + clientPath );
+							string localPath = clientPath.Replace( "//" + P4Util.Instance.Vars.clientSpec, rootPath );
+							//D.Log( "Local Path: " + localPath );
+							depotToDir.Add( repoPath, localPath );
+						}
 					}
 				}
             }

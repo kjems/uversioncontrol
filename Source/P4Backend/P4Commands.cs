@@ -390,7 +390,7 @@ namespace VersionControl.Backend.P4
 		{
 			//D.Log( "Processing " + path );
 
-			string arguments = "status -aed \"" + path + "\"";
+			string arguments = "status -aedf \"" + path + "\"";
 
             CommandLineOutput statusCommandLineOutput = null;
 			if ( statusLevel == StatusLevel.Local ) {
@@ -751,7 +751,7 @@ namespace VersionControl.Backend.P4
 
         public bool Add(IEnumerable<string> assets)
         {
-            bool success = CreateAssetOperation("add", assets);
+            bool success = CreateAssetOperation("add -f ", assets);
 			if ( success ) UpdateAfterOperation( assets );
 			return success;
         }

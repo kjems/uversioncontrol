@@ -3,12 +3,14 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEditor;
 using System.Linq;
 
 namespace VersionControl
 {
     using Logging;
+    using Extensions;
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
@@ -36,6 +38,35 @@ namespace VersionControl
                 removedAssets.Clear();
             }
 
+            GameObjectToAssetPathCache.ClearObjectToAssetPathCache();
+        }
+    }
+
+    [InitializeOnLoad]
+    internal static class GameObjectToAssetPathCache
+    {
+        private static readonly Dictionary<Object, string> gameObjectToAssetPath = new Dictionary<Object, string>();
+
+        static GameObjectToAssetPathCache()
+        {
+            VCCommands.Instance.StatusCompleted += () => ClearObjectToAssetPathCache();
+        }
+
+        public static void ClearObjectToAssetPathCache()
+        {
+            gameObjectToAssetPath.Clear();
+        }
+
+        public static bool TryGetValue(Object obj, out string assetPath)
+        {
+            return gameObjectToAssetPath.TryGetValue(obj, out assetPath);
+        }
+
+        public static void Add(Object obj, string assetPath)
+        {
+            if (!string.IsNullOrEmpty(assetPath)) gameObjectToAssetPath.Add(obj, assetPath);
         }
     }
 }
+
+

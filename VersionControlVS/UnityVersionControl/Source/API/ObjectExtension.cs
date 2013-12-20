@@ -9,26 +9,6 @@ using System.Linq;
 namespace VersionControl
 {
     using Extensions;
-    /*[InitializeOnLoad]
-    internal static class GameObjectToAssetPathCache
-    {
-        static GameObjectToAssetPathCache()
-        {
-            VCCommands.Instance.StatusCompleted += () => gameObjectToAssetPath.Clear();
-        }
-        private static readonly Dictionary<Object, string> gameObjectToAssetPath = new Dictionary<Object, string>();
-
-        public static bool TryGetValue(Object obj, out string assetPath)
-        {
-            return gameObjectToAssetPath.TryGetValue(obj, out assetPath);
-        }
-
-        public static void Add(Object obj, string assetPath)
-        {
-            if (!string.IsNullOrEmpty(assetPath)) gameObjectToAssetPath.Add(obj, assetPath);
-        }
-    }*/
-
     public static class ObjectUtilities
     {
         public static void SetObjectIndirectionCallback(System.Func<Object, Object> objectIndirectionCallback)
@@ -83,17 +63,15 @@ namespace VersionControl
             // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
             public static string GetAssetPath(this Object obj)
             {
-                return ObjectUtilities.ObjectToAssetPath(obj);
-                /*
                 if (obj == null) return "";
                 string assetPath;
                 if (!GameObjectToAssetPathCache.TryGetValue(obj, out assetPath))
                 {
-                    assetPath = ObjectToAssetPath(obj);
-                    GameObjectToAssetPathCache.Add(obj, assetPath);                
+                    assetPath = ObjectUtilities.ObjectToAssetPath(obj);
+                    GameObjectToAssetPathCache.Add(obj, assetPath);
                 }
                 return assetPath;
-                */
+                
             }
         }
     }

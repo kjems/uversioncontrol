@@ -215,7 +215,13 @@ namespace VersionControl.Backend.P4
 					versionControlStatus.owner = fileData.actionOwner;
 					break;
 				case "edit":
-                    if (versionControlStatus.lockStatus == VCLockStatus.NoLock) {
+					// if we have it checked out and this is a "+l" type file, it must be locked
+					if (fileData.type.IndexOf("+l") != -1)
+					{
+						versionControlStatus.lockStatus = VCLockStatus.LockedHere;
+						versionControlStatus.repositoryStatus = VCRepositoryStatus.Locked;
+					}
+                    else if (versionControlStatus.lockStatus == VCLockStatus.NoLock) {
                         versionControlStatus.allowLocalEdit = true;
                     }
 					versionControlStatus.owner = fileData.actionOwner;

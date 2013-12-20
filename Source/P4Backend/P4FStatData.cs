@@ -21,6 +21,7 @@ namespace VersionControl.Backend.P4
 		public string otherOwner 	= "";
 		public bool otherLock 		= false;
 		public bool ourLock 		= false;
+		public string type			= "";
 
 		public P4FStatData ()
 		{
@@ -50,6 +51,7 @@ namespace VersionControl.Backend.P4
 			//... clientFile C:\Users\username\Perforce\workspace_name\Artwork\elvenchain_export.mb
 			//... headRev 3
 			//... haveRev 3
+			//... type binary+l
 
 			foreach( String line in lines ) {
 				if ( !String.IsNullOrEmpty( line ) ) {
@@ -97,6 +99,9 @@ namespace VersionControl.Backend.P4
 						break;
 					case "ourLock":
 						ourLock = true;
+						break;
+					case "type":
+						type = val;
 						break;
 					default:
 						if ( !line.EndsWith("- no such file(s).") ) {

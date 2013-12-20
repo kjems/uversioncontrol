@@ -34,7 +34,8 @@ namespace VersionControl
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
                                     .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.metaStr) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                                    .Select(s => s.Replace("\\", "/")))
+                                    .Select(s => s.Replace("\\", "/"))
+                                    .Select(s => System.Uri.EscapeUriString(s)))
                         .ToArray();
                 }
             }

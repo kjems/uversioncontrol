@@ -112,7 +112,7 @@ namespace VersionControl
 
         private static void SetMaterialLock(Material material, bool gameObjectLocked)
         {
-            var assetPath = AssetDatabase.GetAssetPath(material);
+            var assetPath = material.GetAssetPath();
             var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
             bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
             bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);

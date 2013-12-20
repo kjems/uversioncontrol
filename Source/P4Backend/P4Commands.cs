@@ -61,7 +61,7 @@ namespace VersionControl.Backend.P4
 		
 		}
 		
-		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
+		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock,type";
 		private string rootPath = "";
         private string versionNumber;
 		private Dictionary<string, string> depotToDir = null;

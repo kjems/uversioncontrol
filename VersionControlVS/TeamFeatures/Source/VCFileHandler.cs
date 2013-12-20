@@ -35,7 +35,7 @@ namespace VersionControl
                 foreach (var folderIt in Path.GetDirectoryName(asset).Split(pathSeparator))
                 {
                     currentFolder += folderIt + pathSeparator;
-                    parentFolders.Add(currentFolder.TrimEnd(pathSeparator));
+                    parentFolders.Add(System.Uri.EscapeUriString(currentFolder.TrimEnd(pathSeparator)));
                 }
             }
             return parentFolders;

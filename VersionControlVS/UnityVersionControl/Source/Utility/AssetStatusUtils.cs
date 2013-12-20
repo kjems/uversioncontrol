@@ -59,10 +59,10 @@ namespace VersionControl.UserInterface
         {
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return "Pending";
             if (assetStatus.fileStatus == VCFileStatus.Conflicted) return "Conflicted";
+            if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
             if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit + (assetStatus.fileStatus == VCFileStatus.Modified ? "*" : "");
-            if (assetStatus.ModifiedWithoutLock()) return "Modified!";
-            if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
+            if (assetStatus.ModifiedWithoutLock()) return "Modified!";            
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'";
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;

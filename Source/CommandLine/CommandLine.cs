@@ -32,13 +32,22 @@ namespace CommandLineExecution
 
     public sealed class CommandLine : IDisposable
     {
-        public CommandLine(string command, string arguments, string workingDirectory, string input = null, string cliEnding = "", Dictionary<string, string> _envVars = null)
+        public CommandLine(
+            string command, 
+            string arguments, 
+            string workingDirectory, 
+            string input = null, 
+            string cliEnding = "", 
+            Dictionary<string, string> _envVars = null, 
+            Encoding desiredEncoding = null
+            )
         {
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
             this.input = input;
             this.cliEnding = cliEnding;
+            if(desiredEncoding != null) this.desiredEncoding = desiredEncoding;
             if (_envVars != null) this.envVars = new Dictionary<string, string>(_envVars);
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
@@ -80,6 +89,7 @@ namespace CommandLineExecution
         string error;
         string input;
         string cliEnding;
+        Encoding desiredEncoding = Encoding.UTF8;
         int exitcode;
         bool aborted;
         readonly string command;
@@ -103,6 +113,8 @@ namespace CommandLineExecution
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     RedirectStandardInput = true,
+                    StandardOutputEncoding = desiredEncoding,
+                    StandardErrorEncoding = desiredEncoding,
                     ErrorDialog = false
                 };
                 // set env vars

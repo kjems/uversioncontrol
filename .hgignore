@@ -14,7 +14,7 @@ Assemblies/debug
 Assemblies/release
 
 # Visual Studio Packages
-VersionControlVS/packages
+# VersionControlVS/packages
 
 
 # mstest test results

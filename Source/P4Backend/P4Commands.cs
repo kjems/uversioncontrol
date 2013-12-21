@@ -61,7 +61,7 @@ namespace VersionControl.Backend.P4
 		
 		}
 		
-		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock";
+		private static string fstatAttributes = "clientFile,depotFile,movedFile,shelved,headRev,haveRev,action,actionOwner,change,otherOpen,otherOpen0,otherLock,ourLock,type";
 		private string rootPath = "";
         private string versionNumber;
 		private Dictionary<string, string> depotToDir = null;
@@ -317,14 +317,17 @@ namespace VersionControl.Backend.P4
 						rootPath = line.Substring( "Root:".Length ).Trim().Replace("\\", "/");
 					}
 					else if ( line.Trim().StartsWith( "//" ) ) {
-						string repoPath = line.Substring( 0, line.IndexOf("...") ).Trim();
-						//D.Log( "Repo Path: " + repoPath );
-						int clientPathStart = repoPath.Length + "...".Length + 1;
-						string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
-						//D.Log( "Client Path: " + clientPath );
-						string localPath = clientPath.Replace( "//" + P4Util.Instance.Vars.clientSpec, rootPath );
-						//D.Log( "Local Path: " + localPath );
-						depotToDir.Add( repoPath, localPath );
+						if ( line.IndexOf("...") != -1 )
+						{
+							string repoPath = line.Substring( 0, line.IndexOf("...") ).Trim();
+							//D.Log( "Repo Path: " + repoPath );
+							int clientPathStart = repoPath.Length + "...".Length + 1;
+							string clientPath = line.Substring( clientPathStart, line.IndexOf("...", clientPathStart) - clientPathStart ).Trim();
+							//D.Log( "Client Path: " + clientPath );
+							string localPath = clientPath.Replace( "//" + P4Util.Instance.Vars.clientSpec, rootPath );
+							//D.Log( "Local Path: " + localPath );
+							depotToDir.Add( repoPath, localPath );
+						}
 					}
 				}
             }
@@ -387,7 +390,7 @@ namespace VersionControl.Backend.P4
 		{
 			//D.Log( "Processing " + path );
 
-			string arguments = "status -aed \"" + path + "\"";
+			string arguments = "status -aedf \"" + path + "\"";
 
             CommandLineOutput statusCommandLineOutput = null;
 			if ( statusLevel == StatusLevel.Local ) {
@@ -748,7 +751,7 @@ namespace VersionControl.Backend.P4
 
         public bool Add(IEnumerable<string> assets)
         {
-            bool success = CreateAssetOperation("add", assets);
+            bool success = CreateAssetOperation("add -f ", assets);
 			if ( success ) UpdateAfterOperation( assets );
 			return success;
         }

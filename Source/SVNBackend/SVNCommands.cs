@@ -499,6 +499,7 @@ namespace VersionControl.Backend.SVN
         public bool Revert(IEnumerable<string> assets)
         {
             bool revertSuccess = CreateAssetOperation("revert --depth=infinity", assets);
+            Status(assets, StatusLevel.Previous);
             bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
             bool releaseSuccess = true;
             if (revertSuccess) releaseSuccess = vcc.ReleaseLock(assets);

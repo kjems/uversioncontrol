@@ -24,7 +24,7 @@ namespace VersionControl
         public static bool ChangesStoredInScene(Object obj)
         {
             obj = GetObjectIndirection(obj);
-            return obj.GetAssetPath() == UriEscapedUnityAPI.GetCurrentScenePath();
+            return obj.GetAssetPath() == EditorApplication.currentScene;
         }
         public static bool ChangesStoredInPrefab(Object obj)
         {
@@ -35,32 +35,8 @@ namespace VersionControl
         public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
         {
             obj = GetObjectIndirection(obj);
-            if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj))
-            {
-                return UriEscapedUnityAPI.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
-            }
-            return UriEscapedUnityAPI.GetAssetOrScenePath(obj);
-        }
-    }
-
-    public static class UriEscapedUnityAPI
-    {
-        public static string GetCurrentScenePath()
-        {
-            return System.Uri.EscapeUriString(EditorApplication.currentScene);
-        }
-        public static string GetAssetOrScenePath(Object obj)
-        {
-            return System.Uri.EscapeUriString(AssetDatabase.GetAssetOrScenePath(obj));
-        }
-        public static string GetAssetPath(Object obj)
-        {
-            return System.Uri.EscapeUriString(AssetDatabase.GetAssetPath(obj));
-        }
-
-        public static string GUIDToAssetPath(string guid)
-        {
-            return System.Uri.EscapeUriString(AssetDatabase.GUIDToAssetPath(guid));
+            if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
+            return AssetDatabase.GetAssetOrScenePath(obj);
         }
     }
 

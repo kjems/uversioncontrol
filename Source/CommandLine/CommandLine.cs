@@ -67,7 +67,7 @@ namespace CommandLineExecution
                 {
                     process.Kill();
                 }
-                catch (InvalidOperationException) { }
+                catch (Exception) { }
                 process.Dispose();
                 process = null;
             }

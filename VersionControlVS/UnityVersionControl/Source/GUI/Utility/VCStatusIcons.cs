@@ -28,7 +28,7 @@ namespace VersionControl.UserInterface
         private static void ProjectWindowListElementOnGUI(string guid, Rect selectionRect)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.ProjectIcons || !VCCommands.Active) return;
-            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            string assetPath = UriEscapedUnityAPI.GUIDToAssetPath(guid);
             VCUtility.RequestStatus(assetPath, VCSettings.ProjectReflectionMode);
             DrawIcon(selectionRect, IconUtils.circleIcon, assetPath);
         }

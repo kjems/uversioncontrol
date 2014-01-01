@@ -58,7 +58,7 @@ namespace VersionControl.Backend.P4
 			foreach( String line in lines ) {
 				if ( line.IndexOf(" - reconcile") == -1 ) continue;	// sometimes output may contain blank lines...
                 var status = ParseStatusLine(line, username);
-                string assetPath = line.Substring( 0, line.IndexOf(" - reconcile") ).Replace( '\\', '/' ).Trim().Replace(P4Util.Instance.Vars.unixWorkingDirectory + "/", "");
+                string assetPath = System.Uri.EscapeUriString(line.Substring( 0, line.IndexOf(" - reconcile") ).Replace( '\\', '/' ).Trim().Replace(P4Util.Instance.Vars.unixWorkingDirectory + "/", ""));
                 status.assetPath = new ComposedString(assetPath);
                 statusDatabase[status.assetPath] = status;
 			}
@@ -146,7 +146,7 @@ namespace VersionControl.Backend.P4
 				fileData.ReadFromLines( fstatLines );
 				string unixPath = fileData.clientFile.Replace( "\\", "/" );
 				if ( unixPath.Length > rootDirLength ) {
-					string assetPath = unixPath.Remove( 0, rootDirLength + 1 );
+					string assetPath = System.Uri.EscapeUriString(unixPath.Remove( 0, rootDirLength + 1 ));
 					if ( unixPath.Contains( rootUnixDir ) ) {
 						var status = PopulateFromFstatData(fileData);
 						status.assetPath = assetPath;

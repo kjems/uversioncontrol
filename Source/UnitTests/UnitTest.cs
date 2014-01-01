@@ -127,6 +127,7 @@ namespace VersionControl.UnitTests
         const string str2 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
         const string str3 = "Assets/_Tests/Kjems/Scripts/PhysXForcePush2.cs";
         const string str4 = "Assets/_Tests/Kjems/Test_Anim/Huddle@run.fbx";
+        const string str5 = "Assets/_Tests/Kjems/Prefabs/ֶ״ֵ@%#בסü.prefab";
         const string meta = ".meta";
         const string metaDot = ".meta.";
         const string empty = "";
@@ -146,8 +147,10 @@ namespace VersionControl.UnitTests
             ComposedString cstr2 = new ComposedString(str2);
             ComposedString cstr3 = new ComposedString(str3);
             ComposedString cstr4 = new ComposedString(str4);
+            ComposedString cstr5 = new ComposedString(str5);
             var cstr3meta = cstr3 + meta;
             Assert.AreEqual(str1, cstr1.Compose(), "compose/decompose mismatch");
+            Assert.AreEqual(str5, cstr5.Compose(), "compose/decompose mismatch with Unicode characters");
             Assert.AreEqual(cstr2 , cstr3, "equal ComposedString");
             Assert.AreEqual(str3meta, cstr3meta.Compose(), "using operator + with string");
             Assert.True(cstr3meta.EndsWith(meta), "Endwith and implicit string conversion");

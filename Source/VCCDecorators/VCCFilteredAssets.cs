@@ -114,7 +114,7 @@ namespace VersionControl
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            assets = vcc.Versioned(vcc.OnChangeList(NonEmpty(assets)));
+            assets = vcc.OnChangeList(vcc.Versioned(NonEmpty(assets)));
             return assets.Any() ? base.ChangeListRemove(vcc.Versioned(vcc.OnChangeList(FilesExist(assets)))) && Status(assets, StatusLevel.Local) : false;
         }
 

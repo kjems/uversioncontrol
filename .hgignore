@@ -13,5 +13,9 @@ _ReSharper
 Assemblies/debug
 Assemblies/release
 
+# Visual Studio Packages
+# VersionControlVS/packages
+
+
 # mstest test results
 TestResults

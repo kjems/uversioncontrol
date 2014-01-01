@@ -63,7 +63,11 @@ namespace CommandLineExecution
             if (!aborted && process != null && !process.HasExited)
             {
                 aborted = true;
-                process.Kill();
+                try
+                {
+                    process.Kill();
+                }
+                catch (InvalidOperationException) { }
                 process.Dispose();
                 process = null;
             }

@@ -62,7 +62,7 @@ namespace VersionControl.Backend.SVN
             XmlNodeList entries = xmlDoc.GetElementsByTagName("entry");
             foreach (XmlNode entryIt in entries)
             {
-                ComposedString assetPath = new ComposedString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
+                ComposedString assetPath = new ComposedString(System.Uri.EscapeUriString( (entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim()) );
                 var status = ParseXMLNode(entryIt);
                 status.assetPath = assetPath;
                 statusDatabase[assetPath] = status;
@@ -74,7 +74,7 @@ namespace VersionControl.Backend.SVN
                 string changelist = changelistIt.Attributes["name"].InnerText;
                 foreach (XmlNode entryIt in changelistIt.ChildNodes)
                 {
-                    ComposedString assetPath = new ComposedString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
+                    ComposedString assetPath = new ComposedString( System.Uri.EscapeUriString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim()) );
                     if (statusDatabase.ContainsKey(assetPath))
                     {
                         statusDatabase[assetPath].changelist = changelist;

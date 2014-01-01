@@ -420,14 +420,14 @@ namespace VersionControl.Backend.P4
 	                    {
 	                        var status = statusIt.Value;
 	                        status.reflectionLevel = statusLevel == StatusLevel.Remote ? VCReflectionLevel.Repository : VCReflectionLevel.Local;
-                            statusDatabase[new ComposedString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""))] = status;
+                            statusDatabase[new ComposedString(System.Uri.EscapeUriString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", "")))] = status;
 	                    }
 					}
 
                     foreach (var statusIt in fstatDB)
                     {
                         VersionControlStatus status = null;
-                        ComposedString aPath = new ComposedString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", ""));
+                        ComposedString aPath = new ComposedString(System.Uri.EscapeUriString(statusIt.Key.Compose().Replace(P4Util.Instance.Vars.workingDirectory + "/", "")));
 						statusDatabase.TryGetValue(aPath, out status);
 						if ( status == null || status.reflectionLevel == VCReflectionLevel.Pending ) {
 							// no previous status or previous status is pending, so set it here

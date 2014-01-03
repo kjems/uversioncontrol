@@ -120,6 +120,7 @@ namespace CommandLineExecution
                 // set env vars
                 foreach (KeyValuePair<string, string> kvp in envVars) { psi.EnvironmentVariables.Add(kvp.Key, kvp.Value); }
                 process = Process.Start(psi);
+                encoding = process.StandardOutput.CurrentEncoding;
 
                 if (!String.IsNullOrEmpty(input))
                 {
@@ -143,7 +144,8 @@ namespace CommandLineExecution
                         char[] chars = new char[charactersRead];
                         charactersRead = decoder.GetChars(buffer, 0, bytesRead, chars, 0);
                         string result = ConvertEncoding(chars, encoding, Encoding.UTF8);
-                        if (OutputReceived != null) OutputReceived(result);
+                        if (OutputReceived != null && !string.IsNullOrEmpty(result)) 
+                            OutputReceived(result);
                         sbOutput.Append(result);
                     }
                     else

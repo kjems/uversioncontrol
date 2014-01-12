@@ -167,7 +167,7 @@ namespace VersionControl.UserInterface
                         var selectedAssets = selection.Select(status => status.assetPath).Select(cstr => cstr.Compose()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
-                            commitProgress = s + "\n" + commitProgress;
+                            commitProgress = s + commitProgress;
                             Repaint();
                         };
                         var commitTask = VCCommands.Instance.CommitTask(selectedAssets, CommitMessage);

@@ -39,7 +39,7 @@ namespace VersionControl.UnitTests
             commandLine = new CommandLine("cmd", "/C echo " + echoMsg, workingDirectoryForSVNTests);
             var commandLineOutput = commandLine.Execute();
             Assert.IsFalse(commandLineOutput.Failed, "Should not fail echo");
-            Assert.AreEqual(echoMsg, commandLineOutput.OutputStr, "Echo matches");
+            Assert.AreEqual(echoMsg, commandLineOutput.OutputStr.TrimEnd(), "Echo matches");
         }
     }
 
@@ -60,7 +60,7 @@ namespace VersionControl.UnitTests
             commandLine = new CommandLine("svn", "", workingDirectoryForSVNTests);
             var commandLineOutput = commandLine.Execute();
             Assert.AreEqual(1, commandLineOutput.Exitcode, "commandLineOutput.exitcode");
-            Assert.AreEqual("Type 'svn help' for usage.", commandLineOutput.ErrorStr, "commandLineOutput.errorStr");
+            Assert.AreEqual("Type 'svn help' for usage.", commandLineOutput.ErrorStr.TrimEnd(), "commandLineOutput.errorStr");
             Assert.IsTrue(commandLineOutput.Failed, "commandLineOut.failed");
         }
 

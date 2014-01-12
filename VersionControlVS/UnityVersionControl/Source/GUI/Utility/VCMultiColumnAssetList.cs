@@ -79,7 +79,7 @@ namespace VersionControl.UserInterface
             columnConflict = new MultiColumnState.Column(new GUIContent("Conflict"), data => new GUIContent(data.treeConflictStatus.ToString()));
             columnChangelist = new MultiColumnState.Column(new GUIContent("ChangeList"), data => new GUIContent(data.changelist.Compose()));
 
-            var guiSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene);
+            var guiSkin = EditorGUIUtility.GetBuiltinSkin( EditorGUIUtility.isProSkin ? EditorSkin.Scene : EditorSkin.Inspector);
             multiColumnState = new MultiColumnState();
 
             multiColumnState.Comparer = (r1, r2, c) =>

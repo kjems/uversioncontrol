@@ -608,9 +608,19 @@ namespace VersionControl.Backend.P4
             if (assets == null || !assets.Any()) return true;
 			bool success = true;
 			foreach( String asset in assets ) {
-				success &= CreateOperation(arguments + " \"" + asset + "\"") && RequestStatus(new String[] { asset }, StatusLevel.Previous);
+                success &= CreateOperation(arguments + " \"" + FormatAssetPath(asset) + "\"") && RequestStatus(new String[] { asset }, StatusLevel.Previous);
 			}
 			return success;
+        }
+
+        private string FormatAssetPath(string assetpath)
+        {
+            return assetpath
+                .Replace("\\", "/")
+                .Replace("%", "%25")
+                .Replace("@", "%40")
+                .Replace("#", "%23")
+                .Replace("*", "%2A");
         }
 
         private static string FixAtChar(string asset)

@@ -19,14 +19,14 @@ namespace VersionControl.UnitTests
         private const string localPathForTest = @"c:\develop\Game2.4";
 
         [SetUp]
-        void Setup()
+        public void Setup()
         {
             D.writeErrorCallback += Logging;
             D.exceptionCallback += HandleExceptions;
         }
 
         [TearDown]
-        void TearDown()
+        public void TearDown()
         {
             D.writeErrorCallback -= Logging;
             D.exceptionCallback -= HandleExceptions;
@@ -78,7 +78,7 @@ namespace VersionControl.UnitTests
             Logging("Memory Used : " + GC.GetTotalMemory(true));
         }
 
-        [Test]
+        //[Test]
         public void TestAppDomainUnload()
         {
             for (int i = 0; i < 5; i++)

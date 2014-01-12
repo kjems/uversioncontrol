@@ -170,7 +170,7 @@ namespace CommandLineExecution
                     process.Dispose();
                 process = null;
             }
-            return new CommandLineOutput(command, arguments, output.TrimEnd(), error.TrimEnd(), exitcode);
+            return new CommandLineOutput(command, arguments, output, error, exitcode);
         }
 
         public static string ConvertEncoding(char[] source, Encoding sourceEncoding, Encoding targetEncoding)

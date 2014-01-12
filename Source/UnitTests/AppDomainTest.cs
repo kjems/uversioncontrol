@@ -1,7 +1,7 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
-
+/*
 using System;
 using System.IO;
 using System.Linq;
@@ -142,4 +142,4 @@ namespace VersionControl.UnitTests
             return AppDomain.CreateDomain(name, evidence, setup);
         }
     }
-}
+}*/

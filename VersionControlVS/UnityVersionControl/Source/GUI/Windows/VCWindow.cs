@@ -131,7 +131,7 @@ namespace VersionControl.UserInterface
                 updateCounter++;
                 EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", progress, 1.0f - (1.0f / updateCounter));
             }
-            commandInProgress = progress + "\n" + commandInProgress;                        
+            commandInProgress = progress + commandInProgress;
             Repaint();
         }
 

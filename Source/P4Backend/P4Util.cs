@@ -19,7 +19,6 @@ namespace VersionControl.Backend.P4
 			public string ignoreFile = ".p4ignore"; 
 			public string workingDirectory = ".";
 			public string unixWorkingDirectory = ".";
-			public string cliEnding = "";
 		}
 		
 		private static P4Util s_Instance = null;
@@ -67,7 +66,7 @@ namespace VersionControl.Backend.P4
 			Dictionary<string, string> envVars = new Dictionary<string, string>();
 			envVars.Add("P4CONFIG", p4Vars.configFile);
 			envVars.Add("P4IGNORE", p4Vars.ignoreFile);
-	        return new CommandLine("p4", arguments, p4Vars.workingDirectory, input, p4Vars.cliEnding, envVars);
+	        return new CommandLine("p4", arguments, p4Vars.workingDirectory, input, envVars);
 	    }
 
 		public void P4Set(string key, string value) {

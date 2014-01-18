@@ -81,9 +81,8 @@ namespace VersionControl.Backend.P4
 		private DirectoryCrawler dirStatus = new DirectoryCrawler();
 		private List<P4QueueItem> p4OpQueue = new List<P4QueueItem>();	// not using a Queue<> because we need to insert high-priority items
 		
-        public P4Commands(string cliEnding = "")
+        public P4Commands()
         {
-			P4Util.Instance.Vars.cliEnding = cliEnding;
 			InitializeP4Connection();
 			StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;

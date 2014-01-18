@@ -36,8 +36,7 @@ namespace CommandLineExecution
             string command, 
             string arguments, 
             string workingDirectory, 
-            string input = null, 
-            string cliEnding = "", 
+            string input = null,
             Dictionary<string, string> envVars = null
             )
         {
@@ -45,7 +44,6 @@ namespace CommandLineExecution
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
             this.input = input;
-            this.cliEnding = cliEnding;
             if (envVars != null) this.envVars = new Dictionary<string, string>(envVars);
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
@@ -89,7 +87,6 @@ namespace CommandLineExecution
         string output;
         string error;
         string input;
-        string cliEnding;
         int exitcode;
         bool aborted;
         readonly string command;

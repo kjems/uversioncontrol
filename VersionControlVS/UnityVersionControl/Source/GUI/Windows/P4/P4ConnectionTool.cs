@@ -35,9 +35,6 @@ public class P4ConnectionTool : EditorWindow {
 		};
 		
 		P4Util.Instance.Vars.workingDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
-		if ( Application.platform == RuntimePlatform.OSXEditor ) {
-			P4Util.Instance.Vars.cliEnding = Environment.NewLine;
-		}
 		
 		string oldP4Config = P4Util.Instance.Vars.configFile;
 		P4Util.Instance.InitVars();

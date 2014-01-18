@@ -30,19 +30,18 @@ namespace VersionControl
         public static bool CreateVersionControlCommands(VCSettings.EVersionControlBackend backend)
         {
             string workDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
-            string cliEnding = (Application.platform == RuntimePlatform.OSXEditor) ? Environment.NewLine : "";
             bool noopSelected = backend == VCSettings.EVersionControlBackend.None;
             bool svnSelected = backend == VCSettings.EVersionControlBackend.Svn;
             bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;
             IVersionControlCommands uvc = null;            
 
-            if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(cliEnding), workDirectory, out uvc))
+            if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(), workDirectory, out uvc))
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(uvc);
                 return true;
             }
-            else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(cliEnding), workDirectory, out uvc))
+            else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(), workDirectory, out uvc))
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(uvc);

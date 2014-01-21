@@ -149,6 +149,7 @@ namespace VersionControl.UserInterface
                     VCSettings.BugReport = GUILayout.Toggle(VCSettings.BugReport, new GUIContent("Bug Reports", "Send a bug report to Fogbugz when an error occurs\nDefault: On"));
                     VCSettings.BugReportMode = (VCSettings.EBugReportMode)EditorGUILayout.EnumPopup(VCSettings.BugReportMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
+                VCSettings.Analytics = GUILayout.Toggle(VCSettings.Analytics, new GUIContent("Analytics", "Allow UVC to send anonymous analytics data with the purpose of improving the quality of UVC\nDefault: On"));
                 VCSettings.Logging = GUILayout.Toggle(VCSettings.Logging, new GUIContent("Logging", "Output logs from Version Control to Unity console\nDefault: Off"));
             }
             GUILayout.Label("Advanced", EditorStyles.boldLabel);

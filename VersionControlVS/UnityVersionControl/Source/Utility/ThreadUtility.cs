@@ -19,6 +19,14 @@ namespace VersionControl
             return unityExecutionContext == Thread.CurrentThread.ExecutionContext;
         }
 
+        public static void ExecuteOnMainThread(System.Action action)
+        {
+            if (ThreadUtility.IsMainThread())
+                action();
+            else
+                OnNextUpdate.Do(action);
+        }
+
         private static readonly ExecutionContext unityExecutionContext;
     }
 }

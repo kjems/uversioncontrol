@@ -564,10 +564,7 @@ namespace VersionControl
         {
             if (OperationCompleted != null)
             {
-                if (ThreadUtility.IsMainThread())
-                    OperationCompleted(operation, success);
-                else
-                    OnNextUpdate.Do(() => OperationCompleted(operation, success));
+                ThreadUtility.ExecuteOnMainThread(() => OperationCompleted(operation, success));
             }
         }
 

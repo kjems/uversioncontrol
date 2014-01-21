@@ -34,28 +34,34 @@ namespace VersionControl
             bool noopSelected = backend == VCSettings.EVersionControlBackend.None;
             bool svnSelected = backend == VCSettings.EVersionControlBackend.Svn;
             bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;
-            IVersionControlCommands uvc = null;            
+            IVersionControlCommands uvc = null;
+            bool success = false;
 
             if(svnSelected && CreateVersionControl<SVNCommands>(() => new SVNCommands(cliEnding), workDirectory, out uvc))
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(uvc);
-                return true;
+                success = true;
             }
             else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(cliEnding), workDirectory, out uvc))
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(uvc);
-                return true;
+                success = true;
             }
             else if (noopSelected)
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(GetDefaultImplementation());
-                return true;
+                success = true;
             }
-            D.LogWarning(backend + " backend initialization failed!");
-            return false;
+            GoogleAnalytics.LogUserEvent("Backend", string.Format("{0}_{1}", backend.ToString(), (success ? "success" : "failed")));
+            GoogleAnalytics.LogUserEvent("Project", PlayerSettings.productName.GetHashCode().ToString());
+            
+            if (!success) 
+                D.LogWarning(backend + " backend initialization failed!");
+            
+            return success;
         }
 
         private static bool CreateVersionControl<T>(Func<T> factory, string workDirectory, out IVersionControlCommands uvc) where T : IVersionControlCommands

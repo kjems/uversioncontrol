@@ -25,6 +25,7 @@ namespace VersionControl
             projectIcons = EditorPrefs.GetBool("VCSSettings/projectIcons", true);
             projectReflectionMode = (EReflectionLevel)EditorPrefs.GetInt("VCSSettings/projectReflectionMode", (int)EReflectionLevel.Local);
             bugReport = EditorPrefs.GetBool("VCSSettings/bugReport", true);
+            analytics = EditorPrefs.GetBool("VCSSettings/analytics", true);
             bugReportMode = (EBugReportMode)EditorPrefs.GetInt("VCSSettings/bugReportMode", (int)EBugReportMode.Manual);
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
             lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
@@ -54,6 +55,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/projectIcons", projectIcons);
                 EditorPrefs.SetInt("VCSSettings/projectReflectionMode", (int)projectReflectionMode);
                 EditorPrefs.SetBool("VCSSettings/bugReport", bugReport);
+                EditorPrefs.SetBool("VCSSettings/analytics", analytics);
                 EditorPrefs.SetInt("VCSSettings/bugReportMode", (int)bugReportMode);
                 EditorPrefs.SetBool("VCSSettings/logging", logging);
                 EditorPrefs.SetString("VCSSettings/lockScenesFilter", lockScenesFilter);
@@ -172,6 +174,9 @@ namespace VersionControl
         
         private static bool bugReport;
         public static bool BugReport { get { return bugReport; } set { if (bugReport != value) { bugReport = value; OnSettingsChanged(); } } }
+
+        private static bool analytics;
+        public static bool Analytics { get { return analytics; } set { if (analytics != value) { analytics = value; OnSettingsChanged(); } } }
 
         
         private static EBugReportMode bugReportMode;

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+#pragma warning disable 414
 
 namespace VersionControl.UserInterface
 {

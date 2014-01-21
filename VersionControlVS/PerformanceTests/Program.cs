@@ -60,7 +60,7 @@ namespace PerformanceTests
 
         static void RunMemoryTestComplex()
         {
-            var assets = vcc.GetFilteredAssets(status =>
+            vcc.GetFilteredAssets(status =>
             {
                 VersionControlStatus metaStatus = status;
                 if (!status.assetPath.EndsWith(meta))
@@ -75,7 +75,7 @@ namespace PerformanceTests
 
         static void RunMemoryTestSimple()
         {
-            var assets = vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
+            vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
             //Logging(assets.Select(s => s.assetPath).Aggregate((a, b) => a + "\n" + b));
             //Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
         }

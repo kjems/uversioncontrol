@@ -514,7 +514,7 @@ namespace VersionControl.Backend.SVN
         public bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
             bool getLockSuccess = CreateAssetOperation("lock" + (mode == OperationMode.Force ? " --force" : ""), assets);
-            bool getChangeListRemove = vcc.ChangeListRemove(assets);
+            vcc.ChangeListRemove(assets);
             return getLockSuccess;
         }
 

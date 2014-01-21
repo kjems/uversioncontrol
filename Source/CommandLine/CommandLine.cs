@@ -36,19 +36,15 @@ namespace CommandLineExecution
             string command, 
             string arguments, 
             string workingDirectory, 
-            string input = null, 
-            string cliEnding = "", 
-            Dictionary<string, string> _envVars = null, 
-            Encoding desiredEncoding = null
+            string input = null,
+            Dictionary<string, string> envVars = null
             )
         {
             this.command = command;
             this.arguments = arguments;
             this.workingDirectory = workingDirectory;
             this.input = input;
-            this.cliEnding = cliEnding;
-            if(desiredEncoding != null) this.desiredEncoding = desiredEncoding;
-            if (_envVars != null) this.envVars = new Dictionary<string, string>(_envVars);
+            if (envVars != null) this.envVars = new Dictionary<string, string>(envVars);
             AppDomain.CurrentDomain.DomainUnload += Unload;
             AppDomain.CurrentDomain.ProcessExit += Unload;
         }
@@ -84,16 +80,13 @@ namespace CommandLineExecution
         {
             return workingDirectory + " " + command + " " + arguments;
         }
-
+        const int BUFFER_SIZE = 2048;
+        Encoding encoding = Encoding.UTF8;
         public event Action<string> OutputReceived;
         public event Action<string> ErrorReceived;
-
-
         string output;
         string error;
         string input;
-        string cliEnding;
-        Encoding desiredEncoding = Encoding.UTF8;
         int exitcode;
         bool aborted;
         readonly string command;
@@ -117,13 +110,14 @@ namespace CommandLineExecution
                     RedirectStandardError = true,
                     RedirectStandardOutput = true,
                     RedirectStandardInput = true,
-                    StandardOutputEncoding = desiredEncoding,
-                    StandardErrorEncoding = desiredEncoding,
+                    StandardOutputEncoding = encoding,
+                    StandardErrorEncoding = encoding,
                     ErrorDialog = false
                 };
                 // set env vars
                 foreach (KeyValuePair<string, string> kvp in envVars) { psi.EnvironmentVariables.Add(kvp.Key, kvp.Value); }
                 process = Process.Start(psi);
+                encoding = process.StandardOutput.CurrentEncoding;
 
                 if (!String.IsNullOrEmpty(input))
                 {
@@ -134,43 +128,56 @@ namespace CommandLineExecution
                 }
 
                 var sbOutput = new StringBuilder();
-                process.OutputDataReceived += (obj, de) =>
+                byte[] buffer = new byte[BUFFER_SIZE];
+                Decoder decoder = encoding.GetDecoder();
+                while (true)
                 {
-                    if (!string.IsNullOrEmpty(de.Data))
+                    var asyncResult = process.StandardOutput.BaseStream.BeginRead(buffer, 0, BUFFER_SIZE, null, null);
+                    asyncResult.AsyncWaitHandle.WaitOne();
+                    var bytesRead = process.StandardOutput.BaseStream.EndRead(asyncResult);
+                    if (bytesRead > 0)
                     {
-                        sbOutput.Append(de.Data + cliEnding);
-                        if (OutputReceived != null) OutputReceived(de.Data);
+                        int charactersRead = decoder.GetCharCount(buffer, 0, bytesRead);
+                        char[] chars = new char[charactersRead];
+                        charactersRead = decoder.GetChars(buffer, 0, bytesRead, chars, 0);
+                        string result = ConvertEncoding(chars, encoding, Encoding.UTF8);
+                        if (OutputReceived != null && !string.IsNullOrEmpty(result)) 
+                            OutputReceived(result);
+                        sbOutput.Append(result);
                     }
-                };
-
-                var sbError = new StringBuilder();
-                process.ErrorDataReceived += (obj, de) =>
-                {
-                    if (!string.IsNullOrEmpty(de.Data))
+                    else
                     {
-                        sbError.Append(de.Data + cliEnding);
-                        if (ErrorReceived != null) ErrorReceived(de.Data);
+                        process.WaitForExit();
+                        break;
                     }
-                };
-
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
-
-                process.WaitForExit();
+                }
 
                 if (!aborted)
                 {
-                    error = sbError.ToString();
                     output = sbOutput.ToString();
+                    error = process.StandardError.ReadToEnd();
+                    if (ErrorReceived != null) 
+                        ErrorReceived(error);
                     exitcode = process.ExitCode;
                 }
             }
             finally
             {
-                if (process != null) process.Dispose();
+                if (process != null) 
+                    process.Dispose();
                 process = null;
             }
             return new CommandLineOutput(command, arguments, output, error, exitcode);
         }
+
+        public static string ConvertEncoding(char[] source, Encoding sourceEncoding, Encoding targetEncoding)
+        {
+            if (sourceEncoding == targetEncoding)
+                return new string(source);
+            byte[] sourceEncodingBytes = sourceEncoding.GetBytes(source);
+            byte[] targetEncodingBytes = Encoding.Convert(sourceEncoding, targetEncoding, sourceEncodingBytes);
+            return targetEncoding.GetString(targetEncodingBytes);
+        }
+
     }
 }

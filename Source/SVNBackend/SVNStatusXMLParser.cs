@@ -46,15 +46,6 @@ namespace VersionControl.Backend.SVN
 
     public static class SVNStatusXMLParser
     {
-        static readonly Encoding sourceEncoding = Encoding.UTF8;
-        static readonly Encoding targetEncoding = Encoding.Unicode;
-        public static string ConvertEncoding(string sourceEncodingStr)
-        {
-            byte[] sourceEncodingBytes = sourceEncoding.GetBytes(sourceEncodingStr);
-            byte[] targetEncodingBytes = Encoding.Convert(sourceEncoding, targetEncoding, sourceEncodingBytes);
-            return targetEncoding.GetString(targetEncodingBytes);
-        }
-
         public static StatusDatabase SVNParseStatusXML(string svnStatusXML)
         {
             var xmlStatusDocument = new XmlDocument();
@@ -71,7 +62,7 @@ namespace VersionControl.Backend.SVN
             XmlNodeList entries = xmlDoc.GetElementsByTagName("entry");
             foreach (XmlNode entryIt in entries)
             {
-                ComposedString assetPath = new ComposedString(ConvertEncoding((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim()));
+                ComposedString assetPath = new ComposedString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
                 var status = ParseXMLNode(entryIt);
                 status.assetPath = assetPath;
                 statusDatabase[assetPath] = status;
@@ -83,7 +74,7 @@ namespace VersionControl.Backend.SVN
                 string changelist = changelistIt.Attributes["name"].InnerText;
                 foreach (XmlNode entryIt in changelistIt.ChildNodes)
                 {
-                    ComposedString assetPath = new ComposedString(ConvertEncoding((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim()));
+                    ComposedString assetPath = new ComposedString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
                     if (statusDatabase.ContainsKey(assetPath))
                     {
                         statusDatabase[assetPath].changelist = changelist;

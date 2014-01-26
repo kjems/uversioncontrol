@@ -863,6 +863,12 @@ namespace VersionControl.Backend.P4
             return success;
         }
 
+        public bool Ignore(string path, IEnumerable<string> assets)
+        {
+            D.LogWarning("P4Commands.Ignore not implemented");
+            return false;
+        }
+
         public string GetBasePath(string assetPath)
         {
             if (string.IsNullOrEmpty(versionNumber))

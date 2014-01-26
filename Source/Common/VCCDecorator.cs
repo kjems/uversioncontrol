@@ -160,6 +160,11 @@ namespace VersionControl
             return vcc.Move(from, to);
         }
 
+        public virtual bool Ignore(string path, IEnumerable<string> assets)
+        {
+            return vcc.Ignore(path, assets);
+        }
+
         public virtual string GetBasePath(string assetPath)
         {
             return vcc.GetBasePath(assetPath);

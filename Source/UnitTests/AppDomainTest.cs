@@ -1,7 +1,7 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnitySVN@gmail.com>
-
+/*
 using System;
 using System.IO;
 using System.Linq;
@@ -19,14 +19,14 @@ namespace VersionControl.UnitTests
         private const string localPathForTest = @"c:\develop\Game2.4";
 
         [SetUp]
-        void Setup()
+        public void Setup()
         {
             D.writeErrorCallback += Logging;
             D.exceptionCallback += HandleExceptions;
         }
 
         [TearDown]
-        void TearDown()
+        public void TearDown()
         {
             D.writeErrorCallback -= Logging;
             D.exceptionCallback -= HandleExceptions;
@@ -78,7 +78,7 @@ namespace VersionControl.UnitTests
             Logging("Memory Used : " + GC.GetTotalMemory(true));
         }
 
-        [Test]
+        //[Test]
         public void TestAppDomainUnload()
         {
             for (int i = 0; i < 5; i++)
@@ -142,4 +142,4 @@ namespace VersionControl.UnitTests
             return AppDomain.CreateDomain(name, evidence, setup);
         }
     }
-}
+}*/

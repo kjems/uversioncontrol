@@ -183,6 +183,11 @@ namespace VersionControl.UnitTests
             return true;
         }
 
+        public bool Ignore(string path, IEnumerable<string> assets)
+        {
+            return true;
+        }
+
         public virtual string GetBasePath(string assetPath)
         {
             return "";

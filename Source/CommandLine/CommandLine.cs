@@ -51,21 +51,25 @@ namespace CommandLineExecution
 
         private void Unload(object sender, EventArgs args)
         {
-            AbortProcess();
+			AbortProcess();
         }
 
         private void AbortProcess()
         {
-            if (!aborted && process != null && !process.HasExited)
+			if (!aborted && process != null)
             {
                 aborted = true;
                 try
                 {
-                    process.Kill();
+					if(!process.HasExited)
+                    	process.Kill();
                 }
                 catch (Exception) { }
-                process.Dispose();
-                process = null;
+				finally
+				{
+					process.Dispose();
+                	process = null;
+				}
             }
         }
 
@@ -88,7 +92,7 @@ namespace CommandLineExecution
         string error;
         string input;
         int exitcode;
-        bool aborted;
+        volatile bool aborted;
         readonly string command;
         readonly string arguments;
         readonly string workingDirectory;

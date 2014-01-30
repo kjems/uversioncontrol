@@ -18,8 +18,11 @@ namespace VersionControl
         }
         private static void ValidateIgnoreFoldersInternal()
         {
-            VCCommands.Instance.StatusCompleted -= ValidateIgnoreFoldersInternal;
-            ValidateIgnoreFolders(false);
+            if (VCCommands.Instance.IsReady())
+            {
+                VCCommands.Instance.StatusCompleted -= ValidateIgnoreFoldersInternal;
+                ValidateIgnoreFolders(false);
+            }
         }
 
         [MenuItem("UVC/Re-Validate Setup", false, 1)]

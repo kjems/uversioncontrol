@@ -142,6 +142,8 @@ namespace VersionControl.Backend.P4
                 commandLineOutput = commandLine.Execute();
                 return commandLineOutput;
             }
+			catch (System.Threading.ThreadAbortException) { }
+			catch (AppDomainUnloadedException) { }
             catch (Exception e)
             {
                 D.Log("ERROR: Check that your commandline P4 client is installed correctly - " + e.Message);

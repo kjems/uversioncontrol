@@ -415,7 +415,7 @@ namespace VersionControl.Backend.P4
                 fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
             }
 
-            if ((statusCommandLineOutput != null && (string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || statusCommandLineOutput.Failed)) || !active) return false;
+			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
             if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {

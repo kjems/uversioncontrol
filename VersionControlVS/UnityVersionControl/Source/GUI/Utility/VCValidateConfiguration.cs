@@ -10,7 +10,7 @@ namespace VersionControl
     [InitializeOnLoad]
     internal static class VCValidateConfiguration
     {
-        static readonly string[] defaultIgnores = new[] { "Library", "Temp", "obj", "*.csproj", "*.sln", "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "_ReSharper.*" };
+		static readonly string[] defaultIgnores = new[] { "Library", "Temp", "obj", "*.booproj" ,"*.unityproj" ,"*.csproj", "*.sln", "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide" , "_ReSharper.*" };
 
         static VCValidateConfiguration()
         {

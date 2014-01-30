@@ -22,6 +22,7 @@ namespace VersionControl.UserInterface
         // Const
         const float toolbarHeight = 18.0f;
         const float inStatusHeight = 18.0f;
+        const int maxProgressSize = 10000;
         private readonly Color activeColor = new Color(0.8f, 0.8f, 1.0f);
 
         // State
@@ -132,6 +133,10 @@ namespace VersionControl.UserInterface
                 EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", progress, 1.0f - (1.0f / updateCounter));
             }
             commandInProgress = commandInProgress + progress;
+            if (commandInProgress.Length > maxProgressSize)
+            {
+                commandInProgress = commandInProgress.Substring(commandInProgress.Length - maxProgressSize);
+            }
             statusScroll.y = Mathf.Infinity;
             Repaint();
         }
@@ -308,6 +313,7 @@ namespace VersionControl.UserInterface
 
         private void DrawStatus()
         {
+            GUILayout.Space(6);
             statusScroll = EditorGUILayout.BeginScrollView(statusScroll, false, false);
             var originalColor = GUI.backgroundColor;
             if (updateInProgress) GUI.backgroundColor = activeColor;

@@ -529,6 +529,11 @@ namespace VersionControl
                 return moveSuccess;
             });
         }
+
+        public bool Ignore(string path, IEnumerable<string> assets)
+        {
+            return HandleExceptions(() => vcc.Ignore(path, assets));
+        }
         public string GetBasePath(string assetPath)
         {
             return vcc.GetBasePath(assetPath);

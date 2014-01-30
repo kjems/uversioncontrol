@@ -569,7 +569,7 @@ namespace VersionControl.Backend.SVN
                         .Where(ignore => !string.IsNullOrEmpty(ignore))
                         .Aggregate((a, b) => a + "\n" + b);
 
-                    result &= CreateOperation(string.Format("propset svn:ignore {0} {1}", ignores, path));
+					result &= CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", ignores, path));
                 }
             }
             ClearDatabase();

@@ -66,6 +66,7 @@ namespace VersionControl
         bool Checkout(string url, string path = "");
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
+        bool Ignore(string path, IEnumerable<string> assets);
         string GetBasePath(string assetPath);
         bool CleanUp();
         void ClearDatabase();

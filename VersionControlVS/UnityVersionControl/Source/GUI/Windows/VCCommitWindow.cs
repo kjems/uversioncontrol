@@ -15,6 +15,7 @@ namespace VersionControl.UserInterface
     {
         // Const
         const float minimumControlHeight = 50;
+        const int maxProgressSize = 10000;
 
         // State
         public IEnumerable<string> commitedFiles = new List<string>();
@@ -167,7 +168,12 @@ namespace VersionControl.UserInterface
                         var selectedAssets = selection.Select(status => status.assetPath).Select(cstr => cstr.Compose()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {
-                            commitProgress = s + "\n" + commitProgress;
+                            commitProgress = commitProgress + s;
+                            if (commitProgress.Length > maxProgressSize)
+                            {
+                                commitProgress = commitProgress.Substring(commitProgress.Length - maxProgressSize);
+                            }
+                            statusScroll.y = Mathf.Infinity;
                             Repaint();
                         };
                         var commitTask = VCCommands.Instance.CommitTask(selectedAssets, CommitMessage);

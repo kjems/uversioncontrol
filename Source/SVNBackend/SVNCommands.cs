@@ -22,7 +22,6 @@ namespace VersionControl.Backend.SVN
         private string password;
         private bool allowCacheCredentials = false;
         private string versionNumber;
-        private string cliEnding = "";
         private readonly StatusDatabase statusDatabase = new StatusDatabase();
         private bool OperationActive { get { return currentExecutingOperation != null; } }
         private CommandLine currentExecutingOperation = null;
@@ -37,9 +36,8 @@ namespace VersionControl.Backend.SVN
         private volatile bool requestRefreshLoopStop = false;
         private readonly IVersionControlCommands vcc;
 
-        public SVNCommands(string cliEnding = "")
+        public SVNCommands()
         {
-            this.cliEnding = cliEnding;
             vcc = new VCCFilteredAssets(this);
             StartRefreshLoop();
             AppDomain.CurrentDomain.DomainUnload += Unload;
@@ -367,7 +365,7 @@ namespace VersionControl.Backend.SVN
             {
                 var errStr = commandLineOutput.ErrorStr;
                 if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
-                    throw new VCMissingCredentialsException(errStr, commandLine.ToString());                
+                    throw new VCMissingCredentialsException(errStr, commandLine.ToString());
                 if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
                     throw new VCNewerVersionException(errStr, commandLine.ToString());
                 if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
@@ -380,7 +378,7 @@ namespace VersionControl.Backend.SVN
                     throw new VCLockedByOther(errStr, commandLine.ToString());
                 if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
                     throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
-                
+
                 throw new VCException(errStr, commandLine.ToString());
             }
             return commandLineOutput;
@@ -553,6 +551,30 @@ namespace VersionControl.Backend.SVN
         public bool Move(string from, string to)
         {
             return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
+        }
+
+        public bool Ignore(string path, IEnumerable<string> assets)
+        {
+            bool result = true;
+            using (var commandLineOperation = CreateSVNCommandLine(string.Format("propget svn:ignore {0}", path)))
+            {
+                var commandLineOutput = ExecuteOperation(commandLineOperation);
+                if (!commandLineOutput.Failed)
+                {
+                    var ignores = commandLineOutput.OutputStr
+                        .Split('\n')
+                        .Select(ignore => ignore.Trim('\r', '\n', '\t', ' '))
+                        .Concat(assets)
+                        .Distinct()
+                        .Where(ignore => !string.IsNullOrEmpty(ignore))
+                        .Aggregate((a, b) => a + "\n" + b);
+
+					result &= CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", ignores, path));
+                }
+            }
+            ClearDatabase();
+            Status(StatusLevel.Previous, DetailLevel.Normal);
+            return result;
         }
 
         public string GetBasePath(string assetPath)

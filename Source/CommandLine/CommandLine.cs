@@ -33,9 +33,9 @@ namespace CommandLineExecution
     public sealed class CommandLine : IDisposable
     {
         public CommandLine(
-            string command, 
-            string arguments, 
-            string workingDirectory, 
+            string command,
+            string arguments,
+            string workingDirectory,
             string input = null,
             Dictionary<string, string> envVars = null
             )
@@ -51,25 +51,25 @@ namespace CommandLineExecution
 
         private void Unload(object sender, EventArgs args)
         {
-			AbortProcess();
+            AbortProcess();
         }
 
         private void AbortProcess()
         {
-			if (!aborted && process != null)
+            if (!aborted && process != null)
             {
                 aborted = true;
                 try
                 {
-					if(!process.HasExited)
-                    	process.Kill();
+                    if (!process.HasExited)
+                        process.Kill();
                 }
                 catch (Exception) { }
-				finally
-				{
-					process.Dispose();
-                	process = null;
-				}
+                finally
+                {
+                    process.Dispose();
+                    process = null;
+                }
             }
         }
 
@@ -145,7 +145,7 @@ namespace CommandLineExecution
                         char[] chars = new char[charactersRead];
                         charactersRead = decoder.GetChars(buffer, 0, bytesRead, chars, 0);
                         string result = ConvertEncoding(chars, encoding, Encoding.UTF8);
-                        if (OutputReceived != null && !string.IsNullOrEmpty(result)) 
+                        if (OutputReceived != null && !string.IsNullOrEmpty(result))
                             OutputReceived(result);
                         sbOutput.Append(result);
                     }
@@ -160,14 +160,14 @@ namespace CommandLineExecution
                 {
                     output = sbOutput.ToString();
                     error = process.StandardError.ReadToEnd();
-                    if (ErrorReceived != null) 
+                    if (ErrorReceived != null)
                         ErrorReceived(error);
                     exitcode = process.ExitCode;
                 }
             }
             finally
             {
-                if (process != null) 
+                if (process != null)
                     process.Dispose();
                 process = null;
             }

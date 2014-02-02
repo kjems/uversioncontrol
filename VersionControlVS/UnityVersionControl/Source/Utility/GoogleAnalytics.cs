@@ -42,17 +42,17 @@ namespace VersionControl
         {
             if (!VCSettings.Analytics)
             {
-                D.Log("Google Analytics disabled in settings");
+                //D.Log("Google Analytics disabled in settings");
                 return;
             }
             if (trackingCode.Length == 0 || domain.Length == 0)
             {
-                D.LogError("Please enter your tracking code and domain");
+                //D.LogError("Please enter your tracking code and domain");
                 return;
             }
             if (!HasInternet())
             {
-                D.Log("Google Analytics disabled due to lack of internet connection");
+                //D.Log("Google Analytics disabled due to lack of internet connection");
                 return;
             }
             domainHash = GenerateDomainHash();
@@ -172,10 +172,10 @@ namespace VersionControl
 
         private static void ProcessRequestResult(WWW www)
         {
-            D.Assert(www.isDone, () => "Assuming the www has finished when the result is to be processed");
-            if (www.error != null)
+            //D.Assert(www.isDone, () => "Assuming the www has finished when the result is to be processed");
+            if (www.isDone && www.error != null)
             {
-                D.LogError("GoogleAnalytics :" + www.error + "\nwhen trying to process\n" + www.url);
+                //D.LogError("GoogleAnalytics :" + www.error + "\nwhen trying to process\n" + www.url);
                 requestQueue.Enqueue(www.url);
             }
             else

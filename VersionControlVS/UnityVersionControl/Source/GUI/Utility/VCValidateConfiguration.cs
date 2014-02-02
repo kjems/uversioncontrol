@@ -2,6 +2,8 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
+using System;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -10,7 +12,9 @@ namespace VersionControl
     [InitializeOnLoad]
     internal static class VCValidateConfiguration
     {
-		static readonly string[] defaultIgnores = new[] { "Library", "Temp", "obj", "*.booproj" ,"*.unityproj" ,"*.csproj", "*.sln", "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide" , "_ReSharper.*" };
+        static readonly string[] defaultIgnores = 
+        { "Library", "Temp", "obj", "*.booproj", "*.unityproj", "*.csproj", "*.sln", 
+          "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*" };
 
         static VCValidateConfiguration()
         {
@@ -25,23 +29,27 @@ namespace VersionControl
             }
         }
 
-        [MenuItem("UVC/Re-Validate Setup", false, 1)]
+        [MenuItem("UVC/Validate Setup", false, 1)]
         private static void ValidateMenuItem()
         {
             ValidateIgnoreFolders(true);
         }
         public static void ValidateIgnoreFolders(bool forceValidate)
         {
-            string prefsKey = "ProjectValidated/" + Application.dataPath;
-            if (!EditorPrefs.GetBool(prefsKey) || forceValidate)
+            string workDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.InvariantCultureIgnoreCase));
+            var ignores = VCCommands.Instance.GetIgnore(workDirectory);
+            if (ignores != null)
             {
-                const string title = "Validate Setup?";
-                const string message = "Do you want UVC to automatically setup file ignores for files which should not be managed by Version Control?";
-                if (EditorUtility.DisplayDialog(title, message, "Yes", "No"))
+                bool needSetIgnore = !ignores.Contains("Library") || !ignores.Contains("Temp");
+                if (needSetIgnore || forceValidate)
                 {
-                    VCCommands.Instance.Ignore(".", defaultIgnores);
+                    const string title = "Fix ignores?";
+                    const string message = "Do you want UVC to automatically fix file and folder ignores?";
+                    if (EditorUtility.DisplayDialog(title, message, "Fix it", "No"))
+                    {
+                        VCCommands.Instance.SetIgnore(workDirectory, defaultIgnores);
+                    }
                 }
-                EditorPrefs.SetBool(prefsKey, true);
             }
         }
 

@@ -553,28 +553,35 @@ namespace VersionControl.Backend.SVN
             return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
         }
 
-        public bool Ignore(string path, IEnumerable<string> assets)
+        public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            bool result = true;
+            bool result = CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", assets.Aggregate((a,b) => a + "\n" + b), path));
+            if (result)
+            {
+                result = CreateAssetOperation(string.Format("commit --depth empty -m \"UVC setting svn:ignore for : {0}\"", assets.Aggregate((a, b) => a + ", " + b)), new[]{path});
+            }
+            ClearDatabase();
+            Status(StatusLevel.Previous, DetailLevel.Normal);
+            return result;
+        }
+
+        public IEnumerable<string> GetIgnore(string path)
+        {
+            IEnumerable<string> ignores = null;
             using (var commandLineOperation = CreateSVNCommandLine(string.Format("propget svn:ignore {0}", path)))
             {
                 var commandLineOutput = ExecuteOperation(commandLineOperation);
                 if (!commandLineOutput.Failed)
                 {
-                    var ignores = commandLineOutput.OutputStr
+                    ignores = commandLineOutput.OutputStr
                         .Split('\n')
                         .Select(ignore => ignore.Trim('\r', '\n', '\t', ' '))
-                        .Concat(assets)
                         .Distinct()
                         .Where(ignore => !string.IsNullOrEmpty(ignore))
-                        .Aggregate((a, b) => a + "\n" + b);
-
-					result &= CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", ignores, path));
+                        .ToArray();
                 }
             }
-            ClearDatabase();
-            Status(StatusLevel.Previous, DetailLevel.Normal);
-            return result;
+            return ignores;
         }
 
         public string GetBasePath(string assetPath)

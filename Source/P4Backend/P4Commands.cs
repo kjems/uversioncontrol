@@ -415,7 +415,7 @@ namespace VersionControl.Backend.P4
                 fstatCommandLineOutput = P4Util.Instance.ExecuteOperation(p4FstatTask);
             }
 
-			if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
+            if (statusCommandLineOutput == null || statusCommandLineOutput.Failed || string.IsNullOrEmpty(statusCommandLineOutput.OutputStr) || !active) return false;
             if (fstatCommandLineOutput == null || fstatCommandLineOutput.Failed || string.IsNullOrEmpty(fstatCommandLineOutput.OutputStr) || !active) return false;
             try
             {
@@ -863,10 +863,16 @@ namespace VersionControl.Backend.P4
             return success;
         }
 
-        public bool Ignore(string path, IEnumerable<string> assets)
+        public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            D.LogWarning("P4Commands.Ignore not implemented");
+            D.LogWarning("P4Commands.SetIgnore not implemented");
             return false;
+        }
+
+        public IEnumerable<string> GetIgnore(string path)
+        {
+            D.LogWarning("P4Commands.GetIgnore not implemented");
+            return null;
         }
 
         public string GetBasePath(string assetPath)

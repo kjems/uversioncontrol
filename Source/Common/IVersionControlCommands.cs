@@ -66,12 +66,13 @@ namespace VersionControl
         bool Checkout(string url, string path = "");
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
-        bool Ignore(string path, IEnumerable<string> assets);
+        bool SetIgnore(string path, IEnumerable<string> assets);
+        IEnumerable<string> GetIgnore(string path);
         string GetBasePath(string assetPath);
         bool CleanUp();
         void ClearDatabase();
         void RemoveFromDatabase(IEnumerable<string> assets);
-        
+
         event Action<string> ProgressInformation;
         event Action StatusCompleted;
     }

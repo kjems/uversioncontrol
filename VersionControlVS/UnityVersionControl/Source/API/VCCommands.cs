@@ -144,14 +144,13 @@ namespace VersionControl
 
         #region Private methods
 
-        private bool HandleExceptions(Func<bool> func)
+        private static T HandleExceptions<T>(Func<T> func)
         {
             if (Active)
             {
                 try
                 {
-                    var result = func();
-                    return result;
+                    return func();
                 }
                 catch (VCException vcException)
                 {
@@ -167,7 +166,7 @@ namespace VersionControl
             {
                 D.Log("VC Action ignored due to not being active");
             }
-            return false;
+            return default(T);
         }
 
         private void OnPlaymodeStateChanged()
@@ -530,9 +529,14 @@ namespace VersionControl
             });
         }
 
-        public bool Ignore(string path, IEnumerable<string> assets)
+        public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.Ignore(path, assets));
+            return HandleExceptions(() => vcc.SetIgnore(path, assets));
+        }
+
+        public IEnumerable<string> GetIgnore(string path)
+        {
+            return HandleExceptions(() => vcc.GetIgnore(path));
         }
         public string GetBasePath(string assetPath)
         {

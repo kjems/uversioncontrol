@@ -96,9 +96,14 @@ namespace VersionControl.Backend.Noop
         {
             return true;
         }
-        public virtual bool Ignore(string path, IEnumerable<string> assets)
+        public virtual bool SetIgnore(string path, IEnumerable<string> assets)
         {
             return true;
+        }
+
+        public virtual IEnumerable<string> GetIgnore(string path)
+        {
+            return null;
         }
         public virtual string GetBasePath(string assetPath)
         {

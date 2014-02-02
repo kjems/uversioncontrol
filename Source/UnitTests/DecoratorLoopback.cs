@@ -183,9 +183,14 @@ namespace VersionControl.UnitTests
             return true;
         }
 
-        public bool Ignore(string path, IEnumerable<string> assets)
+        public bool SetIgnore(string path, IEnumerable<string> assets)
         {
             return true;
+        }
+
+        public IEnumerable<string> GetIgnore(string path)
+        {
+            return null;
         }
 
         public virtual string GetBasePath(string assetPath)

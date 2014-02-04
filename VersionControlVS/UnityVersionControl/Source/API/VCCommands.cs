@@ -584,6 +584,7 @@ namespace VersionControl
 
             assets = AssetpathsFilters.AddFilesInFolders(assets);
             assets = AssetpathsFilters.AddFolders(assets);
+            assets = AssetpathsFilters.AddMoveMatches(assets);
             var dependencies = AssetpathsFilters.GetDependencies(assets);
             dependencies = AssetpathsFilters.AddFilesInFolders(dependencies);
             dependencies = AssetpathsFilters.AddFolders(dependencies);

@@ -56,6 +56,7 @@ namespace VersionControl
             }
             GoogleAnalytics.LogUserEvent("Backend", string.Format("{0}_{1}", backend.ToString(), (success ? "success" : "failed")));
             GoogleAnalytics.LogUserEvent("Project", PlayerSettings.productName.GetHashCode().ToString());
+            GoogleAnalytics.LogUserEvent("Version", VCUtility.GetCurrentVersion());
             
             if (!success) 
                 D.LogWarning(backend + " backend initialization failed!");

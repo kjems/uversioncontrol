@@ -51,6 +51,41 @@ namespace VersionControl
             return assetPaths.Concat(deletedInFolders).ToArray();
         }
 
+        internal static IEnumerable<string> AddMoveMatches(IEnumerable<string> assetPaths)
+        {
+            List<string> moveMatches = new List<string>();
+            var allDeleted = VCCommands.Instance.GetFilteredAssets(status => status.fileStatus == VCFileStatus.Deleted);
+            var allAdded = VCCommands.Instance.GetFilteredAssets(status => status.fileStatus == VCFileStatus.Added);
+            var commitDeleted = assetPaths.Where(a => VCCommands.Instance.GetAssetStatus(a).fileStatus == VCFileStatus.Deleted);
+            var commitAdded = assetPaths.Where(a => VCCommands.Instance.GetAssetStatus(a).fileStatus == VCFileStatus.Added);
+            foreach (var deleted in allDeleted)
+            {
+                var deletedPath = deleted.assetPath.Compose();
+                if (commitAdded.Count(added => added.EndsWith(Path.GetFileName(deletedPath))) > 0)
+                {
+                    moveMatches.Add(deletedPath);
+                }
+                if (commitAdded.Count(added => added.StartsWith(Path.GetDirectoryName(deletedPath)) && Path.GetExtension(deletedPath) == Path.GetExtension(added)) > 0)
+                {
+                    moveMatches.Add(deletedPath);
+                }
+
+            }
+            foreach (var added in allAdded)
+            {
+                var addedPath = added.assetPath.Compose();
+                if (commitDeleted.Count(deleted => deleted.EndsWith(Path.GetFileName(addedPath))) > 0)
+                {
+                    moveMatches.Add(addedPath);
+                }
+                if (commitDeleted.Count(deleted => deleted.StartsWith(Path.GetDirectoryName(addedPath)) && Path.GetExtension(addedPath) == Path.GetExtension(deleted)) > 0)
+                {
+                    moveMatches.Add(addedPath);
+                }
+            }
+            return assetPaths.Concat(moveMatches).ToArray();
+        }
+
         internal static IEnumerable<string> GetDependencies(IEnumerable<string> assetPaths)
         {
             return AssetDatabase.GetDependencies(assetPaths.ToArray())

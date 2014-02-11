@@ -69,6 +69,7 @@ namespace VersionControl
         bool SetIgnore(string path, IEnumerable<string> assets);
         IEnumerable<string> GetIgnore(string path);
         string GetBasePath(string assetPath);
+        bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs);
         bool CleanUp();
         void ClearDatabase();
         void RemoveFromDatabase(IEnumerable<string> assets);

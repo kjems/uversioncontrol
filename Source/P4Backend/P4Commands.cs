@@ -887,6 +887,15 @@ namespace VersionControl.Backend.P4
             return "";
         }
 
+        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            D.LogWarning("P4Commands.GetConflict not implemented");
+            basePath = null;
+            mine = null;
+            theirs = null;
+            return false;
+        }
+
         public bool CleanUp()
         {
             // no cleanup operation for p4 - doesn't need it?

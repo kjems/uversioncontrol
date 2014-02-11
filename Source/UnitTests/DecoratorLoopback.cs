@@ -198,6 +198,14 @@ namespace VersionControl.UnitTests
             return "";
         }
 
+        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            basePath = null;
+            mine = null;
+            theirs = null;
+            return false;
+        }
+
         public bool CleanUp()
         {
             return true;

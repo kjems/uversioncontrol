@@ -32,7 +32,7 @@ namespace VersionControl
             string workDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
             bool noopSelected = backend == VCSettings.EVersionControlBackend.None;
             bool svnSelected = backend == VCSettings.EVersionControlBackend.Svn;
-            bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;
+            /*bool p4Selected = backend == VCSettings.EVersionControlBackend.Perforce;*/
             IVersionControlCommands uvc = null;
             bool success = false;
 
@@ -42,12 +42,12 @@ namespace VersionControl
                 OnVersionControlBackendChanged(uvc);
                 success = true;
             }
-            else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(), workDirectory, out uvc))
+            /*else if (p4Selected && CreateVersionControl<P4Commands>(() => new P4Commands(), workDirectory, out uvc))
             {
                 //D.Log(backend + " backend initialized successfully");
                 OnVersionControlBackendChanged(uvc);
                 success = true;
-            }
+            }*/
             else if (noopSelected)
             {
                 //D.Log(backend + " backend initialized successfully");

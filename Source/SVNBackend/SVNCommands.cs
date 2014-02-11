@@ -555,10 +555,10 @@ namespace VersionControl.Backend.SVN
 
         public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            bool result = CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", assets.Aggregate((a,b) => a + "\n" + b), path));
+            bool result = CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", assets.Aggregate((a, b) => a + "\n" + b), path));
             if (result)
             {
-                result = CreateAssetOperation(string.Format("commit --depth empty -m \"UVC setting svn:ignore for : {0}\"", assets.Aggregate((a, b) => a + ", " + b)), new[]{path});
+                result = CreateAssetOperation(string.Format("commit --depth empty -m \"UVC setting svn:ignore for : {0}\"", assets.Aggregate((a, b) => a + ", " + b)), new[] { path });
             }
             ClearDatabase();
             Status(StatusLevel.Previous, DetailLevel.Normal);
@@ -615,6 +615,27 @@ namespace VersionControl.Backend.SVN
                 }
             }
             return "";
+        }
+
+        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            string[] conflictingFiles = Directory.GetFiles(Path.GetDirectoryName(assetPath), Path.GetFileName(assetPath) + ".r*").Where(a => Path.GetExtension(a).StartsWith(".r")).ToArray();
+            string minePath = assetPath + ".mine";
+
+            D.Log(string.Format("mine:{0}, theirs:{1}, base:{2}, length:{3}", minePath, conflictingFiles[1], conflictingFiles[0], conflictingFiles.Length));
+
+            if (conflictingFiles.Length == 2 && File.Exists(minePath) && File.Exists(conflictingFiles[0]) && File.Exists(conflictingFiles[1]))
+            {
+                basePath = conflictingFiles[0];
+                mine = minePath;
+                theirs = conflictingFiles[1];
+                return true;
+            }
+
+            basePath = null;
+            mine = null;
+            theirs = null;
+            return false;
         }
 
         public bool HasValidLocalCopy()

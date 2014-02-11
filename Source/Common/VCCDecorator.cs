@@ -175,6 +175,11 @@ namespace VersionControl
             return vcc.GetBasePath(assetPath);
         }
 
+        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            return vcc.GetConflict(assetPath, out basePath, out mine, out theirs);
+        }
+
         public virtual bool CleanUp()
         {
             return vcc.CleanUp();

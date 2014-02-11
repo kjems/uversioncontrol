@@ -109,6 +109,15 @@ namespace VersionControl.Backend.Noop
         {
             return "";
         }
+
+        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            basePath = null;
+            mine = null;
+            theirs = null;
+            return false;
+        }
+
         public virtual bool CleanUp()
         {
             return true;

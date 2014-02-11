@@ -542,6 +542,11 @@ namespace VersionControl
         {
             return vcc.GetBasePath(assetPath);
         }
+
+        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        {
+            return vcc.GetConflict(assetPath, out basePath, out mine, out theirs);
+        }
         public bool CleanUp()
         {
             return HandleExceptions(() =>
@@ -573,7 +578,11 @@ namespace VersionControl
         {
             if (OperationCompleted != null)
             {
-                ThreadUtility.ExecuteOnMainThread(() => OperationCompleted(operation, success));
+                ThreadUtility.ExecuteOnMainThread(() => 
+                {
+                    D.Log(operation + " : " + success);
+                    OperationCompleted(operation, success);
+                });
             }
         }
 

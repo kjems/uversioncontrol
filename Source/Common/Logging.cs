@@ -27,6 +27,7 @@ namespace VersionControl.Logging
         public static Action<string> writeWarningCallback;
         public static Action<string> writeErrorCallback;
         public static Action<VCException> exceptionCallback;
+        public static Action<string> combinedShorthandCallback;
 
         public static void ThrowException(Exception exception)
         {
@@ -36,6 +37,7 @@ namespace VersionControl.Logging
                 else exceptionCallback(new VCException(exception.Message, exception.StackTrace, exception));
             }
             else LogError("Unhandled exception : " + exception.Message);
+            if (combinedShorthandCallback != null) combinedShorthandCallback(exception.Message);
         }
 
         private static string FormatMessage(string message)
@@ -46,16 +48,19 @@ namespace VersionControl.Logging
         public static void Log(string message)
         {
             if (writeLogCallback != null) writeLogCallback(FormatMessage(message));
+            if (combinedShorthandCallback != null) combinedShorthandCallback(message);
         }
 
         public static void LogError(string message)
         {
             if (writeErrorCallback != null) writeErrorCallback(FormatMessage(message));
+            if (combinedShorthandCallback != null) combinedShorthandCallback(message);
         }
 
         public static void LogWarning(string message)
         {
             if (writeWarningCallback != null) writeWarningCallback(FormatMessage(message));
+            if (combinedShorthandCallback != null) combinedShorthandCallback(message);
         }
 
         /// <summary>

@@ -118,15 +118,21 @@ namespace VersionControl
                 if (versionControlBackend != value) 
                 {
                     if (value == EVersionControlBackend.None) VCSettings.VCEnabled = false;
+                    string errors = "";
+                    Action<string> addToErrors = err => errors += "\n" + err;
+                    D.combinedShorthandCallback += addToErrors;
+                    
                     if (VersionControlFactory.CreateVersionControlCommands(value))
                     {
-                        versionControlBackend = value;                        
+                        versionControlBackend = value;
                         OnSettingsChanged();
                     }
                     else
                     {
-                        EditorUtility.DisplayDialog("Version Control Selection failed", "Unable to initialize '" + value + "'. Look in the console for potential errors", "OK");
+                        EditorUtility.DisplayDialog("Version Control Selection failed", "Unable to initialize '" + value + "'.\n\n" + errors, "OK");
                     }
+                    D.combinedShorthandCallback -= addToErrors;
+                    
                 } 
             } 
         }

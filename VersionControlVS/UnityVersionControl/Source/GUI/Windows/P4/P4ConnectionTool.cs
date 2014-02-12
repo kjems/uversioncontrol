@@ -22,7 +22,7 @@ public class P4ConnectionTool : EditorWindow
     private const int OUTER_PADDING = 15;
     private const int TEXT_AREA_LINE_HEIGHT = 13;
 
-    [MenuItem("UVC/Connect To.../Perforce")]
+    /*[MenuItem("UVC/Connect To.../Perforce")]*/
     public static void Init()
     {
         window = EditorWindow.GetWindow<P4ConnectionTool>();

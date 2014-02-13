@@ -568,7 +568,7 @@ namespace VersionControl.Backend.SVN
         public IEnumerable<string> GetIgnore(string path)
         {
             IEnumerable<string> ignores = null;
-            using (var commandLineOperation = CreateSVNCommandLine(string.Format("propget svn:ignore {0}", path)))
+            using (var commandLineOperation = CreateSVNCommandLine(string.Format("propget svn:ignore \"{0}\"", path)))
             {
                 var commandLineOutput = ExecuteOperation(commandLineOperation);
                 if (!commandLineOutput.Failed)

@@ -149,15 +149,15 @@ namespace VersionControl
         {            
             if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.None)
             {
-                int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "Perforce", "None");
-                if (response == 0) // SVN
+                bool response = EditorUtility.DisplayDialog("Version Control Selection", "Select which Version Control System you are using", "SVN", /*"Perforce",*/ "None");
+                if (response) // SVN
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;                    
                 }
-                else if (response == 1) // Perforce
+                /*else if (response == 1) // Perforce
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Perforce;                 
-                }                
+                }   */             
             }
             return VCSettings.VersionControlBackend != VCSettings.EVersionControlBackend.None;
         }

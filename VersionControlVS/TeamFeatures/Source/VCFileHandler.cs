@@ -87,15 +87,15 @@ namespace VersionControl
             return AssetMoveResult.DidNotMove;
         }
 
-        private static string[] OnWillSaveAssets(string[] assets)
-        {
-            if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
-            {
-                assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
-                //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
-            }
-            return assets;
-        }
+        //private static string[] OnWillSaveAssets(string[] assets)
+        //{
+        //    if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
+        //    {
+        //        assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
+        //        //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
+        //    }
+        //    return assets;
+        //}
 
     }
 }

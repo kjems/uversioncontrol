@@ -86,7 +86,6 @@ namespace VersionControl
             }
             return AssetMoveResult.DidNotMove;
         }*/
-        }
 
         private static string[] OnWillSaveAssets(string[] assets)
         {

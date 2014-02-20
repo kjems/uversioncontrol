@@ -11,7 +11,7 @@ namespace VersionControl.UserInterface
     [Serializable]
     internal class VCSettingsWindow : EditorWindow
     {
-        [MenuItem("UVC/Settings", false, 2)]
+        [MenuItem("Window/UVC/Settings", false, 2)]
         public static void Init()
         {
             GetWindow(typeof(VCSettingsWindow), false, "Version Control Settings");

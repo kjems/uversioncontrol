@@ -16,7 +16,7 @@ namespace VersionControl.UserInterface
         string bugTitle = "";
         string email = "";
 
-        [MenuItem("UVC/Report Bug", false, 3)]
+        [MenuItem("Window/UVC/Report Bug", false, 3)]
         public static void Init()
         {
             GetWindow<VCBugReportWindow>(false, "Bug Report");

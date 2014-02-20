@@ -42,7 +42,7 @@ namespace VersionControl.UserInterface
         private Vector2 statusScroll = Vector2.zero;
 
 
-        [MenuItem("UVC/Overview Window", false, 1)]
+        [MenuItem("Window/UVC/Overview Window", false, 1)]
         public static void Init()
         {
             GetWindow<VCWindow>(false, "VersionControl");

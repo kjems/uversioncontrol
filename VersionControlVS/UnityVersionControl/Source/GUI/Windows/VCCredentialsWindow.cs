@@ -17,7 +17,7 @@ namespace VersionControl.UserInterface
         bool success = false;
         bool allowCacheCredentials = false;
 
-        //[MenuItem("UVC/Credentials", false, 3)]
+        //[MenuItem("Window/UVC/Credentials", false, 3)]
         public static void Init()
         {
             GetWindow<VCCredentialsWindow>(true, "Credentials");

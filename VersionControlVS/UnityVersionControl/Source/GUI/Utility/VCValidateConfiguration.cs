@@ -29,7 +29,7 @@ namespace VersionControl
             }
         }
 
-        [MenuItem("UVC/Validate Setup", false, 1)]
+        [MenuItem("Window/UVC/Validate Setup", false, 1)]
         private static void ValidateMenuItem()
         {
             ValidateIgnoreFolders(true);

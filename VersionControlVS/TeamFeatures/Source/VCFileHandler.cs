@@ -1,7 +1,7 @@
 // Copyright (c) <2012> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
-/*
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace VersionControl
     using Logging;
     internal class VCFileHandler : AssetModificationProcessor
     {
-
+        /* Move and Rename Handled by VCRefreshOnNewAsset
         private static bool InUnversionedParentFolder(string asset, out string topUnversionedFolder)
         {
             topUnversionedFolder = "";
@@ -54,7 +54,7 @@ namespace VersionControl
             }
             return acceptOperation;
         }
-
+        
         private static AssetMoveResult OnWillMoveAsset(string from, string to)
         {
             if (!UnityEditorInternal.InternalEditorUtility.HasMaint()) return AssetMoveResult.DidNotMove;
@@ -85,18 +85,18 @@ namespace VersionControl
                 return AssetMoveResult.FailedMove;
             }
             return AssetMoveResult.DidNotMove;
-        }
+        }*/
 
-        //private static string[] OnWillSaveAssets(string[] assets)
-        //{
-        //    if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
-        //    {
-        //        assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
-        //        //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
-        //    }
-        //    return assets;
-        //}
+        private static string[] OnWillSaveAssets(string[] assets)
+        {
+            if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
+            {
+                assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
+                //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
+            }
+            return assets;
+        }
 
     }
 }
-*/
+

@@ -29,7 +29,8 @@ namespace VersionControl.UserInterface
         private bool showUnversioned = true;
         private bool showMeta = true;
         private bool showModifiedNoLock = true;
-        private float statusHeight = 1000;        
+        private bool showProjectSetting = false;
+        private float statusHeight = 1000;
         private bool updateInProgress = false;
         private bool refreshInProgress = false;
         private string commandInProgress = "";
@@ -51,12 +52,13 @@ namespace VersionControl.UserInterface
         private bool GUIFilter(VersionControlStatus vcStatus)
         {
             var metaStatus = vcStatus.MetaStatus();
+            bool projectSetting = vcStatus.assetPath.StartsWith("ProjectSettings/");
             bool unversioned = vcStatus.fileStatus == VCFileStatus.Unversioned;
             bool meta = metaStatus.fileStatus != VCFileStatus.Normal && vcStatus.fileStatus == VCFileStatus.Normal;
-            bool modifiedNoLock = vcStatus.ModifiedOrLocalEditAllowed();
+            bool modifiedNoLock = !projectSetting && vcStatus.ModifiedOrLocalEditAllowed();
 
-            bool rest = !unversioned && !meta && !modifiedNoLock;
-            return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || rest;
+            bool rest = !unversioned && !meta && !modifiedNoLock && !projectSetting;
+            return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest;
         }
 
         // This is a performance critical function
@@ -257,6 +259,13 @@ namespace VersionControl.UserInterface
                 }
 
                 GUILayout.FlexibleSpace();
+
+                bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });
+                if (newShowModifiedProjectSettings != showProjectSetting)
+                {
+                    showProjectSetting = newShowModifiedProjectSettings;
+                    UpdateFilteringOfKeys();
+                }
 
                 bool newShowModifiedNoLock = GUILayout.Toggle(showModifiedNoLock, Terminology.localModified , EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(90) });
                 if (newShowModifiedNoLock != showModifiedNoLock)

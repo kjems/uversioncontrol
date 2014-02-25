@@ -580,7 +580,7 @@ namespace VersionControl
             {
                 ThreadUtility.ExecuteOnMainThread(() => 
                 {
-                    D.Log(operation + " : " + success);
+                    //D.Log(operation + " : " + (success ? "success":"failed"));
                     OperationCompleted(operation, success);
                 });
             }

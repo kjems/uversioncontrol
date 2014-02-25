@@ -20,46 +20,55 @@ namespace VersionControl
         private static int callcount = 0;
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
-            if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
+            if (VCCommands.Active)
             {
-                for (int i = 0; i < movedAssets.Length; ++i)
+                D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
+                if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
                 {
-                    string from = movedFromAssetPaths[i];
-                    string to = movedAssets[i];
-                    if (File.Exists(to) || Directory.Exists(to) && !File.Exists(from) && !Directory.Exists(from))
+                    callcount++;
+                    if (callcount == 1)
                     {
-                        callcount++;
-                        if (callcount == 1)
+                        var parentFolders = RemoveFilesIfParentFolderInList(movedAssets);
+                        for (int i = 0; i < movedAssets.Length; ++i)
                         {
-                            ReMoveAssetOnVC(movedFromAssetPaths[i], movedAssets[i]);
+                            string from = movedFromAssetPaths[i];
+                            string to = movedAssets[i];
+                            if ((File.Exists(to) || Directory.Exists(to) && !File.Exists(from) && !Directory.Exists(from)) && parentFolders.Contains(to))
+                            {
+                                ReMoveAssetOnVC(movedFromAssetPaths[i], movedAssets[i]);
+                            }
                         }
                         callcount--;
                     }
                 }
-            }
 
-            changedAssets.AddRange(importedAssets);
-            changedAssets.AddRange(movedAssets);
-            if (changedAssets.Count > 0)
-            {
-                changedAssets = changedAssets.Distinct().ToList();
-                VCCommands.Instance.RemoveFromDatabase(changedAssets);
-                VCCommands.Instance.RequestStatus(changedAssets, StatusLevel.Previous);
-                changedAssets.Clear();
-            }
+                changedAssets.AddRange(importedAssets);
+                changedAssets.AddRange(movedAssets);
+                if (changedAssets.Count > 0)
+                {
+                    changedAssets = changedAssets.Distinct().ToList();
+                    VCCommands.Instance.RemoveFromDatabase(changedAssets);
+                    VCCommands.Instance.RequestStatus(changedAssets, StatusLevel.Previous);
+                    changedAssets.Clear();
+                }
 
-            removedAssets.AddRange(deletedAssets);
-            removedAssets.AddRange(movedFromAssetPaths);
-            if (removedAssets.Count > 0)
-            {
-                removedAssets = removedAssets.Distinct().ToList();
-                VCCommands.Instance.RemoveFromDatabase(removedAssets);
-                VCCommands.Instance.RequestStatus(removedAssets, StatusLevel.Previous);
-                removedAssets.Clear();
+                removedAssets.AddRange(deletedAssets);
+                removedAssets.AddRange(movedFromAssetPaths);
+                if (removedAssets.Count > 0)
+                {
+                    removedAssets = removedAssets.Distinct().ToList();
+                    VCCommands.Instance.RemoveFromDatabase(removedAssets);
+                    VCCommands.Instance.RequestStatus(removedAssets, StatusLevel.Previous);
+                    removedAssets.Clear();
+                }
             }
-
             GameObjectToAssetPathCache.ClearObjectToAssetPathCache();
+        }
+
+        static IEnumerable<string> RemoveFilesIfParentFolderInList(IEnumerable<string> assets)
+        {
+            var folders = assets.Where(a => Directory.Exists(a));
+            return assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f)).ToArray();
         }
 
         private static bool InUnversionedParentFolder(string asset, out string topUnversionedFolder)
@@ -115,7 +124,7 @@ namespace VersionControl
                     if (InUnversionedParentFolder(to, out topUnversionedFolder))
                     {
                         string msg = "Versioned files are moved into an unversioned folder. Add following unversioned folder first?\n\n" + topUnversionedFolder;
-                        int result = EditorUtility.DisplayDialogComplex("Add Folder?", msg , "Yes", "No", "Cancel");
+                        int result = EditorUtility.DisplayDialogComplex("Add Folder?", msg, "Yes", "No", "Cancel");
                         if (result == 0)
                         {
                             MoveAssetBack(from, to);
@@ -137,7 +146,11 @@ namespace VersionControl
                     {
                         MoveAssetBack(from, to);
                     }
+                    
                     VCCommands.Instance.Move(from, to);
+                    AssetDatabase.Refresh();
+                    GameObjectToAssetPathCache.ClearObjectToAssetPathCache();
+                    
                 }
             }
         }
@@ -146,13 +159,19 @@ namespace VersionControl
         {
             if (Directory.Exists(to))
             {
+                //D.Log("Directory Move : " + to + " => " + from);
                 Directory.Move(to, from);
                 File.Move(to + ".meta", from + ".meta");
             }
             else
             {
-                AssetDatabase.MoveAsset(to, from);
+                //D.Log("File Move : " + to + " => " + from);
+                File.Move(to, from);
+                File.Move(to + ".meta", from + ".meta");
             }
+
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+
         }
     }
 

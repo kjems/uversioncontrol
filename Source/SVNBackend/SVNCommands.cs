@@ -410,10 +410,14 @@ namespace VersionControl.Backend.SVN
             return assets.Select(a => a.Replace(workingDirectory, ""));
         }
 
+        private static string PrepareAssetPath(string assetpath)
+        {
+            return FixAtChar(assetpath.Replace("\\", "/"));
+        }
+
         private static string ConcatAssetPaths(IEnumerable<string> assets)
         {
-            assets = assets.Select(a => a.Replace("\\", "/"));
-            assets = assets.Select(FixAtChar);
+            assets = assets.Select(PrepareAssetPath);
             if (assets.Any()) return " \"" + assets.Aggregate((i, j) => i + "\" \"" + j) + "\"";
             return "";
         }
@@ -550,6 +554,8 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
+            to = PrepareAssetPath(to);
+            from = PrepareAssetPath(from);
             return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
         }
 
@@ -586,6 +592,7 @@ namespace VersionControl.Backend.SVN
 
         public string GetBasePath(string assetPath)
         {
+            assetPath = PrepareAssetPath(assetPath);
             if (string.IsNullOrEmpty(versionNumber))
             {
                 versionNumber = CreateSVNCommandLine("--version --quiet").Execute().OutputStr;

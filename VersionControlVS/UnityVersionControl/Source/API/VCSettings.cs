@@ -73,7 +73,7 @@ namespace VersionControl
 
         public enum EBugReportMode { Automatic, Manual }
         public enum EReflectionLevel { Local, Remote }
-        public enum EVersionControlBackend { None, Svn, /*Perforce*/ }
+        public enum EVersionControlBackend { None, Svn, P4_Beta }
         public enum ESaveAssetsStrategy { Unity, VersionControl }
 
         public static event Action SettingChanged;        

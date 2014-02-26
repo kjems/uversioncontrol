@@ -22,7 +22,7 @@ namespace VersionControl
         {
             if (VCCommands.Active)
             {
-                D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
+                //D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
                 if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
                 {
                     callcount++;
@@ -183,6 +183,7 @@ namespace VersionControl
         static GameObjectToAssetPathCache()
         {
             VCCommands.Instance.StatusCompleted += () => ClearObjectToAssetPathCache();
+            EditorApplication.hierarchyWindowChanged += () => ClearObjectToAssetPathCache();
         }
 
         public static void ClearObjectToAssetPathCache()

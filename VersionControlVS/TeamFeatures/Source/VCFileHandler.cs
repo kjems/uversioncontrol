@@ -10,6 +10,7 @@ using UnityEditor;
 namespace VersionControl
 {
     using Logging;
+    using AssetFilters;
     internal class VCFileHandler : AssetModificationProcessor
     {
         /* Move and Rename Handled by VCRefreshOnNewAsset
@@ -89,12 +90,53 @@ namespace VersionControl
 
         private static string[] OnWillSaveAssets(string[] assets)
         {
-            if (VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.VersionControl)
+            if (!VCCommands.Active || VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.Unity)
+                return assets;
+
+            if(assets.Any(a => VCCommands.Instance.GetAssetStatus(a).reflectionLevel == VCReflectionLevel.None))
+                VCCommands.Instance.Status(assets, StatusLevel.Previous);
+
+            var toBeSaved = new List<string>();
+            var noControl = new List<string>();
+
+            foreach(var asset in assets)
             {
-                assets = assets.Where(a => VCUtility.HaveAssetControl(a)).ToArray();
-                //if (assets.Length > 0) D.Log("OnWillSaveAssets : " + assets.Aggregate((a, b) => a + ", " + b));
+                //D.Log(asset+ " has ignored parentfolder: " + VCCommands.Instance.InIgnoredParentFolder(asset));
+
+                if (VCUtility.HaveAssetControl(asset) || 
+                    !VCUtility.ManagedByRepository(asset) || 
+                    VCCommands.Instance.FlusingFiles || 
+                    VCCommands.Instance.InUnversionedParentFolder(asset) || 
+                    VCCommands.Instance.InIgnoredParentFolder(asset) || 
+                    EditorApplication.isCompiling)
+                {
+                    toBeSaved.Add(asset);
+                }
+                else
+                    noControl.Add(asset);
             }
-            return assets;
+
+            if (noControl.Count > 0)
+            {
+                foreach (var asset in noControl)
+                {
+                    string message = string.Format("Unity is trying to save following file which is not under control on {1}.\n\n'{0}'", asset, VCSettings.VersionControlBackend, Terminology.getlock);
+                    int result = EditorUtility.DisplayDialogComplex("Save File?", message, Terminology.allowLocalEdit, Terminology.getlock, "Do not save");
+                    if (result == 0 || result == 1)
+                    {
+                        toBeSaved.Add(asset);
+                        if(result == 0)
+                        {
+                            VCCommands.Instance.AllowLocalEdit(new[] { asset });
+                        }
+                        if (result == 1)
+                        {
+                            VCCommands.Instance.GetLock(new[] { asset }, OperationMode.Normal);
+                        }
+                    }
+                }
+            }
+            return toBeSaved.ToArray();
         }
 
     }

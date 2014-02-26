@@ -50,11 +50,12 @@ namespace VersionControl
         static VCCommands instance;
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
+        private static System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
-        private IVersionControlCommands vcc;
-        private bool ignoreStatusRequests = false;
-        private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
+        private IVersionControlCommands vcc;        
+        private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();        
 
+        public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
         public event Action<OperationType, bool> OperationCompleted;
@@ -148,6 +149,8 @@ namespace VersionControl
         {
             if (Active)
             {
+                stopWatch.Reset();
+                stopWatch.Start();
                 try
                 {
                     return func();
@@ -160,6 +163,10 @@ namespace VersionControl
                 {
                     D.LogError("Unhandled exception: " + e.Message + "\n" + D.GetCallstack());
                     throw;
+                }
+                finally
+                {
+                    D.Log(new System.Diagnostics.StackTrace(1, true).GetFrames()[0].GetMethod().Name + " took " + stopWatch.ElapsedMilliseconds + "ms");
                 }
             }
             else
@@ -212,11 +219,11 @@ namespace VersionControl
         {
             if (ThreadUtility.IsMainThread())
             {
-                ignoreStatusRequests = true;
+                FlusingFiles = true;
                 //D.Log("Flusing files");
                 EditorApplication.SaveAssets();
                 EditorUtility.UnloadUnusedAssets();
-                ignoreStatusRequests = false;
+                FlusingFiles = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");
         }
@@ -242,7 +249,7 @@ namespace VersionControl
             if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) == 0)
             {
                 EditorPrefs.SetBool("kAutoRefresh", false);
-                D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+                //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
             }
             EditorPrefs.SetInt("kAutoRefreshDisableCount", EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) + 1);
             EditorPrefs.SetBool("VCCommands/kAutoRefreshOwner", true);
@@ -258,7 +265,7 @@ namespace VersionControl
                 if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) == 0)
                 {
                     EditorPrefs.SetBool("kAutoRefresh", true);
-                    D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
+                    //D.Log("Set AutoRefresh : " + EditorPrefs.GetBool("kAutoRefresh", true));
                 }
                 //D.Log("kAutoRefreshDisableCount : " + EditorPrefs.GetInt("kAutoRefreshDisableCount", 0));
             }
@@ -383,7 +390,7 @@ namespace VersionControl
         }
         public bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            if (ignoreStatusRequests) return false;
+            if (FlusingFiles) return false;
             return vcc.RequestStatus(assets, statusLevel);
         }
 

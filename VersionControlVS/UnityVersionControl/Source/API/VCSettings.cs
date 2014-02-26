@@ -36,7 +36,7 @@ namespace VersionControl
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
             requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
             selectiveCommit = EditorPrefs.GetBool("VCSSettings/selectiveCommit", false);
-            saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/preventSaveNoLock", (int)ESaveAssetsStrategy.Unity);
+            saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/saveStrategy", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
 
             OnSettingsChanged();
@@ -74,7 +74,7 @@ namespace VersionControl
         public enum EBugReportMode { Automatic, Manual }
         public enum EReflectionLevel { Local, Remote }
         public enum EVersionControlBackend { None, Svn, P4_Beta }
-        public enum ESaveAssetsStrategy { Unity, VersionControl }
+        public enum ESaveAssetsStrategy { Unity, VersionControl, User }
 
         public static event Action SettingChanged;        
         

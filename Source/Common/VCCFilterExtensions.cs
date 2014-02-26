@@ -73,6 +73,13 @@ namespace VersionControl.AssetFilters
         {
             return ParentFolders(asset).Any(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned);
         }
+        public static bool InIgnoredParentFolder(this IVersionControlCommands vcc, string asset)
+        {
+            return ParentFolders(asset).Any(a => 
+            {
+                return vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Ignored; 
+            });
+        }
         public static IEnumerable<string> ParentFolders(string asset)
         {
             const char pathSeparator = '/';

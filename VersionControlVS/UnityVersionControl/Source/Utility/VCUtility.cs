@@ -146,7 +146,7 @@ namespace VersionControl
         }
 
         public static bool UserSelectedVersionControlSystem()
-        {            
+        {
             if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.None)
             {
                 int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "P4 Beta", "None");
@@ -219,7 +219,12 @@ namespace VersionControl
 
         public static bool HaveAssetControl(VersionControlStatus assetStatus)
         {
-            return HaveVCLock(assetStatus) || assetStatus.fileStatus == VCFileStatus.Added || !VCSettings.VCEnabled || assetStatus.fileStatus == VCFileStatus.Unversioned || Application.isPlaying || assetStatus.LocalEditAllowed();
+            return (!VCCommands.Active ||
+                    HaveVCLock(assetStatus) ||
+                    assetStatus.fileStatus == VCFileStatus.Added ||
+                    assetStatus.fileStatus == VCFileStatus.Unversioned ||
+                    assetStatus.fileStatus == VCFileStatus.Ignored ||
+                    assetStatus.LocalEditAllowed());
         }
 
         public static bool HaveAssetControl(string assetPath)

@@ -108,7 +108,9 @@ namespace VersionControl
                     VCCommands.Instance.FlusingFiles || 
                     VCCommands.Instance.InUnversionedParentFolder(asset) || 
                     VCCommands.Instance.InIgnoredParentFolder(asset) || 
-                    EditorApplication.isCompiling)
+                    EditorApplication.isCompiling ||
+                    UnityEditorInternal.InternalEditorUtility.inBatchMode
+                    )
                 {
                     toBeSaved.Add(asset);
                 }

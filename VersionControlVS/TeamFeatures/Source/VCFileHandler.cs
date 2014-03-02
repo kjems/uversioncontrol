@@ -90,8 +90,15 @@ namespace VersionControl
 
         private static string[] OnWillSaveAssets(string[] assets)
         {
-            if (!VCCommands.Active || VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.Unity)
+            if (UnityEditorInternal.InternalEditorUtility.inBatchMode ||
+                !VCCommands.Active || 
+                VCSettings.SaveStrategy == VCSettings.ESaveAssetsStrategy.Unity || 
+                VCCommands.Instance.FlusingFiles ||
+                EditorApplication.isCompiling)
+            {
                 return assets;
+            }
+                
 
             if(assets.Any(a => VCCommands.Instance.GetAssetStatus(a).reflectionLevel == VCReflectionLevel.None))
                 VCCommands.Instance.Status(assets, StatusLevel.Previous);
@@ -102,18 +109,8 @@ namespace VersionControl
             foreach(var asset in assets)
             {
                 //D.Log(asset+ " has ignored parentfolder: " + VCCommands.Instance.InIgnoredParentFolder(asset));
-
-                if (VCUtility.HaveAssetControl(asset) || 
-                    !VCUtility.ManagedByRepository(asset) || 
-                    VCCommands.Instance.FlusingFiles || 
-                    VCCommands.Instance.InUnversionedParentFolder(asset) || 
-                    VCCommands.Instance.InIgnoredParentFolder(asset) || 
-                    EditorApplication.isCompiling ||
-                    UnityEditorInternal.InternalEditorUtility.inBatchMode
-                    )
-                {
+                if (VCUtility.HaveAssetControl(asset) || !VCUtility.ManagedByRepository(asset) || VCCommands.Instance.InUnversionedParentFolder(asset) || VCCommands.Instance.InIgnoredParentFolder(asset))
                     toBeSaved.Add(asset);
-                }
                 else
                     noControl.Add(asset);
             }
@@ -128,13 +125,10 @@ namespace VersionControl
                     {
                         toBeSaved.Add(asset);
                         if(result == 0)
-                        {
                             VCCommands.Instance.AllowLocalEdit(new[] { asset });
-                        }
+                        
                         if (result == 1)
-                        {
                             VCCommands.Instance.GetLock(new[] { asset }, OperationMode.Normal);
-                        }
                     }
                 }
             }

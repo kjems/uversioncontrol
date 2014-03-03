@@ -41,6 +41,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Source\Common\AssetPathFilters.cs">
+      <Link>Source\AssetPathFilters.cs</Link>
+    </Compile>
     <Compile Include="..\..\Source\Common\ComposedSet.cs">
       <Link>Source\ComposedSet.cs</Link>
     </Compile>
@@ -58,9 +61,6 @@
     </Compile>
     <Compile Include="..\..\Source\Common\VCCDecorator.cs">
       <Link>Source\VCCDecorator.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Source\Common\VCCFilterExtensions.cs">
-      <Link>Source\VCCFilterExtensions.cs</Link>
     </Compile>
     <Compile Include="..\..\Source\Common\VCExceptions.cs">
       <Link>Source\VCExceptions.cs</Link>

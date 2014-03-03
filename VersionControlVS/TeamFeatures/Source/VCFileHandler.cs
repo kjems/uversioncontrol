@@ -10,7 +10,7 @@ using UnityEditor;
 namespace VersionControl
 {
     using Logging;
-    using AssetFilters;
+    using AssetPathFilters;
     internal class VCFileHandler : AssetModificationProcessor
     {
         /* Move and Rename Handled by VCRefreshOnNewAsset
@@ -109,7 +109,7 @@ namespace VersionControl
             foreach(var asset in assets)
             {
                 //D.Log(asset+ " has ignored parentfolder: " + VCCommands.Instance.InIgnoredParentFolder(asset));
-                if (VCUtility.HaveAssetControl(asset) || !VCUtility.ManagedByRepository(asset) || VCCommands.Instance.InUnversionedParentFolder(asset) || VCCommands.Instance.InIgnoredParentFolder(asset))
+                if (VCUtility.HaveAssetControl(asset) || !VCUtility.ManagedByRepository(asset) || asset.InUnversionedParentFolder(VCCommands.Instance) || asset.InIgnoredParentFolder(VCCommands.Instance))
                     toBeSaved.Add(asset);
                 else
                     noControl.Add(asset);

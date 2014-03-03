@@ -13,6 +13,7 @@ namespace VersionControl
     using UnityEngine;
     using UnityEditor;
     using UserInterface;
+    using AssetPathFilters;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 
     [InitializeOnLoad]
@@ -598,15 +599,10 @@ namespace VersionControl
             int initialAssetCount = assets.Count();
             if (initialAssetCount == 0) return true;
 
-            assets = AssetpathsFilters.AddFilesInFolders(assets);
-            assets = AssetpathsFilters.AddFolders(assets);
-            assets = AssetpathsFilters.AddMoveMatches(assets);
-            var dependencies = AssetpathsFilters.GetDependencies(assets);
-            dependencies = AssetpathsFilters.AddFilesInFolders(dependencies);
-            dependencies = AssetpathsFilters.AddFolders(dependencies);
-            dependencies = dependencies.Concat(AssetpathsFilters.AddDeletedInFolders(assets));
+            assets = assets.AddFilesInFolders().AddFolders(vcc).AddMoveMatches(vcc);
+            var dependencies = assets.GetDependencies().AddFilesInFolders().AddFolders(vcc).Concat(assets.AddDeletedInFolders(vcc));
             var allAssets = assets.Concat(dependencies).Distinct().ToList();
-            var localModified = AssetpathsFilters.LocalModified(allAssets);
+            var localModified = allAssets.LocalModified(vcc);
             if (assets.Contains(EditorApplication.currentScene))
             {
                 EditorApplication.SaveCurrentSceneIfUserWantsTo();

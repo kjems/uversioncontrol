@@ -16,13 +16,12 @@ namespace VersionControl
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
-        private static List<string> removedAssets = new List<string>();
         private static int callcount = 0;
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             if (VCCommands.Active)
             {
-                //D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
+                D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
                 if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
                 {
                     callcount++;
@@ -44,22 +43,14 @@ namespace VersionControl
 
                 changedAssets.AddRange(importedAssets);
                 changedAssets.AddRange(movedAssets);
+                changedAssets.AddRange(deletedAssets);
+                changedAssets.AddRange(movedFromAssetPaths);
                 if (changedAssets.Count > 0)
                 {
                     changedAssets = changedAssets.Distinct().ToList();
                     VCCommands.Instance.RemoveFromDatabase(changedAssets);
                     VCCommands.Instance.RequestStatus(changedAssets, StatusLevel.Previous);
                     changedAssets.Clear();
-                }
-
-                removedAssets.AddRange(deletedAssets);
-                removedAssets.AddRange(movedFromAssetPaths);
-                if (removedAssets.Count > 0)
-                {
-                    removedAssets = removedAssets.Distinct().ToList();
-                    VCCommands.Instance.RemoveFromDatabase(removedAssets);
-                    VCCommands.Instance.RequestStatus(removedAssets, StatusLevel.Previous);
-                    removedAssets.Clear();
                 }
             }
             GameObjectToAssetPathCache.ClearObjectToAssetPathCache();
@@ -170,7 +161,7 @@ namespace VersionControl
                 File.Move(to + ".meta", from + ".meta");
             }
 
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.Refresh();
 
         }
     }

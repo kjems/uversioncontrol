@@ -387,7 +387,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
+            return CreateOperation(arguments + ConcatAssetPaths(assets));
         }
 
         private static string FixAtChar(string asset)
@@ -671,6 +671,7 @@ namespace VersionControl.Backend.SVN
 
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
+            D.Log("Remove from DB: "+ assets.Aggregate((a,b) => a + ", " + b));
             lock (statusDatabaseLockToken)
             {
                 foreach (var assetIt in assets)

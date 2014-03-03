@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using VersionControl.AssetFilters;
+using VersionControl.AssetPathFilters;
 
 namespace VersionControl
 {
@@ -33,13 +33,13 @@ namespace VersionControl
 
         public override VersionControlStatus GetAssetStatus(string assetPath)
         {
-            if (vcc.InUnversionedParentFolder(assetPath)) return new VersionControlStatus() {assetPath = new ComposedString(assetPath), fileStatus = VCFileStatus.Unversioned};
+            if (assetPath.InUnversionedParentFolder(vcc)) return new VersionControlStatus() { assetPath = new ComposedString(assetPath), fileStatus = VCFileStatus.Unversioned };
             return vcc.GetAssetStatus(assetPath);
         }
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = vcc.InVersionedFolder(NonEmpty(assets));
+            assets = NonEmpty(assets).InVersionedFolder(vcc);
             return assets.Any() ? base.Status(assets, statusLevel) : true;
         }
 
@@ -52,23 +52,30 @@ namespace VersionControl
 
         public override bool Update(IEnumerable<string> assets = null)
         {
-            return base.Update((assets != null ? vcc.Versioned(assets) : null));
+            return base.Update((assets != null ? assets.Versioned(vcc) : null));
         }
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            var filesInFolders = vcc.AddedOrUnversionedParentFolders(vcc.AddFilesInFolders(assets, true)).ToArray();
-            return
-                base.Add(vcc.UnversionedInVersionedFolder(filesInFolders)) &&
-                base.Delete(vcc.Missing(filesInFolders), OperationMode.Normal) &&
+            var filesInFolders = assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc).ToArray();
+            var deletedInFolders = assets.AddDeletedInFolders(vcc);
+
+            bool result =
+                base.Add(filesInFolders.UnversionedInVersionedFolder(vcc)) &&
+                base.Delete(filesInFolders.Missing(vcc), OperationMode.Normal) &&
                 base.Commit(ShortestFirst(filesInFolders), commitMessage) &&
                 Status(assets, StatusLevel.Local) &&
                 ReleaseLock(assets);
+
+            if (result)
+                RemoveFromDatabase(deletedInFolders);
+
+            return result;
         }
 
         public override bool Add(IEnumerable<string> assets)
         {
-            return base.Add(vcc.UnversionedInVersionedFolder(assets));
+            return base.Add(assets.UnversionedInVersionedFolder(vcc));
         }
 
         public override bool Revert(IEnumerable<string> assets)
@@ -79,14 +86,14 @@ namespace VersionControl
 
         public override bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.Delete(vcc.Versioned(assets), mode);
+            return base.Delete(assets.Versioned(vcc), mode);
         }
 
         public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
             try
             {
-                return base.GetLock(mode == OperationMode.Force ? vcc.Versioned(assets) : vcc.NotLocked(assets), mode);
+                return base.GetLock(mode == OperationMode.Force ? assets.Versioned(vcc) : assets.NotLocked(vcc), mode);
             }
             catch (VCLockedByOther e)
             {
@@ -103,25 +110,25 @@ namespace VersionControl
 
         public override bool ReleaseLock(IEnumerable<string> assets)
         {
-            return base.ReleaseLock(vcc.Locked(assets));
+            return base.ReleaseLock(assets.Locked(vcc));
         }
 
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            assets = vcc.Versioned(NonEmpty(assets));
+            assets = NonEmpty(assets).Versioned(vcc);
             return assets.Any() ? (base.ChangeListAdd(assets, changelist) && Status(assets, StatusLevel.Local)) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            assets = vcc.OnChangeList(vcc.Versioned(NonEmpty(assets)));
-            return assets.Any() ? base.ChangeListRemove(vcc.Versioned(vcc.OnChangeList(FilesExist(assets)))) && Status(assets, StatusLevel.Local) : false;
+            assets = NonEmpty(assets).Versioned(vcc).OnChangeList(vcc);
+            return assets.Any() ? base.ChangeListRemove(FilesExist(assets).OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
         }
 
         public override bool Move(string from, string to)
         {
             if (vcc.GetAssetStatus(from).fileStatus == VCFileStatus.Unversioned) return false;
-            if (vcc.InUnversionedParentFolder(to)) return false;
+            if (to.InUnversionedParentFolder(vcc)) return false;
             return base.Move(from, to);
         }
 
@@ -139,6 +146,7 @@ namespace VersionControl
         {
             return assets.Where(File.Exists).ToArray();
         }
+
     }
 
 }

@@ -161,11 +161,30 @@ namespace VersionControl.AssetPathFilters
         public static IEnumerable<string> AddDeletedInFolders(this IEnumerable<string> assetPaths, IVersionControlCommands vcc)
         {
             var deletedInFolders = assetPaths
-                .Where(Directory.Exists)
                 .SelectMany(d => vcc.GetFilteredAssets(status => (status.fileStatus == VCFileStatus.Deleted || status.fileStatus == VCFileStatus.Missing) && status.assetPath.StartsWith(new ComposedString(d))))
                 .Select(status => status.assetPath.Compose())
                 .ToArray();
             return assetPaths.Concat(deletedInFolders).ToArray();
+        }
+
+        public static IEnumerable<string> NonEmpty(this IEnumerable<string> assets)
+        {
+            return assets.Where(a => !string.IsNullOrEmpty(a)).ToArray();
+        }
+
+        public static IEnumerable<string> ShortestFirst(this IEnumerable<string> assets)
+        {
+            return assets.OrderBy(s => s.Length);
+        }
+
+        public static IEnumerable<string> FilesExist(this IEnumerable<string> assets)
+        {
+            return assets.Where(File.Exists).ToArray();
+        }
+
+        public static string AggregateString(this IEnumerable<string> assets)
+        {
+            return assets.Aggregate((a, b) => a + ", " + b);
         }
     }
 }

@@ -39,14 +39,14 @@ namespace VersionControl
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = NonEmpty(assets).InVersionedFolder(vcc);
+            assets = assets.NonEmpty().InVersionedFolder(vcc);
             return assets.Any() ? base.Status(assets, statusLevel) : true;
         }
 
         public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null) return true;
-            assets = NonEmpty(assets).ToList();
+            assets = assets.NonEmpty();
             return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
         }
 
@@ -60,10 +60,12 @@ namespace VersionControl
             var filesInFolders = assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc).ToArray();
             var deletedInFolders = assets.AddDeletedInFolders(vcc);
 
+            D.Log("Deleted In Folders: " + deletedInFolders.AggregateString());
+
             bool result =
                 base.Add(filesInFolders.UnversionedInVersionedFolder(vcc)) &&
                 base.Delete(filesInFolders.Missing(vcc), OperationMode.Normal) &&
-                base.Commit(ShortestFirst(filesInFolders), commitMessage) &&
+                base.Commit(filesInFolders.ShortestFirst(), commitMessage) &&
                 Status(assets, StatusLevel.Local) &&
                 ReleaseLock(assets);
 
@@ -80,7 +82,7 @@ namespace VersionControl
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            assets = ShortestFirst(assets);
+            assets = assets.ShortestFirst();
             return assets.Any() ? base.Revert(assets) : true;
         }
 
@@ -105,7 +107,7 @@ namespace VersionControl
 
         public override bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return base.Resolve(FilesExist(assets), conflictResolution);
+            return base.Resolve(assets.FilesExist(), conflictResolution);
         }
 
         public override bool ReleaseLock(IEnumerable<string> assets)
@@ -115,14 +117,14 @@ namespace VersionControl
 
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            assets = NonEmpty(assets).Versioned(vcc);
+            assets = assets.NonEmpty().Versioned(vcc);
             return assets.Any() ? (base.ChangeListAdd(assets, changelist) && Status(assets, StatusLevel.Local)) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            assets = NonEmpty(assets).Versioned(vcc).OnChangeList(vcc);
-            return assets.Any() ? base.ChangeListRemove(FilesExist(assets).OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
+            assets = assets.NonEmpty().Versioned(vcc).OnChangeList(vcc);
+            return assets.Any() ? base.ChangeListRemove(assets.FilesExist().OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
         }
 
         public override bool Move(string from, string to)
@@ -130,21 +132,6 @@ namespace VersionControl
             if (vcc.GetAssetStatus(from).fileStatus == VCFileStatus.Unversioned) return false;
             if (to.InUnversionedParentFolder(vcc)) return false;
             return base.Move(from, to);
-        }
-
-        static IEnumerable<string> NonEmpty(IEnumerable<string> assets)
-        {
-            return assets.Where(a => !string.IsNullOrEmpty(a)).ToArray();
-        }
-
-        static IEnumerable<string> ShortestFirst(IEnumerable<string> assets)
-        {
-            return assets.OrderBy(s => s.Length);
-        }
-        
-        static IEnumerable<string> FilesExist(IEnumerable<string> assets)
-        {
-            return assets.Where(File.Exists).ToArray();
         }
 
     }

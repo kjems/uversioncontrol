@@ -12,6 +12,7 @@ using CommandLineExecution;
 namespace VersionControl.Backend.SVN
 {
     using Logging;
+    using AssetPathFilters;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
@@ -387,7 +388,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets));
+            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
         }
 
         private static string FixAtChar(string asset)
@@ -527,7 +528,7 @@ namespace VersionControl.Backend.SVN
 
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            return CreateAssetOperation("changelist \"" + changelist + "\"", assets);
+            return CreateAssetOperation("changelist \"" + changelist + "\"", assets) && Status(assets, StatusLevel.Previous);
         }
 
         public bool ChangeListRemove(IEnumerable<string> assets)

@@ -118,8 +118,8 @@ namespace VersionControl.UserInterface
                 Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
                 Rect placement = GetRightAligned(rect, iconType.Size);
                 var clickRect = placement;
-                clickRect.xMax += iconType.Size * 0.25f;
-                clickRect.xMin -= rect.width * 0.15f;
+                //clickRect.xMax += iconType.Size * 0.25f;
+                //clickRect.xMin -= rect.width * 0.15f;
                 if (texture) GUI.DrawTexture(placement, texture);
                 if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
                 {

@@ -5,15 +5,18 @@ using System;
 using System.Threading.Tasks;
 using VersionControl;
 
-public static class TaskExtensions
+namespace VersionControl
 {
-    public static Task ContinueWithOnNextUpdate<T>(this Task<T> task, Action<T> postAction)
+    public static class TaskExtensions
     {
-        return task.ContinueWith(NextUpdate(postAction));
-    }
+        public static Task ContinueWithOnNextUpdate<T>(this Task<T> task, Action<T> postAction)
+        {
+            return task.ContinueWith(NextUpdate(postAction));
+        }
 
-    private static Action<Task<T>> NextUpdate<T>(Action<T> postAction)
-    {
-        return t => OnNextUpdate.Do(() => postAction(t.Result));
+        private static Action<Task<T>> NextUpdate<T>(Action<T> postAction)
+        {
+            return t => OnNextUpdate.Do(() => postAction(t.Result));
+        }
     }
 }

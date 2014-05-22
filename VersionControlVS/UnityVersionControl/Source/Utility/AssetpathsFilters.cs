@@ -32,10 +32,21 @@ namespace VersionControl.AssetPathFilters
 
         public static IEnumerable<string> GetDependencies(this IEnumerable<string> assetPaths)
         {
-            return AssetDatabase.GetDependencies(assetPaths.ToArray())
+            return AssetDatabase.GetDependencies(assetPaths.Where(a => !ignoreDependency.Contains(a)).ToArray())
                 .Where(dep => VCCommands.Instance.GetAssetStatus(dep).fileStatus != VCFileStatus.Normal)
                 .Except(assetPaths.Select(ap => ap.ToLowerInvariant()))
                 .ToArray();
+        }
+
+        private static readonly List<string> ignoreDependency = new List<string>();
+        public static void RemoveIgnoreDependencies(string assetPath)
+        {
+            ignoreDependency.Remove(assetPath);
+        }
+        public static void AddIgnoreDependencies(string assetPath)
+        {
+            if(!ignoreDependency.Contains(assetPath))
+                ignoreDependency.Add(assetPath);
         }
     }
 }

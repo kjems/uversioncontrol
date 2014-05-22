@@ -18,7 +18,7 @@ namespace VersionControl
     public static class OnNextUpdate
     {
         private static readonly object mLockToken = new object();
-        private static readonly List<Action> mActionQueue = new List<Action>();
+        private static readonly Queue<Action> mActionQueue = new Queue<Action>();
 
         static OnNextUpdate()
         {
@@ -29,7 +29,7 @@ namespace VersionControl
         {
             lock (mLockToken)
             {
-                mActionQueue.Add(work);
+                mActionQueue.Enqueue(work);
             }
         }
 
@@ -37,25 +37,21 @@ namespace VersionControl
         {
             if (mActionQueue.Count > 0)
             {
-                List<Action> actionQueueCopy;
+                Queue<Action> actionQueueCopy;
                 lock (mLockToken)
                 {
-                    actionQueueCopy = new List<Action>(mActionQueue);
+                    actionQueueCopy = new Queue<Action>(mActionQueue);
                     mActionQueue.Clear();
                 }
                 while (actionQueueCopy.Count > 0)
                 {
                     try
                     {
-                        actionQueueCopy[0]();
+                        actionQueueCopy.Dequeue()();
                     }
                     catch (Exception e)
                     {
                         D.ThrowException(e);
-                    }
-                    finally
-                    {
-                        actionQueueCopy.RemoveAt(0);
                     }
                 }
             }

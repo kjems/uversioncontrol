@@ -186,8 +186,14 @@ namespace VersionControl
 
         public static void DiffWithBase(string assetPath)
         {
-            string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
-            EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
+                if (!string.IsNullOrEmpty(baseAssetPath))
+                {
+                    EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
+                }
+            }
         }
 
         static readonly List<ComposedString> textPostfix = new List<ComposedString> { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml" };

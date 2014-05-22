@@ -161,7 +161,7 @@ namespace VersionControl.UserInterface
                 widths = new float[] { 200 },
                 doubleClickAction = status =>
                 {
-                    if (VCUtility.IsTextAsset(status.assetPath) && VCUtility.ManagedByRepository(status))
+                    if (VCUtility.IsTextAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
                         VCUtility.DiffWithBase(status.assetPath.Compose());
                     else
                         AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.Compose()));

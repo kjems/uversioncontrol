@@ -115,7 +115,6 @@ namespace VersionControl.UserInterface
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.commit, buttonStyle))
                                 {
-                                    EditorApplication.SaveScene();
                                     OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {EditorApplication.currentScene}));
                                 }
                             }

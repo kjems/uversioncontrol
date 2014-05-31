@@ -20,7 +20,8 @@ namespace VersionControl
         public static void SetEditable(Object obj, bool editable)
         {
             //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
-            if (obj != null && !AvoidGUILock(obj) && !string.IsNullOrEmpty(obj.GetAssetPath()))
+            if (obj != null && !AvoidGUILock(obj) && !string.IsNullOrEmpty(obj.GetAssetPath()) && 
+                !(obj is GameObject && PrefabHelper.IsPrefabParent(obj))) // Do not modify object flags for Project-Prefab GameObjects
             {
                 if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
                 if (!editable && IsEditable(obj)) obj.hideFlags |= HideFlags.NotEditable;

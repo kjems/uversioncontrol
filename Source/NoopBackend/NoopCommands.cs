@@ -3,6 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using System.Collections.Generic;
+#pragma warning disable 0067
 
 namespace VersionControl.Backend.Noop
 {

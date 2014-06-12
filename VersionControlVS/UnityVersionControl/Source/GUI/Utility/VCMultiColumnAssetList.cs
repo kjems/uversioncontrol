@@ -153,8 +153,8 @@ namespace VersionControl.UserInterface
 
             options = new MultiColumnViewOption
             {
-                headerStyle = guiSkin.button,
-                rowStyle = guiSkin.label,
+                headerStyle = new GUIStyle(guiSkin.button),
+                rowStyle = new GUIStyle(guiSkin.label),
                 rowRightClickMenu = rowRightClickMenu,
                 headerRightClickMenu = headerRightClickMenu,
                 cellClickAction = cellClickAction,

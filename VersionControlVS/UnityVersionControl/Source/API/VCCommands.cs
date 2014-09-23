@@ -59,7 +59,7 @@ namespace VersionControl
         public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
-        public event Action<OperationType, bool> OperationCompleted;
+        public event Action<OperationType, IEnumerable<string>, bool> OperationCompleted;
         public event Action<List<string>> PreCommit;
         public event Action Started;
 
@@ -401,7 +401,7 @@ namespace VersionControl
             bool updateResult = vcc.Update(assets);
             updating = false;
             if (updateResult) RequestAssetDatabaseRefresh();
-            OnOperationCompleted(OperationType.Update, updateResult);
+            OnOperationCompleted(OperationType.Update, assets, updateResult);
             if (updateResult) Status(StatusLevel.Local, DetailLevel.Normal);
             return updateResult;
         }
@@ -414,7 +414,7 @@ namespace VersionControl
                 Status(assets, StatusLevel.Local);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Commit, commitSuccess);
+                OnOperationCompleted(OperationType.Commit, assets, commitSuccess);
                 return commitSuccess;
             });
         }
@@ -434,7 +434,7 @@ namespace VersionControl
                 {
                     RefreshAssetDatabase();                    
                 }
-                OnOperationCompleted(OperationType.Revert, revertSuccess);
+                OnOperationCompleted(OperationType.Revert, assets, revertSuccess);
                 return revertSuccess;
             });
         }
@@ -481,7 +481,7 @@ namespace VersionControl
                 bool result = vcc.Delete(deleteAssets, mode);
                 RequestAssetDatabaseRefresh();
                 if (filesOSDeleted) RefreshAssetDatabase();
-                OnOperationCompleted(OperationType.Delete, result || filesOSDeleted);
+                OnOperationCompleted(OperationType.Delete, assets, result || filesOSDeleted);
                 return result;
             });
         }
@@ -490,7 +490,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool getlockSuccess = vcc.GetLock(assets, mode);
-                OnOperationCompleted(OperationType.GetLock, getlockSuccess);
+                OnOperationCompleted(OperationType.GetLock, assets, getlockSuccess);
                 return getlockSuccess;
             });
         }
@@ -499,7 +499,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.ReleaseLock(assets);
-                OnOperationCompleted(OperationType.ReleaseLock, result);
+                OnOperationCompleted(OperationType.ReleaseLock, assets, result);
                 return result;
             });
         }
@@ -521,7 +521,7 @@ namespace VersionControl
             {
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
                 RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Resolve, resolveSuccess);
+                OnOperationCompleted(OperationType.Resolve, assets, resolveSuccess);
                 return resolveSuccess;
             });
         }
@@ -532,7 +532,7 @@ namespace VersionControl
                 FlushFiles();
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Move, moveSuccess);
+                OnOperationCompleted(OperationType.Move, new []{from, to}, moveSuccess);
                 return moveSuccess;
             });
         }
@@ -560,7 +560,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.CleanUp();
-                OnOperationCompleted(OperationType.CleanUp, result);
+                OnOperationCompleted(OperationType.CleanUp, null, result);
                 return result;
             });
         }
@@ -582,14 +582,14 @@ namespace VersionControl
             RefreshAssetDatabase();
         }
 
-        private void OnOperationCompleted(OperationType operation, bool success)
+        private void OnOperationCompleted(OperationType operation, IEnumerable<string> assetPaths, bool success)
         {
             if (OperationCompleted != null)
             {
                 ThreadUtility.ExecuteOnMainThread(() => 
                 {
                     //D.Log(operation + " : " + (success ? "success":"failed"));
-                    OperationCompleted(operation, success);
+                    OperationCompleted(operation, assetPaths, success);
                 });
             }
         }

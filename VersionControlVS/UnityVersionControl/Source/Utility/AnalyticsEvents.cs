@@ -12,7 +12,7 @@ namespace VersionControl
     {
         static AnalyticsEvents()
         {
-            VCCommands.Instance.OperationCompleted += (operation, assets, success) =>
+            VCCommands.Instance.OperationCompleted += (operation, beforeStatus, afterStatus, success) =>
             {
                 GoogleAnalytics.LogUserEvent("Operation", string.Format("{0}_{1}", operation.ToString(), (success ? "success" : "failed")));
             };

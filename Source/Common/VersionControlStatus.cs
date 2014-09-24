@@ -86,6 +86,11 @@ namespace VersionControl
     [Serializable]
     public sealed class VersionControlStatus
     {
+        public VersionControlStatus Clone()
+        {
+            return MemberwiseClone() as VersionControlStatus;
+        }
+
         public VCReflectionLevel reflectionLevel = VCReflectionLevel.None;
         public VCFileStatus fileStatus = VCFileStatus.Normal;
         public VCDirectoryStatus directoryStatus = VCDirectoryStatus.NoModification;

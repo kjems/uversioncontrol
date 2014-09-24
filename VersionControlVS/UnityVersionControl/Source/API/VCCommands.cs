@@ -36,6 +36,7 @@ namespace VersionControl
         Move,
         CleanUp,
         Resolve,
+        AllowLocalEdit,
     }
 
     /// <summary>
@@ -59,7 +60,7 @@ namespace VersionControl
         public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
-        public event Action<OperationType, IEnumerable<string>, bool> OperationCompleted;
+        public event Action<OperationType, VersionControlStatus[], VersionControlStatus[], bool> OperationCompleted;
         public event Action<List<string>> PreCommit;
         public event Action Started;
 
@@ -175,6 +176,20 @@ namespace VersionControl
                 D.Log("VC Action ignored due to not being active");
             }
             return default(T);
+        }
+
+        private VersionControlStatus[] StoreCurrentStatus(IEnumerable<string> assets)
+        {
+            return assets != null ? assets.Select(a => GetAssetStatus(a).Clone()).ToArray() : new VersionControlStatus[] { };
+        }
+
+        private bool PerformOperation(OperationType operationType, IEnumerable<string> assets, Func<IEnumerable<string>, bool> operation)
+        {
+            var beforeStatus = StoreCurrentStatus(assets);
+            bool result = operation(assets);
+            var afterStatus = StoreCurrentStatus(assets);
+            OnOperationCompleted(operationType, beforeStatus, afterStatus, result);
+            return result;
         }
 
         private void OnPlaymodeStateChanged()
@@ -397,11 +412,13 @@ namespace VersionControl
 
         public bool Update(IEnumerable<string> assets = null)
         {
+            var beforeStatus = StoreCurrentStatus(assets);
             updating = true;
             bool updateResult = vcc.Update(assets);
             updating = false;
             if (updateResult) RequestAssetDatabaseRefresh();
-            OnOperationCompleted(OperationType.Update, assets, updateResult);
+            var afterStatus = StoreCurrentStatus(assets);
+            OnOperationCompleted(OperationType.Update, beforeStatus, afterStatus, updateResult);
             if (updateResult) Status(StatusLevel.Local, DetailLevel.Normal);
             return updateResult;
         }
@@ -412,9 +429,11 @@ namespace VersionControl
             {
                 FlushFiles();
                 Status(assets, StatusLevel.Local);
+                var beforeStatus = StoreCurrentStatus(assets);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
-                RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Commit, assets, commitSuccess);
+                Status(assets, StatusLevel.Local);
+                var afterStatus = StoreCurrentStatus(assets); ;
+                OnOperationCompleted(OperationType.Commit, beforeStatus, afterStatus, commitSuccess);
                 return commitSuccess;
             });
         }
@@ -427,14 +446,16 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
-                Status(assets.ToList(), StatusLevel.Local);
+                Status(assets, StatusLevel.Local);
+                var beforeStatus = StoreCurrentStatus(assets);
                 bool revertSuccess = vcc.Revert(assets);
-                RequestAssetDatabaseRefresh();
+                Status(assets, StatusLevel.Local);
                 if (revertSuccess)
                 {
                     RefreshAssetDatabase();                    
                 }
-                OnOperationCompleted(OperationType.Revert, assets, revertSuccess);
+                var afterStatus = StoreCurrentStatus(assets);
+                OnOperationCompleted(OperationType.Revert, beforeStatus, afterStatus, revertSuccess);
                 return revertSuccess;
             });
         }
@@ -442,6 +463,7 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
+                var beforeStatus = StoreCurrentStatus(assets);
                 bool filesOSDeleted = false;
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
@@ -481,27 +503,18 @@ namespace VersionControl
                 bool result = vcc.Delete(deleteAssets, mode);
                 RequestAssetDatabaseRefresh();
                 if (filesOSDeleted) RefreshAssetDatabase();
-                OnOperationCompleted(OperationType.Delete, assets, result || filesOSDeleted);
+                var afterStatus = StoreCurrentStatus(assets);
+                OnOperationCompleted(OperationType.Delete, beforeStatus, afterStatus, result || filesOSDeleted);
                 return result;
             });
         }
         public bool GetLock(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
-            return HandleExceptions(() =>
-            {
-                bool getlockSuccess = vcc.GetLock(assets, mode);
-                OnOperationCompleted(OperationType.GetLock, assets, getlockSuccess);
-                return getlockSuccess;
-            });
+            return HandleExceptions(() => PerformOperation(OperationType.GetLock, assets, _assets => vcc.GetLock(_assets,mode)));
         }
         public bool ReleaseLock(IEnumerable<string> assets)
         {
-            return HandleExceptions(() =>
-            {
-                bool result = vcc.ReleaseLock(assets);
-                OnOperationCompleted(OperationType.ReleaseLock, assets, result);
-                return result;
-            });
+            return HandleExceptions(() => PerformOperation(OperationType.ReleaseLock, assets, vcc.ReleaseLock));
         }
         public bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
@@ -519,9 +532,11 @@ namespace VersionControl
         {
             return HandleExceptions(() =>
             {
+                var beforeStatus = StoreCurrentStatus(assets);
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
+                var afterStatus = StoreCurrentStatus(assets);
                 RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Resolve, assets, resolveSuccess);
+                OnOperationCompleted(OperationType.Resolve, beforeStatus, afterStatus, resolveSuccess);
                 return resolveSuccess;
             });
         }
@@ -530,9 +545,10 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
+                var beforeStatus = new[] {GetAssetStatus(from)};
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
-                OnOperationCompleted(OperationType.Move, new []{from, to}, moveSuccess);
+                OnOperationCompleted(OperationType.Move, beforeStatus, new[] { GetAssetStatus(to) }, moveSuccess);
                 return moveSuccess;
             });
         }
@@ -560,7 +576,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 bool result = vcc.CleanUp();
-                OnOperationCompleted(OperationType.CleanUp, null, result);
+                OnOperationCompleted(OperationType.CleanUp, null, null, result);
                 return result;
             });
         }
@@ -582,14 +598,14 @@ namespace VersionControl
             RefreshAssetDatabase();
         }
 
-        private void OnOperationCompleted(OperationType operation, IEnumerable<string> assetPaths, bool success)
+        private void OnOperationCompleted(OperationType operation, VersionControlStatus[] statusBefore, VersionControlStatus[] statusAfter, bool success)
         {
             if (OperationCompleted != null)
             {
                 ThreadUtility.ExecuteOnMainThread(() => 
                 {
                     //D.Log(operation + " : " + (success ? "success":"failed"));
-                    OperationCompleted(operation, assetPaths, success);
+                    OperationCompleted(operation, statusBefore, statusAfter, success);
                 });
             }
         }
@@ -633,7 +649,7 @@ namespace VersionControl
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {
-            return vcc.AllowLocalEdit(assets);
+            return PerformOperation(OperationType.AllowLocalEdit, assets, vcc.AllowLocalEdit);
         }
 
         #endregion

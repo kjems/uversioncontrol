@@ -54,7 +54,20 @@ namespace VersionControl.UserInterface
                 {
                     if (!VCUtility.HaveAssetControl(vcSceneStatus))
                     {
-                        if (vcSceneStatus.lockStatus == VCLockStatus.LockedOther)
+                        if (vcSceneStatus.ModifiedWithoutLock())
+                        {
+                            numberOfButtons++;
+                            if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
+                            {
+                                var sceneAssetPath = new[] { EditorApplication.currentScene };
+                                if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
+                                {
+                                    EditorApplication.SaveScene();
+                                    VCCommands.Instance.Revert(sceneAssetPath);
+                                }
+                            }
+                        }
+                        else if (vcSceneStatus.lockStatus == VCLockStatus.LockedOther)
                         {
                             numberOfButtons++;
                             if (GUILayout.Button(new GUIContent(Terminology.allowLocalEdit, "Shift-click to steal lock"), buttonStyle))
@@ -102,7 +115,7 @@ namespace VersionControl.UserInterface
                         }
                         else
                         {
-                            if (vcSceneStatus.ModifiedOrLocalEditAllowed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
+                            if (vcSceneStatus.LocalEditAllowed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
                             {
                                 numberOfButtons++;
                                 if (GUILayout.Button(Terminology.getlock, buttonStyle))

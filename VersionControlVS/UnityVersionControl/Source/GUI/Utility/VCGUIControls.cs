@@ -133,14 +133,15 @@ namespace VersionControl.UserInterface
                     bool haveLock = VCUtility.HaveVCLock(assetStatus);
                     bool allowLocalEdit = assetStatus.LocalEditAllowed();
                     bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
+                    bool modifiedWithoutRights = assetStatus.ModifiedWithoutRights();
 
                     bool showAdd = ready && !pending && !ignored && unversioned;
-                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit);
+                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit) && !modifiedWithoutRights;
                     bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
                     bool showCommit = ready && !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
                     bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
                     bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
-                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset;
+                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset && !modifiedWithoutRights;
                     bool showUnlock = ready && !pending && !ignored && !allowLocalEdit && haveLock;
                     bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
                     bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;

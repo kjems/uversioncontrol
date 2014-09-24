@@ -143,7 +143,7 @@ namespace VersionControl.UserInterface
             Repaint();
         }
 
-        private void OperationComplete(OperationType operation, IEnumerable<string> assets, bool success)
+        private void OperationComplete(OperationType operation, IEnumerable<VersionControlStatus> statusBefore, IEnumerable<VersionControlStatus> statusAfter, bool success)
         {
             if (operation == OperationType.Update)
             {

@@ -187,7 +187,7 @@ namespace VersionControl.UserInterface
             options.widthTable.Add(columnFileStatus.GetHeader().text, 90);
 
             multiColumnState.AddColumn(columnMetaStatus);
-            options.widthTable.Add(columnMetaStatus.GetHeader().text, 90);
+            options.widthTable.Add(columnMetaStatus.GetHeader().text, 100);
 
             multiColumnState.AddColumn(columnFileType);
             options.widthTable.Add(columnFileType.GetHeader().text, 80);

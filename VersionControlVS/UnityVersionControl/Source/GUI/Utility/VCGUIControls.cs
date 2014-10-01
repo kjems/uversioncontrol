@@ -121,6 +121,7 @@ namespace VersionControl.UserInterface
                     bool mergableTextAsset = VCUtility.IsMergableTextAsset(assetPath);
                     bool modifiedTextAsset = textAsset && assetStatus.fileStatus != VCFileStatus.Normal;
                     bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
+                    bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
                     bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
                     bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
                     bool added = assetStatus.fileStatus == VCFileStatus.Added;
@@ -133,15 +134,14 @@ namespace VersionControl.UserInterface
                     bool haveLock = VCUtility.HaveVCLock(assetStatus);
                     bool allowLocalEdit = assetStatus.LocalEditAllowed();
                     bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
-                    bool modifiedWithoutRights = assetStatus.ModifiedWithoutRights();
 
                     bool showAdd = ready && !pending && !ignored && unversioned;
-                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit) && !modifiedWithoutRights;
+                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit);
                     bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
                     bool showCommit = ready && !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
-                    bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta);
+                    bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta || lockedMeta);
                     bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
-                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset && !modifiedWithoutRights;
+                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset;
                     bool showUnlock = ready && !pending && !ignored && !allowLocalEdit && haveLock;
                     bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
                     bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
@@ -153,7 +153,7 @@ namespace VersionControl.UserInterface
                     if (showOpenLocal) menu.AddItem(new GUIContent(Terminology.allowLocalEdit), false, () => AllowLocalEdit(assetPath, instance));
                     if (showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock), false, () => GetLock(assetPath, instance, OperationMode.Force));
                     if (showCommit) menu.AddItem(new GUIContent(Terminology.commit), false, () => Commit(assetPath, instance));
-                    if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));                    
+                    //if (showUpdate) menu.AddItem(new GUIContent(Terminology.update), false, () => VCCommands.Instance.UpdateTask(new[] { assetPath }));                    
                     if (showUnlock) menu.AddItem(new GUIContent(Terminology.unlock), false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
                     if (showDisconnect) menu.AddItem(new GUIContent("Disconnect"), false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
                     if (showDelete) menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(new[] { assetPath }));

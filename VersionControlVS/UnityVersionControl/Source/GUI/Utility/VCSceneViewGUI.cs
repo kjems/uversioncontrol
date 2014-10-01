@@ -48,102 +48,93 @@ namespace VersionControl.UserInterface
             int numberOfButtons = 0;
             const int maxButtons = 4;
 
+            bool modified = vcSceneStatus.fileStatus == VCFileStatus.Modified;
+            bool deleted = vcSceneStatus.fileStatus == VCFileStatus.Deleted;
+            bool added = vcSceneStatus.fileStatus == VCFileStatus.Added;
+            bool unversioned = vcSceneStatus.fileStatus == VCFileStatus.Unversioned;
+            bool ignored = vcSceneStatus.fileStatus == VCFileStatus.Ignored;
+            bool replaced = vcSceneStatus.fileStatus == VCFileStatus.Replaced;
+            bool lockedByOther = vcSceneStatus.lockStatus == VCLockStatus.LockedOther;
+            bool haveControl = VCUtility.HaveAssetControl(vcSceneStatus);
+            bool haveLock = VCUtility.HaveVCLock(vcSceneStatus);
+            bool allowLocalEdit = vcSceneStatus.LocalEditAllowed();
+            bool pending = vcSceneStatus.reflectionLevel == VCReflectionLevel.Pending;
+
+            bool showAdd =  !pending && !ignored && unversioned;
+            bool showOpen =  !pending && !showAdd && !added && !haveLock && !deleted && (!lockedByOther || allowLocalEdit);
+            bool showCommit = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted);
+            bool showRevert = !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced);
+            bool showOpenLocal = !pending && !ignored && !deleted && !allowLocalEdit && !unversioned && !added && !haveLock;
+            bool showUnlock = !pending && !ignored && !allowLocalEdit && haveLock;
+            bool showForceOpen = !pending && !ignored && !deleted  && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
+
             using (GUILayoutHelper.Vertical())
             {
                 using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
                 {
-                    if (!VCUtility.HaveAssetControl(vcSceneStatus))
+                    if (showAdd)
                     {
-                        if (vcSceneStatus.ModifiedWithoutLock())
+                        numberOfButtons++;
+                        if (GUILayout.Button(Terminology.add, buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
-                            {
-                                var sceneAssetPath = new[] { EditorApplication.currentScene };
-                                if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
-                                {
-                                    EditorApplication.SaveScene();
-                                    VCCommands.Instance.Revert(sceneAssetPath);
-                                }
-                            }
+                            EditorApplication.SaveScene();
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { EditorApplication.currentScene }));
                         }
-                        else if (vcSceneStatus.lockStatus == VCLockStatus.LockedOther)
+                    }
+                    if (showOpen)
+                    {
+                        numberOfButtons++;
+                        if (GUILayout.Button(Terminology.getlock, buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent(Terminology.allowLocalEdit, "Shift-click to steal lock"), buttonStyle))
-                            {
-                                if (Event.current.shift)
-                                {
-                                    VCUtility.GetLock(EditorApplication.currentScene, OperationMode.Force);
-                                }
-                                else VCCommands.Instance.AllowLocalEdit(new[] {EditorApplication.currentScene});
-                            }
+                            VCCommands.Instance.GetLockTask(new[] { EditorApplication.currentScene });
                         }
-                        else if (vcSceneStatus.fileStatus == VCFileStatus.Added)
+                    }
+                    if (showCommit)
+                    {
+                        numberOfButtons++;
+                        if (GUILayout.Button(Terminology.commit, buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.commit, buttonStyle))
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { EditorApplication.currentScene }));
+                        }
+                    }
+                    if (showRevert)
+                    {
+                        numberOfButtons++;
+                        if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
+                        {
+                            var sceneAssetPath = new[] { EditorApplication.currentScene };
+                            if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
                             {
                                 EditorApplication.SaveScene();
-                                OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {EditorApplication.currentScene}));
-                            }
-                        }
-                        else
-                        {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.getlock, buttonStyle))
-                            {
-                                VCCommands.Instance.GetLockTask(new[] {EditorApplication.currentScene});
-                            }
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
-                            {
-                                VCCommands.Instance.AllowLocalEdit(new[] { EditorApplication.currentScene });
+                                VCCommands.Instance.Revert(sceneAssetPath);
+                                OnNextUpdate.Do(AssetDatabase.Refresh);
                             }
                         }
                     }
-                    else
+                    if (showOpenLocal)
                     {
-                        if (vcSceneStatus.fileStatus == VCFileStatus.Unversioned)
+                        numberOfButtons++;
+                        if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.add, buttonStyle))
-                            {
-                                EditorApplication.SaveScene();
-                                OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {EditorApplication.currentScene}));
-                            }
-                        }
-                        else
-                        {
-                            if (vcSceneStatus.LocalEditAllowed() && vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
-                            {
-                                numberOfButtons++;
-                                if (GUILayout.Button(Terminology.getlock, buttonStyle))
-                                {
-                                    OnNextUpdate.Do(() => VCCommands.Instance.GetLockTask(new[] { EditorApplication.currentScene }));
-                                }
-                            }
-                            else if (vcSceneStatus.lockStatus != VCLockStatus.LockedOther)
-                            {
-                                numberOfButtons++;
-                                if (GUILayout.Button(Terminology.commit, buttonStyle))
-                                {
-                                    OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {EditorApplication.currentScene}));
-                                }
-                            }
-                            numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
-                            {
-                                var sceneAssetPath = new[] {EditorApplication.currentScene};
-                                if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
-                                {
-                                    EditorApplication.SaveScene();
-                                    VCCommands.Instance.Revert(sceneAssetPath);
-                                }
-                            }
+                            VCCommands.Instance.AllowLocalEdit(new[] { EditorApplication.currentScene });
                         }
                     }
-
+                    if (showUnlock)
+                    {
+                        numberOfButtons++;
+                        if (GUILayout.Button(Terminology.unlock, buttonStyle))
+                        {
+                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { EditorApplication.currentScene }));
+                        }
+                    }
+                    if (showForceOpen)
+                    {
+                        numberOfButtons++;
+                        if (GUILayout.Button("Force Open", buttonStyle))
+                        {
+                            OnNextUpdate.Do(() => VCUtility.GetLock(EditorApplication.currentScene, OperationMode.Force));
+                        }
+                    }
 
                     // bug: Workaround for a bug in Unity to avoid Tools getting stuck when number of GUI elements change while right mouse is down.
                     using (GUILayoutHelper.Enabled(false))

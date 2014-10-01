@@ -7,7 +7,7 @@ namespace VersionControl.UserInterface
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static class AssetStatusUtils
     {
-        private static readonly Color orange = new Color(0.9f, 0.60f, 0.0f);
+        private static readonly Color orange = new Color(0.85f, 0.45f, 0.05f);
         private static readonly Color pastelRed = new Color(0.85f, 0.4f, 0.4f);
         private static readonly Color pastelBlue = new Color(0.3f, 0.55f, 0.85f);
         private static readonly Color lightgrey = new Color(0.55f, 0.55f, 0.55f);
@@ -23,7 +23,7 @@ namespace VersionControl.UserInterface
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = pastelBlue;
         private static readonly Color modifiedNoLockColor = orange;
-        private static readonly Color localEditColor = new Color(1.0f, 0.9f, 0.1f);
+        private static readonly Color localEditColor = new Color(1.0f, 1.0f, 0.2f);
         private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 0.3f);
         private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
         private static readonly Color pendingColor = new Color(0.9f, 0.9f, 0.6f, 0.0f);

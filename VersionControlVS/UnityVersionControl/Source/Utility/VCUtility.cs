@@ -149,6 +149,12 @@ namespace VersionControl
         {
             if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.None)
             {
+                bool response = EditorUtility.DisplayDialog("Version Control Selection", "Select which Version Control System you are using", "SVN", "None");
+                if (response) // SVN
+                {
+                    VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;
+                }
+                /*P4_DISABLED 
                 int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "P4 Beta", "None");
                 if (response == 0) // SVN
                 {
@@ -157,7 +163,7 @@ namespace VersionControl
                 else if (response == 1) // Perforce
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.P4_Beta;
-                }
+                }*/
             }
             return VCSettings.VersionControlBackend != VCSettings.EVersionControlBackend.None;
         }

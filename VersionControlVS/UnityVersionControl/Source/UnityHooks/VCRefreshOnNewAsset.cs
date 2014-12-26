@@ -22,22 +22,26 @@ namespace VersionControl
             if (VCCommands.Active)
             {
                 D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
-                if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
+
+                if (VCSettings.HandleFileMove == VCSettings.EHandleFileMove.Simple)
                 {
-                    callcount++;
-                    if (callcount == 1)
+                    if (deletedAssets.Length == 0 && movedAssets.Length > 0 && movedAssets.Length == movedFromAssetPaths.Length)
                     {
-                        var parentFolders = RemoveFilesIfParentFolderInList(movedAssets);
-                        for (int i = 0; i < movedAssets.Length; ++i)
+                        callcount++;
+                        if (callcount == 1)
                         {
-                            string from = movedFromAssetPaths[i];
-                            string to = movedAssets[i];
-                            if ((File.Exists(to) || Directory.Exists(to) && !File.Exists(from) && !Directory.Exists(from)) && parentFolders.Contains(to))
+                            var parentFolders = RemoveFilesIfParentFolderInList(movedAssets);
+                            for (int i = 0; i < movedAssets.Length; ++i)
                             {
-                                ReMoveAssetOnVC(movedFromAssetPaths[i], movedAssets[i]);
+                                string from = movedFromAssetPaths[i];
+                                string to = movedAssets[i];
+                                if ((File.Exists(to) || Directory.Exists(to) && !File.Exists(from) && !Directory.Exists(from)) && parentFolders.Contains(to))
+                                {
+                                    ReMoveAssetOnVC(movedFromAssetPaths[i], movedAssets[i]);
+                                }
                             }
+                            callcount--;
                         }
-                        callcount--;
                     }
                 }
 

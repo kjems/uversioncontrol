@@ -238,7 +238,6 @@ namespace VersionControl
                 FlusingFiles = true;
                 //D.Log("Flusing files");
                 EditorApplication.SaveAssets();
-                EditorUtility.UnloadUnusedAssets();
                 FlusingFiles = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");

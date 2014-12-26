@@ -38,6 +38,7 @@ namespace VersionControl
             selectiveCommit = EditorPrefs.GetBool("VCSSettings/selectiveCommit", false);
             saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/saveStrategy", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
+            handleFileMove = (EHandleFileMove)EditorPrefs.GetInt("VCSSettings/handleFileMove", (int)EHandleFileMove.Simple);
 
             OnSettingsChanged();
 
@@ -68,6 +69,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/selectiveCommit", selectiveCommit);
                 EditorPrefs.SetInt("VCSSettings/saveStrategy", (int)saveStrategy);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
+                EditorPrefs.SetInt("VCSSettings/handleFileMove", (int)handleFileMove);
             };
         }
 
@@ -75,6 +77,7 @@ namespace VersionControl
         public enum EReflectionLevel { Local, Remote }
         public enum EVersionControlBackend { None, Svn, P4_Beta }
         public enum ESaveAssetsStrategy { Unity, VersionControl, User }
+        public enum EHandleFileMove { None, Simple, TeamLicense }
 
         public static event Action SettingChanged;        
         
@@ -108,8 +111,7 @@ namespace VersionControl
         {
             if (SettingChanged != null) SettingChanged();
         }
-
-        
+     
         private static EVersionControlBackend versionControlBackend;
         public static EVersionControlBackend VersionControlBackend 
         { 
@@ -172,38 +174,30 @@ namespace VersionControl
         
         private static bool projectIcons;
         public static bool ProjectIcons { get { return projectIcons; } set { if (projectIcons != value) { projectIcons = value; OnSettingsChanged(); } } }
-
         
         private static EReflectionLevel projectReflectionMode;
         public static EReflectionLevel ProjectReflectionMode { get { return projectReflectionMode; } set { if (projectReflectionMode != value) { projectReflectionMode = value; } } }
-
         
         private static bool bugReport;
         public static bool BugReport { get { return bugReport; } set { if (bugReport != value) { bugReport = value; OnSettingsChanged(); } } }
 
         private static bool analytics;
         public static bool Analytics { get { return analytics; } set { if (analytics != value) { analytics = value; OnSettingsChanged(); } } }
-
         
         private static EBugReportMode bugReportMode;
         public static EBugReportMode BugReportMode { get { return bugReportMode; } set { if (bugReportMode != value) { bugReportMode = value; } } }
-
         
         private static string lockScenesFilter;
         public static string LockScenesFilter { get { return lockScenesFilter; } set { if (lockScenesFilter != value) { lockScenesFilter = value.TrimStart(new[] { ' ', '/' }); } } }
-
         
         private static string lockPrefabsFilter;
         public static string LockPrefabsFilter { get { return lockPrefabsFilter; } set { if (lockPrefabsFilter != value) { lockPrefabsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
-
         
         private static string lockMaterialsFilter;
         public static string LockMaterialsFilter { get { return lockMaterialsFilter; } set { if (lockMaterialsFilter != value) { lockMaterialsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
 
-
         private static bool autoCloseAfterSuccess;
         public static bool AutoCloseAfterSuccess { get { return autoCloseAfterSuccess; } set { if (autoCloseAfterSuccess != value) { autoCloseAfterSuccess = value; OnSettingsChanged(); } } }
-
 
         private static bool includeDepedenciesAsDefault;
         public static bool IncludeDepedenciesAsDefault { get { return includeDepedenciesAsDefault; } set { if (includeDepedenciesAsDefault != value) { includeDepedenciesAsDefault = value; OnSettingsChanged(); } } }
@@ -214,11 +208,11 @@ namespace VersionControl
         private static bool selectiveCommit;
         public static bool SelectiveCommit { get { return selectiveCommit; } set { if (selectiveCommit != value) { selectiveCommit = value; OnSettingsChanged(); } } }
         
-
         private static ESaveAssetsStrategy saveStrategy;
         public static ESaveAssetsStrategy SaveStrategy { get { return saveStrategy; } set { if (saveStrategy != value) { saveStrategy = value; OnSettingsChanged(); } } }
-        
-        
+
+        private static EHandleFileMove handleFileMove;
+        public static EHandleFileMove HandleFileMove { get { return handleFileMove; } set { if (handleFileMove != value) { handleFileMove = value; OnSettingsChanged(); } } }
 
 
         private static string clientPath;

@@ -75,7 +75,7 @@ namespace VersionControl
 
         public enum EBugReportMode { Automatic, Manual }
         public enum EReflectionLevel { Local, Remote }
-        public enum EVersionControlBackend { None, Svn, P4_Beta }
+        public enum EVersionControlBackend { None, Svn/*P4_DISABLED, P4_Beta*/ }
         public enum ESaveAssetsStrategy { Unity, VersionControl, User }
         public enum EHandleFileMove { None, Simple, TeamLicense }
 

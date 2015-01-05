@@ -41,10 +41,11 @@ namespace VersionControl
 
         private static int GetSelectionHash(ref Object[] selection)
         {
-            int hash = 0;
-            foreach (var selectionIt in selection)
+            int hash = 17;
+            for (int i = 0, count = selection.Length; i < count; ++i)
             {
-                hash ^= selectionIt.GetHashCode();
+                if (selection[i])
+                    hash = 31 * hash + selection[i].GetHashCode();
             }
             return hash;
         }

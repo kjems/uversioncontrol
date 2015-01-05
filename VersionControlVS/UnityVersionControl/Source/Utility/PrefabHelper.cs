@@ -54,16 +54,15 @@ namespace VersionControl
         public static GameObject DisconnectPrefab(GameObject gameObject)
         {
             // instantiate prefab at prefab location, remove original prefab instance.
-            Undo.RegisterSceneUndo("Disconnect Prefab");
             var prefabRoot = FindPrefabRoot(gameObject);
             string prefabName = prefabRoot.name;
 
             var replacedPrefab = Object.Instantiate(prefabRoot, prefabRoot.transform.position, prefabRoot.transform.rotation) as GameObject;
+            Undo.RegisterCreatedObjectUndo(replacedPrefab, "Disconnect Prefab");
             replacedPrefab.name = prefabName;
             replacedPrefab.transform.parent = prefabRoot.transform.parent;
 
-            Object.DestroyImmediate(prefabRoot);
-            EditorUtility.UnloadUnusedAssets();
+            Undo.DestroyObjectImmediate(prefabRoot);
             return replacedPrefab;
         }
 
@@ -76,11 +75,11 @@ namespace VersionControl
 
         public static void ApplyPrefab(GameObject prefabInstance)
         {
-            Undo.RegisterSceneUndo("Apply Prefab");
             GameObject go = PrefabUtility.FindRootGameObjectWithSameParentPrefab(prefabInstance);
             var prefabParent = GetPrefabParent(prefabInstance) as GameObject;
             if (prefabParent && GetPrefabType(prefabParent) == PrefabType.Prefab)
             {
+                Undo.RecordObject(go, "Apply Prefab");
                 PrefabUtility.ReplacePrefab(go, prefabParent, ReplacePrefabOptions.ConnectToPrefab);
             }
         }

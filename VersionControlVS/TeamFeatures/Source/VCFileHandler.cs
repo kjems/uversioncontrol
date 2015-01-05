@@ -11,9 +11,17 @@ namespace VersionControl
 {
     using Logging;
     using AssetPathFilters;
-    internal class VCFileHandler : AssetModificationProcessor
+    internal class VCFileHandler : /*UnityEditor.*/AssetModificationProcessor
     {
-        /* Move and Rename Handled by VCRefreshOnNewAsset
+
+        private static bool UseTeamLicence 
+        { 
+            get 
+            {
+                return VCSettings.HandleFileMove == VCSettings.EHandleFileMove.TeamLicense && UnityEditorInternal.InternalEditorUtility.HasMaint();
+            }
+        }
+        
         private static bool InUnversionedParentFolder(string asset, out string topUnversionedFolder)
         {
             topUnversionedFolder = "";
@@ -58,7 +66,7 @@ namespace VersionControl
         
         private static AssetMoveResult OnWillMoveAsset(string from, string to)
         {
-            if (!UnityEditorInternal.InternalEditorUtility.HasMaint()) return AssetMoveResult.DidNotMove;
+            if (!UseTeamLicence) return AssetMoveResult.DidNotMove;
 
             VersionControlStatus status = VCCommands.Instance.GetAssetStatus(from);
             if (VCUtility.ManagedByRepository(status))
@@ -86,7 +94,7 @@ namespace VersionControl
                 return AssetMoveResult.FailedMove;
             }
             return AssetMoveResult.DidNotMove;
-        }*/
+        }
 
         private static string[] OnWillSaveAssets(string[] assets)
         {

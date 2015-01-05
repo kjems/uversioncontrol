@@ -22,7 +22,7 @@ namespace VersionControl.UserInterface
 
         private void OnEnable()
         {
-            minSize = new Vector2(320, 430);
+            minSize = new Vector2(320, 470);
         }
 
         private void OnGUI()
@@ -154,7 +154,12 @@ namespace VersionControl.UserInterface
             }
             GUILayout.Label("Advanced", EditorStyles.boldLabel);
             using (GUILayoutHelper.VerticalIdented(14))
-            {                
+            {
+                using (GUILayoutHelper.Horizontal())
+                {
+                    GUILayout.Label(new GUIContent("How to Move and Rename", "How should file move and renames in project be handled\nDefault: Simple"));
+                    VCSettings.HandleFileMove = (VCSettings.EHandleFileMove)EditorGUILayout.EnumPopup(VCSettings.HandleFileMove, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
                 using (GUILayoutHelper.Horizontal())
                 {
                     GUILayout.Label(new GUIContent(string.Format("Who Controls Asset Saves", Terminology.getlock), string.Format("Select {0} to only let Unity save files that are either {1} or {2} \nDefault: {3}", VCSettings.ESaveAssetsStrategy.VersionControl.ToString(), Terminology.allowLocalEdit, Terminology.getlock, VCSettings.ESaveAssetsStrategy.Unity.ToString())));

@@ -1,3 +1,4 @@
+/*P4_DISABLED
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
@@ -378,4 +379,4 @@ public class P4ConnectionTool : EditorWindow
             fileWriter.Close();
         }
     }
-}
+}*/

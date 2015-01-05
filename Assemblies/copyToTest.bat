@@ -1,5 +1,10 @@
 @echo off
 
+IF NOT EXIST %2 (
+@echo Test Project does not exist at %2 so skipping copy 
+Exit
+)
+
 if "%1" NEQ "release" if "%1" NEQ "debug" goto usage
 if "%2"=="" goto usage
 

@@ -109,6 +109,15 @@ namespace VersionControl
             vcc.Dispose();
         }
 
+        public void StartInPassiveMode()
+        {
+            if (Active)
+            {
+                vcc.Start();
+                if (Started != null) Started();
+            }
+        }
+
         public void Start()
         {
             if (Active)
@@ -449,6 +458,7 @@ namespace VersionControl
                 var beforeStatus = StoreCurrentStatus(assets);
                 bool revertSuccess = vcc.Revert(assets);
                 Status(assets, StatusLevel.Local);
+                RequestAssetDatabaseRefresh();
                 if (revertSuccess)
                 {
                     RefreshAssetDatabase();                    

@@ -17,6 +17,7 @@ namespace VersionControl.UserInterface
     {
         private HashSet<VersionControlStatus> masterSelection = new HashSet<VersionControlStatus>();
         private bool showMasterSelection = false;
+        private Action repaint;
         private IEnumerable<VersionControlStatus> interrestingStatus;
         private MultiColumnState multiColumnState;
         private MultiColumnViewOption options;
@@ -43,8 +44,9 @@ namespace VersionControl.UserInterface
             return VCCommands.Instance.GetAssetStatus(assetPath).MetaStatus();
         }
 
-        public VCMultiColumnAssetList(bool showMasterSelection = false)
+        public VCMultiColumnAssetList(Action repaint = null, bool showMasterSelection = false)
         {
+            this.repaint = repaint;
             this.showMasterSelection = showMasterSelection;
             Initialize();
             VCCommands.Instance.StatusCompleted += RefreshGUI;
@@ -124,6 +126,7 @@ namespace VersionControl.UserInterface
             // Return value of true steals the click from normal selection, false does not.
             Func<MultiColumnState.Row, MultiColumnState.Column, bool> cellClickAction = (row, column) =>
             {
+                GUI.FocusControl("");
                 if (column == columnSelection)
                 {
                     var currentSelection = multiColumnState.GetSelected();
@@ -267,8 +270,30 @@ namespace VersionControl.UserInterface
             RefreshBaseFilter();
         }
 
+        private void ToggleMasterSelection()
+        {
+            var selected = multiColumnState.GetSelected();
+            if(selected.Any())
+            {
+                bool toggle = masterSelection.Contains( selected.First() );
+                foreach(var item in selected)
+                {
+                    if (toggle)
+                        masterSelection.Remove(item);
+                    else
+                        masterSelection.Add(item);
+                }
+                if (repaint != null) repaint();
+            }
+        }
+
         public void DrawGUI()
         {
+            if (GUIUtility.hotControl == 0 && GUIUtility.keyboardControl == 0 && Event.current.isKey && Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Space)
+            {
+                ToggleMasterSelection();
+            }
+
             Rect rect = GUILayoutUtility.GetRect(5, float.MaxValue, 5, float.MaxValue, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             GUI.Box(rect, "");
             MultiColumnView.ListView(rect, multiColumnState, options);

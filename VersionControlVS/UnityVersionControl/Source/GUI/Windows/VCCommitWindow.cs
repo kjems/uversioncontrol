@@ -90,7 +90,7 @@ namespace VersionControl.UserInterface
             minSize = new Vector2(250, 100);
             commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 1000.0f);
             rect = new Rect(0, commitMessageHeight, position.width, 10.0f);
-            vcMultiColumnAssetList = new VCMultiColumnAssetList(VCSettings.SelectiveCommit);
+            vcMultiColumnAssetList = new VCMultiColumnAssetList(Repaint, VCSettings.SelectiveCommit);
             VCCommands.Instance.StatusCompleted += RefreshSelection;
         }
 

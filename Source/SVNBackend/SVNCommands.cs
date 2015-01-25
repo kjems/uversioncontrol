@@ -334,7 +334,11 @@ namespace VersionControl.Backend.SVN
             }
             catch (Exception e)
             {
-                throw new VCCriticalException("Check that your commandline SVN client is installed corretly\n\n" + e.Message, commandLine.ToString(), e);
+                if (e.StackTrace.Contains("System.IO.MonoSyncFileStream/ReadDelegate"))
+                {
+                    throw new VCMonoDebuggerAttachedException(e.Message, commandLine.ToString(), e);
+                }
+                throw new VCCriticalException(e.Message, commandLine.ToString(), e);
             }
             finally
             {

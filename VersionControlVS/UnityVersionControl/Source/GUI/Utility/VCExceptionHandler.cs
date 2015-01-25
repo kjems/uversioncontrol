@@ -39,6 +39,7 @@ namespace VersionControl
                 else if (e is VCOutOfDate) HandleOutOfDate(e as VCOutOfDate);
                 else if (e is VCCriticalException) HandleCritical(e as VCCriticalException);
                 else if (e is VCMissingCredentialsException) HandleUserCredentials();
+                else if (e is VCMonoDebuggerAttachedException) HandleMonoDebuggerAttached(e as VCMonoDebuggerAttachedException);
                 else HandleBase(e);
             });
         }
@@ -47,6 +48,15 @@ namespace VersionControl
         {
             D.LogWarning(e.ErrorMessage);
             if (EditorUtility.DisplayDialog("Connection Timeout", "Connection to the server timed out.\n\nTurn Off Version Control?", "Yes", "No"))
+            {
+                VCSettings.VCEnabled = false;
+            }
+        }
+
+        private static void HandleMonoDebuggerAttached(VCMonoDebuggerAttachedException e)
+        {
+            D.LogWarning(e.ErrorMessage);
+            if (EditorUtility.DisplayDialog("Mono Debugger Attached Bug", "When the Mono debugger is attached a conflict in calling command-line operations occur, so either detach Mono Debugger or turn of UVC\n\nTurn Off Version Control?", "Yes", "No"))
             {
                 VCSettings.VCEnabled = false;
             }
@@ -79,8 +89,8 @@ namespace VersionControl
         private static void HandleCritical(VCCriticalException e)
         {
             GoogleAnalytics.LogUserEvent("CriticalException", e.ErrorMessage);
-            D.LogError("Exception caught! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
-            if (EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage + "\n\nTurn Off Version Control?", "Yes", "No"))
+            Debug.LogException(e.InnerException);
+            if (EditorUtility.DisplayDialog("Version Control Exception", e.ErrorDetails + "\n\nTurn Off Version Control?", "Yes", "No"))
             {
                 VCSettings.VCEnabled = false;
             }
@@ -93,16 +103,16 @@ namespace VersionControl
 
         private static void HandleBase(VCException e)
         {
-            D.LogError("Exception caught! : " + e.ErrorDetails + "\n\n" + e.ErrorMessage);
+            Debug.LogException(e.InnerException);
             GoogleAnalytics.LogUserEvent("Exception", e.ErrorMessage);
             if (VCSettings.BugReport)
             {
-                var report = EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage, "Report", "Close");
+                var report = EditorUtility.DisplayDialog("Version Control Exception", e.ErrorDetails, "Report", "Close");
                 if (report) ReportError(e);
             }
             else
             {
-                EditorUtility.DisplayDialog("Version Control Exception", e.ErrorMessage, "OK");
+                EditorUtility.DisplayDialog("Version Control Exception", e.ErrorDetails, "OK");
             }
         }
         

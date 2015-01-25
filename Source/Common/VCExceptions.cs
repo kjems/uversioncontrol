@@ -12,13 +12,19 @@ namespace VersionControl
         public string ErrorMessage { get { return base.Message; } }
         public string ErrorDetails { get; private set; }
         public VCException(string errorMessage, string errorDetails) : base(errorMessage) { ErrorDetails = errorDetails + "\n\n" + D.GetCallstack(); }
-        public VCException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, innerEx) { ErrorDetails = errorDetails + "\n\n" + D.GetCallstack(); }
+        public VCException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, innerEx) { ErrorDetails = innerEx.Message + "\n\n" + innerEx.StackTrace; }
     }
 
     public class VCCriticalException : VCException
     {
         public VCCriticalException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
         public VCCriticalException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
+    }
+
+    public class VCMonoDebuggerAttachedException : VCException
+    {
+        public VCMonoDebuggerAttachedException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
+        public VCMonoDebuggerAttachedException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
     }
 
     public class VCInitializationException : VCException

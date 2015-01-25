@@ -78,7 +78,7 @@ namespace VersionControl
             }
             catch (Exception e)
             {
-                D.LogWarning(e.Message);
+                D.ThrowException(e);
             }
             finally
             {

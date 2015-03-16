@@ -57,9 +57,11 @@ namespace VersionControl
             }
 
             GoogleAnalytics.LogUserEvent("Backend", string.Format("{0}_{1}", backend.ToString(), (success ? "success" : "failed")));
-            
-            if (!success) 
+
+            if (!success)
+            {
                 D.LogWarning(backend + " backend initialization failed!");
+            }
             
             return success;
         }

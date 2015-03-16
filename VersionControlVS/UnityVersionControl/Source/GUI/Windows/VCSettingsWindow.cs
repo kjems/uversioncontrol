@@ -22,7 +22,7 @@ namespace VersionControl.UserInterface
 
         private void OnEnable()
         {
-            minSize = new Vector2(320, 470);
+            minSize = new Vector2(380, 470);
         }
 
         private void OnGUI()

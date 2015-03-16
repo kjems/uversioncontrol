@@ -14,9 +14,9 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>..\..\Assemblies\debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;ENABLE_GENERICS;ENABLE_PROFILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -24,12 +24,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>..\..\Assemblies\release\</OutputPath>
     <DefineConstants>TRACE;ENABLE_GENERICS;ENABLE_PROFILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>True</DebugSymbols>
     <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup>
@@ -70,6 +70,7 @@
     <Compile Include="Source\GUI\Utility\VCStatusIcons.cs" />
     <Compile Include="Source\GUI\Utility\Terminology.cs" />
     <Compile Include="Source\GUI\Utility\VCValidateConfiguration.cs" />
+    <Compile Include="Source\GUI\Windows\CustomDialog.cs" />
     <Compile Include="Source\GUI\Windows\P4\P4ConnectionTool.cs" />
     <Compile Include="Source\GUI\Windows\VCAboutWindow.cs" />
     <Compile Include="Source\GUI\Windows\VCBugReportWindow.cs" />
@@ -106,7 +107,7 @@
       <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\NoopBackend\NoopBackend.csproj">
-      <Project>{5c4771d4-946e-4125-88c7-7f8aa443f701}</Project>
+      <Project>{5C4771D4-946E-4125-88C7-7F8AA443F701}</Project>
       <Name>NoopBackend</Name>
     </ProjectReference>
     <ProjectReference Include="..\SVNBackend\SVNBackend.csproj">

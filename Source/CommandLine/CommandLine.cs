@@ -131,6 +131,11 @@ namespace CommandLineExecution
                     myStreamWriter.Close();
                 }
 
+                /*if (psi.Arguments.Contains("ExceptionTest.txt"))
+                {
+                    throw new System.ApplicationException("Test Exception cast due to ExceptionTest.txt being a part of arguments");
+                }*/
+
                 var sbOutput = new StringBuilder();
                 byte[] buffer = new byte[BUFFER_SIZE];
                 Decoder decoder = encoding.GetDecoder();

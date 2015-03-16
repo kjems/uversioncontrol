@@ -10,6 +10,7 @@ namespace VersionControl.UserInterface
     {
         private static readonly Vector2 defaultSize = new Vector2(400, 200);
         private Action body;
+        private Func<Vector2> sizeFunc = null;
         private List<Action> buttons;
 
         public static CustomDialog Create(string title)
@@ -46,6 +47,12 @@ namespace VersionControl.UserInterface
             return this;
         }
 
+        public CustomDialog SetSize(Func<Vector2> sizeFunc)
+        {
+            this.sizeFunc = sizeFunc;
+            return this;
+        }
+        
         public CustomDialog SetPosition(Rect position)
         {
             this.position = position;
@@ -64,6 +71,11 @@ namespace VersionControl.UserInterface
 
         void OnGUI()
         {
+            if (sizeFunc != null)
+            {
+                SetSize(sizeFunc());
+            }
+ 
             if (body != null)
                 body();
 
@@ -80,6 +92,19 @@ namespace VersionControl.UserInterface
 
     public class CustomDialogs
     {
+        public static CustomDialog CreateConflictDialog(string title, string message, MessageType type = MessageType.None)
+        {
+            CustomDialog dialog = CustomDialog.Create(title);
+            dialog
+            .CenterOnScreen()
+            .SetBodyGUI(() =>
+            {
+                EditorGUILayout.HelpBox(message, type);
+                GUILayout.FlexibleSpace();
+            });
+
+            return dialog;
+        }
         public static CustomDialog CreateMessageDialog(string title, string message, MessageType type = MessageType.None)
         {
             CustomDialog dialog = CustomDialog.Create(title);

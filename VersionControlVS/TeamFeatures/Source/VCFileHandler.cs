@@ -18,7 +18,7 @@ namespace VersionControl
         { 
             get 
             {
-                return VCSettings.HandleFileMove == VCSettings.EHandleFileMove.TeamLicense && UnityEditorInternal.InternalEditorUtility.HasMaint();
+                return VCSettings.HandleFileMove == VCSettings.EHandleFileMove.TeamLicense;
             }
         }
         

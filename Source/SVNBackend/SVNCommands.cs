@@ -308,9 +308,9 @@ namespace VersionControl.Backend.SVN
             return new CommandLine("svn", arguments, workingDirectory);
         }
 
-        private bool CreateOperation(string arguments)
+        private bool CreateOperation(string arguments, bool onlyRunWhenActive = true)
         {
-            if (!active) return false;
+            if (!active && onlyRunWhenActive) return false;
 
             CommandLineOutput commandLineOutput;
             using (var commandLineOperation = CreateSVNCommandLine(arguments))
@@ -362,10 +362,10 @@ namespace VersionControl.Backend.SVN
                 commandLineOutput = ExecuteCommandLine(commandLine);
             }
 
-            /*if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
-            {
-                throw new VCException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
-            }*/
+            //if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
+            //{
+            //    throw new VCCriticalException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
+            //}
             if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
             {
                 var errStr = commandLineOutput.ErrorStr;
@@ -375,9 +375,11 @@ namespace VersionControl.Backend.SVN
                     throw new VCNewerVersionException(errStr, commandLine.ToString());
                 if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
                     throw new VCCriticalException(errStr, commandLine.ToString());
+                if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
+                    throw new VCCriticalException(errStr, commandLine.ToString());
                 if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
                     throw new VCOutOfDate(errStr, commandLine.ToString());
-                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'"))
+                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
                 if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
@@ -653,6 +655,11 @@ namespace VersionControl.Backend.SVN
         public bool HasValidLocalCopy()
         {
             string error = CreateSVNCommandLine("info").Execute().ErrorStr;
+            if (error.Contains("E155037") || error.Contains("E155004") || error.Contains("run 'svn cleanup'") || error.Contains("run 'cleanup'"))
+            {
+                CreateOperation("cleanup", onlyRunWhenActive: false);
+                error = CreateSVNCommandLine("info").Execute().ErrorStr;
+            }
             if (!string.IsNullOrEmpty(error))
             {
                 D.LogWarning(error);

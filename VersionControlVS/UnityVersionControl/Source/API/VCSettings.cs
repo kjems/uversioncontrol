@@ -8,6 +8,7 @@ using System;
 namespace VersionControl
 {
     using Logging;
+    using UserInterface;
     [InitializeOnLoad]
     public class VCSettings
     {
@@ -131,7 +132,9 @@ namespace VersionControl
                     }
                     else
                     {
-                        EditorUtility.DisplayDialog("Version Control Selection failed", "Unable to initialize '" + value + "'.\n\n" + errors, "OK");
+                        var dialog = CustomDialogs.CreateMessageDialog("Version Control Selection failed", "Unable to initialize '" + value + "'\n\n" + errors, MessageType.Error);
+                        dialog.AddButton("OK", () => dialog.Close());
+                        dialog.ShowUtility();
                     }
                     D.combinedShorthandCallback -= addToErrors;
                     

@@ -87,8 +87,14 @@ namespace VersionControl.UserInterface
 
         private void OnEnable()
         {
-            minSize = new Vector2(250, 100);
-            commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 1000.0f);
+            minSize  = new Vector2(1000, 400);
+            position = new Rect(
+                left: Screen.width * 0.5f - this.minSize.x,
+                top: Screen.height * 0.5f - this.minSize.y,
+                width: this.minSize.x,
+                height: this.minSize.y
+            );
+            commitMessageHeight = EditorPrefs.GetFloat("VCCommitWindow/commitMessageHeight", 140.0f);
             rect = new Rect(0, commitMessageHeight, position.width, 10.0f);
             vcMultiColumnAssetList = new VCMultiColumnAssetList(Repaint, VCSettings.SelectiveCommit);
             VCCommands.Instance.StatusCompleted += RefreshSelection;

@@ -95,7 +95,7 @@ namespace VersionControl.UserInterface
             showUnversioned = EditorPrefs.GetBool("VCWindow/showUnversioned", true);
             showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
             showModifiedNoLock = EditorPrefs.GetBool("VCWindow/showModifiedNoLock", true);
-            statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 1000.0f);
+            statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 400.0f);
 
 
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
@@ -108,7 +108,7 @@ namespace VersionControl.UserInterface
             VCCommands.Instance.ProgressInformation += ProgressInformation;
             VCSettings.SettingChanged += Repaint;            
 
-            rect = new Rect(0, statusHeight, position.width, 10.0f);
+            rect = new Rect(0, statusHeight, position.width, 40.0f);
         }
 
         virtual protected void OnDisable()

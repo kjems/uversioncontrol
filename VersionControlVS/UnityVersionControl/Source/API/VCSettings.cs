@@ -14,7 +14,7 @@ namespace VersionControl
     {
         static VCSettings()
         {
-            vcEnabled = EditorPrefs.GetBool("VCSSettings/vcEnabled", true);
+            vcEnabled = EditorPrefs.GetBool("VCSSettings/vcEnabled", false);
             lockPrefabs = EditorPrefs.GetBool("VCSSettings/lockPrefabs", false);
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);
             lockMaterials = EditorPrefs.GetBool("VCSSettings/lockMaterials", true);

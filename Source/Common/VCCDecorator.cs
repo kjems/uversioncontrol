@@ -170,6 +170,11 @@ namespace VersionControl
             return vcc.GetIgnore(path);
         }
 
+        public virtual string GetRevision()
+        {
+            return vcc.GetRevision();
+        }
+
         public virtual string GetBasePath(string assetPath)
         {
             return vcc.GetBasePath(assetPath);

@@ -597,6 +597,24 @@ namespace VersionControl.Backend.SVN
             return ignores;
         }
 
+        public string GetRevision()
+        {
+            var svnInfo = CreateSVNCommandLine("info --xml ").Execute();
+            if (!svnInfo.Failed)
+            {
+                var xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(svnInfo.OutputStr);
+                var revisionNode = xmlDoc.GetElementsByTagName("entry").Item(0);
+                if (revisionNode != null)
+                {
+                    var revision = revisionNode.Attributes["revision"];
+                    if(revision != null)
+                        return revision.InnerText;
+                }
+            }
+            return null;
+        }
+
         public string GetBasePath(string assetPath)
         {
             assetPath = PrepareAssetPath(assetPath);

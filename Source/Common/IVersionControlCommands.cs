@@ -68,6 +68,7 @@ namespace VersionControl
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);
         IEnumerable<string> GetIgnore(string path);
+        string GetRevision();
         string GetBasePath(string assetPath);
         bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs);
         bool CleanUp();

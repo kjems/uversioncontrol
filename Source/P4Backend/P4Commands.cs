@@ -875,6 +875,12 @@ namespace VersionControl.Backend.P4
             return null;
         }
 
+        public string GetRevision()
+        {
+            D.LogWarning("P4Commands.GetRevisionNumber not implemented");
+            return null;
+        }
+
         public string GetBasePath(string assetPath)
         {
             if (string.IsNullOrEmpty(versionNumber))

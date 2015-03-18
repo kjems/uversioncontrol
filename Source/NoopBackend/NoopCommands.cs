@@ -106,6 +106,10 @@ namespace VersionControl.Backend.Noop
         {
             return null;
         }
+        public virtual string GetRevision()
+        {
+            return "0";
+        }
         public virtual string GetBasePath(string assetPath)
         {
             return "";

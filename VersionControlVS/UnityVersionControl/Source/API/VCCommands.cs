@@ -571,6 +571,12 @@ namespace VersionControl
         {
             return HandleExceptions(() => vcc.GetIgnore(path));
         }
+
+        public string GetRevision()
+        {
+            return vcc.GetRevision();
+        }
+
         public string GetBasePath(string assetPath)
         {
             return vcc.GetBasePath(assetPath);

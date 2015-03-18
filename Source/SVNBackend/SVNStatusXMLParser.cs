@@ -155,6 +155,12 @@ namespace VersionControl.Backend.SVN
 
         private static IEnumerable<string> GetFilesInFolder(string assetPath)
         {
+            if (!Directory.Exists(assetPath))
+            {
+                D.LogWarning("Directory not found: " + assetPath);
+                return new string[] { };
+            }
+
             return
                 Directory.GetFiles(assetPath, "*", SearchOption.AllDirectories)
                     .Concat(Directory.GetDirectories(assetPath, "*", SearchOption.AllDirectories))

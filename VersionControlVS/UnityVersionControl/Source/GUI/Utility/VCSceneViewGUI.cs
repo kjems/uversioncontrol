@@ -21,17 +21,17 @@ namespace VersionControl.UserInterface
 
         static void Refresh()
         {
-            VCUtility.RequestStatus(EditorApplication.currentScene, VCSettings.HierarchyReflectionMode);
+            VCUtility.RequestStatus(SceneManagerUtilities.GetCurrentScenePath(), VCSettings.HierarchyReflectionMode);
             SceneView.RepaintAll();
         }
 
         static void SceneViewUpdate(SceneView sceneView)
         {
-            if (!VCSettings.SceneviewGUI || !VCCommands.Active || !VCUtility.ValidAssetPath(EditorApplication.currentScene)) return;
+            if (!VCSettings.SceneviewGUI || !VCCommands.Active || !VCUtility.ValidAssetPath(SceneManagerUtilities.GetCurrentScenePath())) return;
 
-            VCUtility.RequestStatus(EditorApplication.currentScene, VCSettings.HierarchyReflectionMode);
+            VCUtility.RequestStatus(SceneManagerUtilities.GetCurrentScenePath(), VCSettings.HierarchyReflectionMode);
 
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(EditorApplication.currentScene);
+            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(SceneManagerUtilities.GetCurrentScenePath());
             buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 80};
 
             backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
@@ -77,8 +77,8 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.add, buttonStyle))
                         {
-                            EditorApplication.SaveScene();
-                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { EditorApplication.currentScene }));
+                            SceneManagerUtilities.SaveActiveScene();
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
                     if (showOpen)
@@ -86,7 +86,7 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.getlock, buttonStyle))
                         {
-                            VCCommands.Instance.GetLockTask(new[] { EditorApplication.currentScene });
+                            VCCommands.Instance.GetLockTask(new[] { SceneManagerUtilities.GetCurrentScenePath() });
                         }
                     }
                     if (showCommit)
@@ -94,7 +94,7 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.commit, buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { EditorApplication.currentScene }));
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
                     if (showRevert)
@@ -102,10 +102,10 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
                         {
-                            var sceneAssetPath = new[] { EditorApplication.currentScene };
+                            var sceneAssetPath = new[] { SceneManagerUtilities.GetCurrentScenePath() };
                             if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
                             {
-                                EditorApplication.SaveScene();
+                                SceneManagerUtilities.SaveActiveScene();
                                 VCCommands.Instance.Revert(sceneAssetPath);
                                 OnNextUpdate.Do(AssetDatabase.Refresh);
                             }
@@ -116,7 +116,7 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
                         {
-                            VCCommands.Instance.AllowLocalEdit(new[] { EditorApplication.currentScene });
+                            VCCommands.Instance.AllowLocalEdit(new[] { SceneManagerUtilities.GetCurrentScenePath() });
                         }
                     }
                     if (showUnlock)
@@ -124,7 +124,7 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.unlock, buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { EditorApplication.currentScene }));
+                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
                     if (showForceOpen)
@@ -132,7 +132,7 @@ namespace VersionControl.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button("Force Open", buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCUtility.GetLock(EditorApplication.currentScene, OperationMode.Force));
+                            OnNextUpdate.Do(() => VCUtility.GetLock(SceneManagerUtilities.GetCurrentScenePath(), OperationMode.Force));
                         }
                     }
 

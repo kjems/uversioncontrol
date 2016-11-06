@@ -11,7 +11,7 @@ namespace VersionControl
 {
     using Logging;
     using AssetPathFilters;
-    internal class VCFileHandler : /*UnityEditor.*/AssetModificationProcessor
+    internal class VCFileHandler : UnityEditor.AssetModificationProcessor
     {
 
         private static bool UseTeamLicence 

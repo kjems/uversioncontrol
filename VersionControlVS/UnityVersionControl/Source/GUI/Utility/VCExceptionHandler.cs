@@ -130,7 +130,6 @@ namespace VersionControl
                 string title = Environment.UserName + "@" + Environment.MachineName + " : (" + VCUtility.GetCurrentVersion() + "):\n" + e.ErrorMessage;
                 string description = "\n" + e.ErrorDetails;
 
-                if (!string.IsNullOrEmpty(Application.loadedLevelName)) description += "\n\nScene Name: " + Application.loadedLevelName;
                 var conflicts =
                     VCCommands.Instance.GetFilteredAssets(
                         svnStatus =>

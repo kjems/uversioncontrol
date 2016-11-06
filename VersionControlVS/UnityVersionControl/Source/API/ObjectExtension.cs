@@ -9,6 +9,7 @@ using System.Linq;
 namespace VersionControl
 {
     using Extensions;
+
     public static class ObjectUtilities
     {
         public static void SetObjectIndirectionCallback(System.Func<Object, Object> objectIndirectionCallback)
@@ -24,7 +25,7 @@ namespace VersionControl
         public static bool ChangesStoredInScene(Object obj)
         {
             obj = GetObjectIndirection(obj);
-            return obj.GetAssetPath() == EditorApplication.currentScene;
+            return obj.GetAssetPath() == SceneManagerUtilities.GetCurrentScenePath();
         }
         public static bool ChangesStoredInPrefab(Object obj)
         {

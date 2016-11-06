@@ -94,6 +94,7 @@
     <Compile Include="Source\Utility\OnNextUpdate.cs" />
     <Compile Include="Source\Utility\PrefabHelper.cs" />
     <Compile Include="Source\Utility\PushState.cs" />
+    <Compile Include="Source\Utility\SceneManagerUtilities.cs" />
     <Compile Include="Source\Utility\ThreadUtility.cs" />
     <Compile Include="Source\Utility\VCUtility.cs" />
   </ItemGroup>

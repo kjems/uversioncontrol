@@ -295,7 +295,7 @@ namespace VersionControl.UserInterface
                     if (settingsWindow == null)
                     {
                         settingsWindow = CreateInstance<VCSettingsWindow>();
-                        settingsWindow.title = "Version Control Settings";
+                        settingsWindow.titleContent = new GUIContent("Version Control Settings");
                         settingsWindow.ShowUtility();
                     }
                     else

@@ -299,7 +299,7 @@ namespace VersionControl
         {
             var commitWindow = ScriptableObject.CreateInstance<VCCommitWindow>();
             commitWindow.minSize = new Vector2(220, 140);
-            commitWindow.title = "Commit...";
+            commitWindow.titleContent = new GUIContent("Commit...");
             commitWindow.SetAssetPaths(assets, dependencies);
             commitWindow.ShowUtility();
             return commitWindow.commitedFiles.Any();
@@ -634,9 +634,9 @@ namespace VersionControl
             var dependencies = assets.GetDependencies().AddFilesInFolders().AddFolders(vcc).Concat(assets.AddDeletedInFolders(vcc));
             var allAssets = assets.Concat(dependencies).Distinct().ToList();
             var localModified = allAssets.LocalModified(vcc);
-            if (assets.Contains(EditorApplication.currentScene))
+            if (assets.Contains(SceneManagerUtilities.GetCurrentScenePath()))
             {
-                EditorApplication.SaveCurrentSceneIfUserWantsTo();
+                SceneManagerUtilities.SaveCurrentModifiedScenesIfUserWantsTo();                
             }
             if (PreCommit != null)
             {

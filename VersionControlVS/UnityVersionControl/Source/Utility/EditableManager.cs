@@ -62,7 +62,7 @@ namespace VersionControl
         internal static void RefreshEditableObject(GameObject gameObject)
         {
             bool editable = ShouleBeEditable(gameObject);
-            bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(EditorApplication.currentScene);
+            bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(SceneManagerUtilities.GetCurrentScenePath());
             bool prefabHeadEditable = PrefabHelper.IsPrefabRoot(gameObject) && parentEditable;
             
             if (prefabHeadEditable) SetEditable(gameObject, true);

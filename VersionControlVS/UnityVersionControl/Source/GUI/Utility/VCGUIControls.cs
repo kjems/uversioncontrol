@@ -112,7 +112,7 @@ namespace VersionControl.UserInterface
                 if (ready)
                 {
                     var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                    if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = EditorApplication.currentScene;
+                    if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = SceneManagerUtilities.GetCurrentScenePath();
 
                     bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                     bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);

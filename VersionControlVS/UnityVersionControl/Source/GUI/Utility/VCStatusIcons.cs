@@ -43,7 +43,7 @@ namespace VersionControl.UserInterface
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
             bool guiLockForPrefabs = VCSettings.PrefabGUI;
 
-            if (assetPath != EditorApplication.currentScene && (!changesStoredInPrefab || guiLockForPrefabs))
+            if (assetPath != SceneManagerUtilities.GetCurrentScenePath() && (!changesStoredInPrefab || guiLockForPrefabs))
             {
                 VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
                 DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, objectIndirection);

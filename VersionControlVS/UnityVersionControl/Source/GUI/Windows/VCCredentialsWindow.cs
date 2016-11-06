@@ -27,7 +27,7 @@ namespace VersionControl.UserInterface
         {
             maxSize = new Vector2(250, 100);
             minSize = new Vector2(250, 100);
-            title = VCSettings.VersionControlBackend + " Credentials";
+            titleContent = new GUIContent(VCSettings.VersionControlBackend + " Credentials");
             username = EditorPrefs.GetString("VCCredentialsWindow/username", "");
         }
 

@@ -15,7 +15,7 @@ namespace VersionControl.UserInterface
         public static CustomDialog Create(string title)
         {
             var dialog = ScriptableObject.CreateInstance<CustomDialog>();
-            dialog.title = title;
+            dialog.titleContent = new GUIContent(title);
             dialog.buttons = new List<Action>();
             dialog.minSize = defaultSize;
             return dialog;
@@ -54,11 +54,12 @@ namespace VersionControl.UserInterface
 
         public CustomDialog CenterOnScreen()
         {
-            this.position = new Rect(
-                left: Screen.width * 0.5f - this.minSize.x,
-                top: Screen.height * 0.5f - this.minSize.y,
-                width: this.minSize.x,
-                height: this.minSize.y);
+            this.position = new Rect {
+                xMin    = Screen.width * 0.5f - this.minSize.x,
+                yMin    = Screen.height * 0.5f - this.minSize.y,
+                width   = this.minSize.x,
+                height  = this.minSize.y
+            };
             return this;
         }
 

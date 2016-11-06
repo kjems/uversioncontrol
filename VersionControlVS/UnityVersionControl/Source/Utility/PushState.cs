@@ -37,7 +37,7 @@ internal static class PushStateUtility
 {
     public static PushState Profiler(string name, UnityEngine.Object obj = null)
     {
-        return new PushState(() => UnityEngine.Profiler.BeginSample(name, obj), () => UnityEngine.Profiler.EndSample());
+        return new PushState(() => VersionControl.ProfilerUtilities.BeginSample(name, obj), () => VersionControl.ProfilerUtilities.EndSample());
     }
 }
 

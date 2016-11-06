@@ -49,12 +49,12 @@ namespace VersionControl.UserInterface
         public void SetAssetPaths(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
             D.Log("VCCommitWindow:SetAssetPaths");
-            Profiler.BeginSample("CommitWindow::SetAssetPaths");
+            ProfilerUtilities.BeginSample("CommitWindow::SetAssetPaths");
             assetPaths = assets.Select(s => new ComposedString(s)).ToList();
             depedencyAssetPaths = dependencies.Select(s => new ComposedString(s)).ToList();
             vcMultiColumnAssetList.SetBaseFilter(BaseFilter);
             RefreshSelection();
-            Profiler.EndSample();
+            ProfilerUtilities.EndSample();
         }
 
         private bool BaseFilter(VersionControlStatus vcStatus)

@@ -26,7 +26,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>..\..\Assemblies\release\</OutputPath>
-    <DefineConstants>TRACE;ENABLE_GENERICS;ENABLE_PROFILER</DefineConstants>
+    <DefineConstants>TRACE;ENABLE_GENERICS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>True</DebugSymbols>
@@ -93,6 +93,7 @@
     <Compile Include="Source\Utility\IconUtils.cs" />
     <Compile Include="Source\Utility\OnNextUpdate.cs" />
     <Compile Include="Source\Utility\PrefabHelper.cs" />
+    <Compile Include="Source\Utility\ProfilerUtilities.cs" />
     <Compile Include="Source\Utility\PushState.cs" />
     <Compile Include="Source\Utility\SceneManagerUtilities.cs" />
     <Compile Include="Source\Utility\ThreadUtility.cs" />

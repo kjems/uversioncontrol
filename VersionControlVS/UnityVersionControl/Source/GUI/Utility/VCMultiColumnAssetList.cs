@@ -219,11 +219,11 @@ namespace VersionControl.UserInterface
 
         private void RefreshBaseFilter()
         {
-            Profiler.BeginSample("MultiColumnAssetList::RefreshBaseFilter");
+            ProfilerUtilities.BeginSample("MultiColumnAssetList::RefreshBaseFilter");
             interrestingStatus = VCCommands.Instance.GetFilteredAssets(baseFilter);
             //D.Log("RefreshBaseFilter, interrestingStatus.Count : " + interrestingStatus.Count());
             RefreshGUIFilter();
-            Profiler.EndSample();
+            ProfilerUtilities.EndSample();
         }
 
         private static string GetFileType(string assetPath)
@@ -234,9 +234,9 @@ namespace VersionControl.UserInterface
 
         public void RefreshGUIFilter()
         {
-            Profiler.BeginSample("MultiColumnAssetList::RefreshGUIFilter");
+            ProfilerUtilities.BeginSample("MultiColumnAssetList::RefreshGUIFilter");
             multiColumnState.Refresh(interrestingStatus.Where(status => guiFilter(status)));
-            Profiler.EndSample();
+            ProfilerUtilities.EndSample();
         }
 
         public IEnumerable<VersionControlStatus> GetSelection()

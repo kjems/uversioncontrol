@@ -31,7 +31,7 @@ internal static class MultiColumnView
 
     public static void ListView<TD>(Rect rect, MultiColumnState<TD, TC> multiColumnState, MultiColumnViewOption<TD> mvcOption)
     {
-        Profiler.BeginSample("MultiColumnView::ListView");
+        VersionControl.ProfilerUtilities.BeginSample("MultiColumnView::ListView");
         bool controlModifier = ((Application.platform == RuntimePlatform.OSXEditor) ? Event.current.command : Event.current.control);
 
         GUI.BeginGroup(rect);
@@ -122,7 +122,7 @@ internal static class MultiColumnView
                 r.selected = true;
             Event.current.Use();
         }
-        Profiler.EndSample();
+        VersionControl.ProfilerUtilities.EndSample();
     }
 
 

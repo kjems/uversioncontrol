@@ -195,7 +195,7 @@ namespace VersionControl.UnitTests
 
         public virtual string GetRevision()
         {
-            return 0;
+            return "";
         }
 
         public virtual string GetBasePath(string assetPath)

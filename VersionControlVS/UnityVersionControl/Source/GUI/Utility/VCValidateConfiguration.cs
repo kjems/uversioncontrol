@@ -14,7 +14,7 @@ namespace VersionControl
     {
         static readonly string[] defaultIgnores = 
         { "Library", "Temp", "obj", "*.booproj", "*.unityproj", "*.csproj", "*.sln", 
-          "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*" };
+          "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*", ".vs" };
 
         static VCValidateConfiguration()
         {

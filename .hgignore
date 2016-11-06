@@ -8,6 +8,8 @@ _ReSharper
 .user
 .pidb
 .DS_Store
+.vs
+*.FileListAbsolute.txt
 
 # Compiled assemblies
 Assemblies/debug

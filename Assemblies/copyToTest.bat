@@ -16,6 +16,7 @@ pdb2mdb.exe %~dp0%1\CommandLine.dll
 pdb2mdb.exe %~dp0%1\Common.dll
 pdb2mdb.exe %~dp0%1\SVNBackend.dll
 pdb2mdb.exe %~dp0%1\P4Backend.dll
+pdb2mdb.exe %~dp0%1\NoopBackend.dll
 pdb2mdb.exe %~dp0%1\UnityVersionControl.dll
 pdb2mdb.exe %~dp0%1\TeamFeatures.dll
 pdb2mdb.exe %~dp0%1\RendererInspectors.dll

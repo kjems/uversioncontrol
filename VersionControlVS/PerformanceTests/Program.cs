@@ -14,7 +14,7 @@ namespace PerformanceTests
     class Program
     {
         static readonly IVersionControlCommands vcc = new VCCFilteredAssets(CreateSVNCommands());
-        private const string localPathForTest = @"c:\develop\Game2.4";
+        private const string localPathForTest = @"c:\develop\INSIDE\Game2.4";
         static readonly ComposedString meta = new ComposedString(".meta");
         static void Main(string[] args)
         {
@@ -60,7 +60,7 @@ namespace PerformanceTests
 
         static void RunMemoryTestComplex()
         {
-            vcc.GetFilteredAssets(status =>
+            var assets = vcc.GetFilteredAssets(status =>
             {
                 VersionControlStatus metaStatus = status;
                 if (!status.assetPath.EndsWith(meta))
@@ -69,14 +69,14 @@ namespace PerformanceTests
                 }
                 return (status.fileStatus != VCFileStatus.Normal || metaStatus.fileStatus != VCFileStatus.Normal);
             });
-            //Logging(assets.Select(s => s.assetPath).Aggregate((a, b) => a + "\n" + b));
-            //Logging("Memory Used Complex: " + GC.GetTotalMemory(true));
+            //Logging(assets.Select(s => s.assetPath.Compose()).Aggregate((a, b) => a + "\n" + b));
+            //Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
         }
 
         static void RunMemoryTestSimple()
         {
-            vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
-            //Logging(assets.Select(s => s.assetPath).Aggregate((a, b) => a + "\n" + b));
+            var assets = vcc.GetFilteredAssets(status => (status.fileStatus != VCFileStatus.Normal));
+            //Logging(assets.Select(s => s.assetPath.Compose()).Aggregate((a, b) => a + "\n" + b));
             //Logging("Memory Used Simple: " + GC.GetTotalMemory(true));
         }
 

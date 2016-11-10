@@ -18,6 +18,7 @@ namespace VersionControl.Backend.SVN
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         internal const string localEditChangeList = "Open Local";
+        internal const string svnTargetsFile = ".svn/targets";
         private string workingDirectory = ".";
         private string userName;
         private string password;
@@ -257,8 +258,8 @@ namespace VersionControl.Backend.SVN
 
             string arguments = "status --xml -q -v ";
             if (statusLevel == StatusLevel.Remote) arguments += "-u ";
-            else arguments += " --depth=empty ";
-            arguments += ConcatAssetPaths(RemoveWorkingDirectoryFromPath(assets));
+            else arguments += " --depth=infinity ";
+            arguments += ConcatAssetPaths(RemoveFilesIfParentFolderInList(RemoveWorkingDirectoryFromPath(assets)));
 
             SetPending(assets);
 
@@ -371,30 +372,36 @@ namespace VersionControl.Backend.SVN
                 var errStr = commandLineOutput.ErrorStr;
                 if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
                     throw new VCMissingCredentialsException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
+                else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
                     throw new VCNewerVersionException(errStr, commandLine.ToString());
-                if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
+                else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
                     throw new VCCriticalException(errStr, commandLine.ToString());
-                if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
+                else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
                     throw new VCCriticalException(errStr, commandLine.ToString());
-                if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
+                else if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
                     throw new VCOutOfDate(errStr, commandLine.ToString());
-                if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
+                else if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
                     throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
+                else if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
                     throw new VCLockedByOther(errStr, commandLine.ToString());
-                if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
+                else if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
                     throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
-
-                throw new VCException(errStr, commandLine.ToString());
+                else if (errStr.Contains("W200017"))  // Ignore warning relating to use of propget on non-existing property in SVN 1.9+
+                    commandLineOutput = new CommandLineOutput(commandLineOutput.Command, commandLineOutput.Arguments, commandLineOutput.OutputStr, "", 0);
+                else
+                    throw new VCException(errStr, commandLine.ToString());
             }
             return commandLineOutput;
-        }
+        }                    
 
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            return CreateOperation(arguments + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
+            File.WriteAllLines(svnTargetsFile, assets.ToArray());
+            bool result = CreateOperation(arguments + " --targets " + svnTargetsFile);
+            File.Delete(svnTargetsFile);
+            result &= RequestStatus(assets, StatusLevel.Previous);
+            return result;
         }
 
         private static string FixAtChar(string asset)
@@ -492,7 +499,7 @@ namespace VersionControl.Backend.SVN
         public bool Update(IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
-            return CreateAssetOperation("update --force", assets);
+            return CreateOperation("update --force" + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")

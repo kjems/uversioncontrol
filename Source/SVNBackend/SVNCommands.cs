@@ -397,7 +397,7 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            File.WriteAllLines(svnTargetsFile, assets.ToArray());
+            File.WriteAllLines(svnTargetsFile, assets.Select(PrepareAssetPath).ToArray());
             bool result = CreateOperation(arguments + " --targets " + svnTargetsFile);
             File.Delete(svnTargetsFile);
             result &= RequestStatus(assets, StatusLevel.Previous);
@@ -424,9 +424,14 @@ namespace VersionControl.Backend.SVN
             return assets.Select(a => a.Replace(workingDirectory, ""));
         }
 
+        private static string FixSlash(string assetpath)
+        {
+            return assetpath.Replace("\\", "/");
+        }
+
         private static string PrepareAssetPath(string assetpath)
         {
-            return FixAtChar(assetpath.Replace("\\", "/"));
+            return FixAtChar(FixSlash(assetpath));
         }
 
         private static string ConcatAssetPaths(IEnumerable<string> assets)
@@ -568,7 +573,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Move(string from, string to)
         {
-            to = PrepareAssetPath(to);
+            to = FixSlash(to);
             from = PrepareAssetPath(from);
             return CreateOperation("move \"" + from + "\" \"" + to + "\"") && RequestStatus(new[] { from, to }, StatusLevel.Previous);
         }

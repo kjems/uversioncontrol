@@ -15,7 +15,7 @@ namespace VersionControl.UserInterface
     {
         // Const
         const float minimumControlHeight = 50;
-        const int maxProgressSize = 10000;
+        const int maxProgressSize = 65536;
 
         // State
         public IEnumerable<string> commitedFiles = new List<string>();

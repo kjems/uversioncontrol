@@ -7,6 +7,7 @@ using UnityEditor;
 namespace VersionControl
 {
     using UnityEditor.SceneManagement;
+    using UnityEngine.SceneManagement;
     public static class SceneManagerUtilities
     {
         public static string GetCurrentScenePath()
@@ -37,6 +38,19 @@ namespace VersionControl
         public static void SaveCurrentModifiedScenesIfUserWantsTo()
         {
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
+        }
+
+        public static Scene GetSceneFromHandle(int handle)
+        {
+            System.Type T = System.Type.GetType("UnityEditor.SceneManagement.EditorSceneManager,UnityEditor");
+            System.Reflection.MethodInfo getSceneByHandleInfo = T.GetMethod("GetSceneByHandle", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            return (Scene)getSceneByHandleInfo.Invoke(null, new object[] {handle});
+        }
+
+        public static string GetSceneAssetPathFromHandle(int handle)
+        {
+            Scene scene = GetSceneFromHandle(handle);
+            return scene != null ? scene.path : null;
         }
     }
 }

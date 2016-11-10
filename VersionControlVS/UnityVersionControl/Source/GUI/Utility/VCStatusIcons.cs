@@ -35,19 +35,32 @@ namespace VersionControl.UserInterface
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
-            var obj = EditorUtility.InstanceIDToObject(instanceID);
-            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active || obj == null) return;            
+
+            var obj = EditorUtility.InstanceIDToObject(instanceID);            
+            if (obj == null)
+            {
+                string sceneAssetPath = SceneManagerUtilities.GetSceneAssetPathFromHandle(instanceID);
+                if (!string.IsNullOrEmpty(sceneAssetPath)) MultiSceneHierarchyElement(sceneAssetPath, selectionRect);
+                return;
+            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;            
             var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
 
             string assetPath = obj.GetAssetPath();
             bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
             bool guiLockForPrefabs = VCSettings.PrefabGUI;
 
-            if (assetPath != SceneManagerUtilities.GetCurrentScenePath() && (!changesStoredInPrefab || guiLockForPrefabs))
+            if (changesStoredInPrefab && guiLockForPrefabs)
             {
                 VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
                 DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, objectIndirection);
             }
+        }
+
+        private static void MultiSceneHierarchyElement(string assetPath, Rect selectionRect)
+        {
+            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
+            DrawIcon(selectionRect, IconUtils.rubyIcon, assetPath, null, -20f);
         }
 
         private static IconUtils.Icon GetHierarchyIcon(Object obj)
@@ -109,7 +122,7 @@ namespace VersionControl.UserInterface
             return false;
         }
 
-        private static void DrawIcon(Rect rect, IconUtils.Icon iconType, string assetPath, Object instance = null)
+        private static void DrawIcon(Rect rect, IconUtils.Icon iconType, string assetPath, Object instance = null, float xOffset = 0f)
         {
             if (VCSettings.VCEnabled)
             {
@@ -117,6 +130,7 @@ namespace VersionControl.UserInterface
                 string statusText = AssetStatusUtils.GetStatusText(assetStatus);
                 Texture2D texture = iconType.GetTexture(AssetStatusUtils.GetStatusColor(assetStatus, true));
                 Rect placement = GetRightAligned(rect, iconType.Size);
+                placement.x += xOffset;
                 var clickRect = placement;
                 //clickRect.xMax += iconType.Size * 0.25f;
                 //clickRect.xMin -= rect.width * 0.15f;

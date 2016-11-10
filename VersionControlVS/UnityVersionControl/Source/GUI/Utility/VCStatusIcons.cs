@@ -35,8 +35,8 @@ namespace VersionControl.UserInterface
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;
             var obj = EditorUtility.InstanceIDToObject(instanceID);
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active || obj == null) return;            
             var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
 
             string assetPath = obj.GetAssetPath();

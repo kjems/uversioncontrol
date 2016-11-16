@@ -18,7 +18,7 @@ namespace VersionControl.Backend.SVN
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         internal const string localEditChangeList = "Open Local";
-        internal const string svnTargetsFile = ".svn/targets";
+        internal const string svnTargetsFile = ".targets.tmp";
         private string workingDirectory = ".";
         private string userName;
         private string password;

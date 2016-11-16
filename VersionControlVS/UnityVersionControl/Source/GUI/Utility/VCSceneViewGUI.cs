@@ -11,12 +11,14 @@ namespace VersionControl.UserInterface
     {
         private static GUIStyle buttonStyle;
         private static GUIStyle backgroundGuiStyle;
+        private static bool shouldDraw = true;
 
         static VCSceneViewGUI()
         {
             SceneView.onSceneGUIDelegate += SceneViewUpdate;
             VCSettings.SettingChanged += SceneView.RepaintAll;
             VCCommands.Instance.StatusCompleted += SceneView.RepaintAll;
+            EditorApplication.update += EditorUpdate;
         }
 
         static void Refresh()
@@ -25,9 +27,14 @@ namespace VersionControl.UserInterface
             SceneView.RepaintAll();
         }
 
+        static void EditorUpdate()
+        {
+            shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(SceneManagerUtilities.GetCurrentScenePath());
+        }
+
         static void SceneViewUpdate(SceneView sceneView)
         {
-            if (!VCSettings.SceneviewGUI || !VCCommands.Active || !VCUtility.ValidAssetPath(SceneManagerUtilities.GetCurrentScenePath())) return;
+            if (!shouldDraw) return;
 
             VCUtility.RequestStatus(SceneManagerUtilities.GetCurrentScenePath(), VCSettings.HierarchyReflectionMode);
 

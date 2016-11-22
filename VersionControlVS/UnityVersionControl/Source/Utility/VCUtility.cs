@@ -190,6 +190,15 @@ namespace VersionControl
             return objectType;
         }
 
+        static string binary2TextPath = null;
+        static string GetBinaryConverterPath()
+        {
+            if (binary2TextPath == null)
+                binary2TextPath = EditorApplication.applicationPath.Replace("Unity.exe", "") + (Application.platform == RuntimePlatform.WindowsEditor ? "Data/Tools/binary2text.exe" : "Data/Tools/binary2text");
+            return binary2TextPath;
+        }
+
+        const string tempDirectory = "Temp/UVC/";
         public static void DiffWithBase(string assetPath)
         {
             if (!string.IsNullOrEmpty(assetPath))
@@ -197,24 +206,35 @@ namespace VersionControl
                 string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
                 if (!string.IsNullOrEmpty(baseAssetPath))
                 {
-                    EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
+                    if (EditorSettings.serializationMode == SerializationMode.ForceBinary)
+                    {
+                        if (!Directory.Exists(tempDirectory))
+                            Directory.CreateDirectory(tempDirectory);
+                        string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-base";
+                        string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-wc";
+                        var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
+                        var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
+                        EditorUtility.InvokeDiffTool("Working Base : " + convertedWorkingCopyFile, convertedBaseFile, "Working Copy : " + convertedWorkingCopyFile, convertedWorkingCopyFile, convertedWorkingCopyFile, convertedBaseFile);
+                    }
+                    else
+                    {
+                        EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
+                    }
                 }
             }
         }
 
-        static readonly List<ComposedString> textPostfix = new List<ComposedString> { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml" };
-        static readonly List<ComposedString> textPostfixTextSerialization = new List<ComposedString> { ".unity", ".prefab", ".mat" };
-        public static bool IsTextAsset(ComposedString assetPath)
+        static readonly ComposedString[] requiresTextConversionPostfix  = new ComposedString[] { ".unity", ".prefab", ".mat" };
+        static readonly ComposedString[] mergablePostfix                = new ComposedString[] { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml" };
+        
+        public static bool IsDiffableAsset(ComposedString assetPath)
         {
-            bool textAsset = IsMergableTextAsset(assetPath);
-            if (EditorSettings.serializationMode == SerializationMode.ForceText)
-                textAsset |= textPostfixTextSerialization.Any(assetPath.EndsWith);
-            return textAsset;
+            return mergablePostfix.Any(assetPath.EndsWith) || requiresTextConversionPostfix.Any(assetPath.EndsWith);
         }
 
-        public static bool IsMergableTextAsset(ComposedString assetPath)
+        public static bool IsMergableAsset(ComposedString assetPath)
         {
-            return textPostfix.Any(assetPath.EndsWith);
+            return mergablePostfix.Any(assetPath.EndsWith);
         }
 
         public static bool HaveVCLock(VersionControlStatus assetStatus)

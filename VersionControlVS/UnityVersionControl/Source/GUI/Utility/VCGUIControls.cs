@@ -117,9 +117,9 @@ namespace VersionControl.UserInterface
                     bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
                     bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
                     bool isFolder = Directory.Exists(assetPath);
-                    bool textAsset = VCUtility.IsMergableTextAsset(assetPath);
-                    bool mergableTextAsset = VCUtility.IsMergableTextAsset(assetPath);
-                    bool modifiedTextAsset = textAsset && assetStatus.fileStatus != VCFileStatus.Normal;
+                    bool diffableAsset = VCUtility.IsDiffableAsset(assetPath);
+                    bool mergableAsset = VCUtility.IsMergableAsset(assetPath);
+                    bool modifiedDiffableAsset = diffableAsset && assetStatus.fileStatus != VCFileStatus.Normal;
                     bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
                     bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
                     bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
@@ -136,12 +136,12 @@ namespace VersionControl.UserInterface
                     bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
 
                     bool showAdd = ready && !pending && !ignored && unversioned;
-                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableTextAsset && (!lockedByOther || allowLocalEdit);
-                    bool showDiff = ready && !pending && !ignored && !deleted && modifiedTextAsset && managedByRep;
-                    bool showCommit = ready && !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedTextAsset || isFolder || modifiedMeta);
-                    bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedTextAsset || modifiedMeta || lockedMeta);
+                    bool showOpen = ready && !pending && !showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
+                    bool showDiff = ready && !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
+                    bool showCommit = ready && !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta);
+                    bool showRevert = ready && !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta);
                     bool showDelete = ready && !pending && !ignored && !deleted && !lockedByOther;
-                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableTextAsset;
+                    bool showOpenLocal = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset;
                     bool showUnlock = ready && !pending && !ignored && !allowLocalEdit && haveLock;
                     bool showUpdate = ready && !pending && !ignored && !added && managedByRep && instance != null;
                     bool showForceOpen = ready && !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;

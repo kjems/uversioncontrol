@@ -15,7 +15,7 @@ public static class VersionControlStatusExtension
     }
     public static bool ModifiedWithoutLock(this VersionControlStatus vcs)
     {
-        return (vcs.fileStatus == VCFileStatus.Modified && vcs.lockStatus != VCLockStatus.LockedHere && !VCUtility.IsMergableTextAsset(vcs.assetPath));
+        return (vcs.fileStatus == VCFileStatus.Modified && vcs.lockStatus != VCLockStatus.LockedHere && !VCUtility.IsMergableAsset(vcs.assetPath));
     }    
     public static bool LocalEditAllowed(this VersionControlStatus vcs)
     {

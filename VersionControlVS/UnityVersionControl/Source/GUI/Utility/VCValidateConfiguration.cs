@@ -13,7 +13,7 @@ namespace VersionControl
     internal static class VCValidateConfiguration
     {
         static readonly string[] defaultIgnores = 
-        { "Library", "Temp", "obj", "*.booproj", "*.unityproj", "*.csproj", "*.sln", 
+        { "Library", "Temp", "obj", ".targets.tmp" , "*.booproj", "*.unityproj", "*.csproj", "*.sln", 
           "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*", ".vs" };
 
         static VCValidateConfiguration()

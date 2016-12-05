@@ -70,7 +70,7 @@ namespace VersionControl.UserInterface
 
         public static void Control(ControlParameters param)
         {
-            int id = GUIUtility.GetControlID(param.hash, FocusType.Native);
+            int id = GUIUtility.GetControlID(param.hash, FocusType.Passive);
             Event e = Event.current;
             switch (e.GetTypeForControl(id))
             {

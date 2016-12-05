@@ -246,7 +246,7 @@ namespace VersionControl
             {
                 FlusingFiles = true;
                 //D.Log("Flusing files");
-                EditorApplication.SaveAssets();
+                AssetDatabase.SaveAssets();
                 FlusingFiles = false;
             }
             //else Debug.Log("Ignoring 'FlushFiles' due to Execution context");

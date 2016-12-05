@@ -30,7 +30,7 @@ namespace VersionControl.UserInterface
                 var material = sharedMaterials[i];
                 string assetPath = material.GetAssetPath();
                 GUIStyle buttonStyle = EditorStyles.toolbarButton;
-                bool builtinMaterial = assetPath == "";
+                bool builtinMaterial = EditableManager.IsBuiltinAsset(assetPath);
                 var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
 
                 EditorGUILayout.BeginVertical(VCGUIControls.GetVCBox(assetStatus));
@@ -66,7 +66,15 @@ namespace VersionControl.UserInterface
                     });
                 }
 
-                VCGUIControls.VersionControlStatusGUI(buttonStyle, assetStatus, renderer.sharedMaterials[i], !builtinMaterial, !builtinMaterial, !builtinMaterial && VCUtility.HaveAssetControl(assetStatus));
+                var validActions = VCGUIControls.GetValidActions(assetPath, material);
+
+                VCGUIControls.VersionControlStatusGUI(
+                    style:                      buttonStyle, 
+                    assetStatus:                assetStatus, obj: material, 
+                    showAddCommit:              !builtinMaterial && (validActions.showAdd || validActions.showCommit), 
+                    showLockAndAllowLocalEdit:  !builtinMaterial && (validActions.showOpenLocal || validActions.showOpen), 
+                    showRevert:                 !builtinMaterial && validActions.showRevert
+                );
 
                 EditorGUILayout.EndHorizontal();
                 EditorGUILayout.EndVertical();

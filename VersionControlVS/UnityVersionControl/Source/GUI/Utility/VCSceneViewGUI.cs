@@ -36,9 +36,10 @@ namespace VersionControl.UserInterface
         {
             if (!shouldDraw) return;
 
-            VCUtility.RequestStatus(SceneManagerUtilities.GetCurrentScenePath(), VCSettings.HierarchyReflectionMode);
+            string assetPath = SceneManagerUtilities.GetCurrentScenePath();
+            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
 
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(SceneManagerUtilities.GetCurrentScenePath());
+            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
             buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 80};
 
             backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
@@ -55,31 +56,13 @@ namespace VersionControl.UserInterface
             int numberOfButtons = 0;
             const int maxButtons = 4;
 
-            bool modified = vcSceneStatus.fileStatus == VCFileStatus.Modified;
-            bool deleted = vcSceneStatus.fileStatus == VCFileStatus.Deleted;
-            bool added = vcSceneStatus.fileStatus == VCFileStatus.Added;
-            bool unversioned = vcSceneStatus.fileStatus == VCFileStatus.Unversioned;
-            bool ignored = vcSceneStatus.fileStatus == VCFileStatus.Ignored;
-            bool replaced = vcSceneStatus.fileStatus == VCFileStatus.Replaced;
-            bool lockedByOther = vcSceneStatus.lockStatus == VCLockStatus.LockedOther;
-            bool haveControl = VCUtility.HaveAssetControl(vcSceneStatus);
-            bool haveLock = VCUtility.HaveVCLock(vcSceneStatus);
-            bool allowLocalEdit = vcSceneStatus.LocalEditAllowed();
-            bool pending = vcSceneStatus.reflectionLevel == VCReflectionLevel.Pending;
-
-            bool showAdd =  !pending && !ignored && unversioned;
-            bool showOpen =  !pending && !showAdd && !added && !haveLock && !deleted && (!lockedByOther || allowLocalEdit);
-            bool showCommit = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted);
-            bool showRevert = !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced);
-            bool showOpenLocal = !pending && !ignored && !deleted && !allowLocalEdit && !unversioned && !added && !haveLock;
-            bool showUnlock = !pending && !ignored && !allowLocalEdit && haveLock;
-            bool showForceOpen = !pending && !ignored && !deleted  && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
+            var validActions = VCGUIControls.GetValidActions(assetPath);                       
 
             using (GUILayoutHelper.Vertical())
             {
                 using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
                 {
-                    if (showAdd)
+                    if (validActions.showAdd)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.add, buttonStyle))
@@ -88,7 +71,7 @@ namespace VersionControl.UserInterface
                             OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
-                    if (showOpen)
+                    if (validActions.showOpen)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.getlock, buttonStyle))
@@ -96,7 +79,7 @@ namespace VersionControl.UserInterface
                             VCCommands.Instance.GetLockTask(new[] { SceneManagerUtilities.GetCurrentScenePath() });
                         }
                     }
-                    if (showCommit)
+                    if (validActions.showCommit)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.commit, buttonStyle))
@@ -104,7 +87,7 @@ namespace VersionControl.UserInterface
                             OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
-                    if (showRevert)
+                    if (validActions.showRevert)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
@@ -118,7 +101,7 @@ namespace VersionControl.UserInterface
                             }
                         }
                     }
-                    if (showOpenLocal)
+                    if (validActions.showOpenLocal)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
@@ -126,7 +109,7 @@ namespace VersionControl.UserInterface
                             VCCommands.Instance.AllowLocalEdit(new[] { SceneManagerUtilities.GetCurrentScenePath() });
                         }
                     }
-                    if (showUnlock)
+                    if (validActions.showUnlock)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.unlock, buttonStyle))
@@ -134,7 +117,7 @@ namespace VersionControl.UserInterface
                             OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
                         }
                     }
-                    if (showForceOpen)
+                    if (validActions.showForceOpen)
                     {
                         numberOfButtons++;
                         if (GUILayout.Button("Force Open", buttonStyle))

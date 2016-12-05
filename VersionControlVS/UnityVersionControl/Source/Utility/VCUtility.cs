@@ -259,6 +259,17 @@ namespace VersionControl
                     assetStatus.LocalEditAllowed());
         }
 
+        public static bool Revertable(VersionControlStatus assetStatus)
+        {
+            return (HaveVCLock(assetStatus) ||
+                    assetStatus.fileStatus == VCFileStatus.Added ||
+                    assetStatus.fileStatus == VCFileStatus.Modified ||
+                    assetStatus.fileStatus == VCFileStatus.Conflicted ||
+                    assetStatus.fileStatus == VCFileStatus.Deleted ||
+                    assetStatus.ModifiedWithoutLock() ||
+                    assetStatus.LocalEditAllowed());
+        }
+
         public static bool HaveAssetControl(string assetPath)
         {
             return HaveAssetControl(VCCommands.Instance.GetAssetStatus(assetPath));

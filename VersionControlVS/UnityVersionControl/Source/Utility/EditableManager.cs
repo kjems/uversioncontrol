@@ -20,7 +20,7 @@ namespace VersionControl
         public static void SetEditable(Object obj, bool editable)
         {
             //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
-            if (obj != null && !AvoidGUILock(obj) && !string.IsNullOrEmpty(obj.GetAssetPath()) && 
+            if (obj != null && !AvoidGUILock(obj) && !IsBuiltinAsset(obj.GetAssetPath()) && 
                 !(obj is GameObject && PrefabHelper.IsPrefabParent(obj))) // Do not modify object flags for Project-Prefab GameObjects
             {
                 if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
@@ -37,6 +37,11 @@ namespace VersionControl
         private static bool AvoidGUILock(Object obj)
         {
             return avoidGUILockConditions.Any(c => c(obj));
+        }
+
+        public static bool IsBuiltinAsset(string assetPath)
+        {
+            return string.IsNullOrEmpty(assetPath) || assetPath.EndsWith("unity_builtin_extra");
         }
 
         public static bool LockPrefab(string assetPath)

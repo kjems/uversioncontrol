@@ -55,7 +55,7 @@ namespace VersionControl
         private static System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
 
         private IVersionControlCommands vcc;        
-        private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
 
         public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;

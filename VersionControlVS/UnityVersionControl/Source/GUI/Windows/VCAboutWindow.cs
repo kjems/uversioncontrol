@@ -10,9 +10,9 @@ namespace VersionControl.UserInterface
     [Serializable]
     internal class VCAboutWindow : EditorWindow
     {
-        const string maintainAtURL = "https://bitbucket.org/Kjems/uversioncontrol";
+        const string maintainAtURL = "https://github.com/kjems/uversioncontrol";
         private const string infoText =
-            "Unity Version Control is maintained at Bitbucket.\n" +
+            "Unity Version Control is maintained at Github.\n" +
             "All code is subject to the MIT open source license.\n" +
             "Bug reports can be submitted via the Report Bug menu item.\n" +
             "Feedback can be given to 'kristian.kjems+UnityVC@gmail.com'";

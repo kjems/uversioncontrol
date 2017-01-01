@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Playdead")]
 [assembly: AssemblyProduct("CommandLine")]
-[assembly: AssemblyCopyright("Copyright Playdead©  2012")]
+[assembly: AssemblyCopyright("Copyright Playdead©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -1,0 +1,7 @@
+{
+    "name": "Playdead.UVC.Common",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

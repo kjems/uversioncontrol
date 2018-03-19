@@ -67,17 +67,9 @@ menu. Add /usr/local/bin/ to the environment path.
 = Information =
  * See the Documentation folder for a structural overview of the code
  * See the MIT open source license in the TermsOfUse.txt
- * Download a set of pre-compiled assemblies from:
-   https://bitbucket.org/Kjems/uversioncontrol/downloads
-
-= How to compile and use =
- * Open the solution in ./VersionControlVS in MonoDevelop or Visual Studio
- * Build solution as release
- * Copy all assemblies from ./Assemblies/release/ to an Editor folder in Unity
- * Use following Unity guide on setting up version control:
-http://unity3d.com/support/documentation/Manual/ExternalVersionControlSystemSupport
-
-
+ 
+= How to use =
+ * Add to Unity project Package folder or Assets folder
 
 = Project Overview =
  == General C# ==

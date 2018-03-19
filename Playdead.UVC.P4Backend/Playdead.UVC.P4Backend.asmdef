@@ -1,0 +1,7 @@
+{
+    "name": "Playdead.UVC.P4Backend",
+    "references": ["Playdead.UVC.Common", "Playdead.UVC.CommandLine"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

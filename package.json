@@ -1,6 +1,6 @@
 {
   "name": "org.kjems.uvc",
-  "version": "2.3.0.0",
+  "version": "2.3.0",
   "unity": "2018.1",
   "author": "Kjems",
   "description": "UVC - Unity Version Control using SVN",

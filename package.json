@@ -1,13 +1,12 @@
 {
-  "name": "org.kjems.uvc",
-  "version": "2.3.0",
-  "unity": "2018.1",
-  "author": "Kjems",
-  "description": "UVC - Unity Version Control using SVN",
-  "keywords": [
-    "versioncontrol",
-    "uvc",
-    "svn"
-  ],
-  "category": "AssetStore/VersionControl"
+    "name": "org.kjems.uvc",
+    "displayName": "UVC - Unity Version Control",
+    "version": "2.3.1",
+    "unity": "2018.1",
+    "author": "Kjems",
+    "description": "UVC - Unity Version Control using SVN",
+    "keywords": ["versioncontrol","uvc","svn"],
+    "category": "AssetStore/VersionControl",
+    "dependencies": {
+    }
 }

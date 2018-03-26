@@ -48,7 +48,7 @@ namespace VersionControl.UserInterface
             backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
             backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
 
-            var rect = new Rect(5, 5, 200, 65);
+            var rect = new Rect(5, 5, 200, 100);
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
             GUILayout.TextField(AssetStatusUtils.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);

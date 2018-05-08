@@ -1,7 +1,0 @@
-{
-    "name": "Playdead.UVC.SVNBackend",
-    "references": ["Playdead.UVC.Common", "Playdead.UVC.CommandLine", "Playdead.UVC.VCCDecorators"],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

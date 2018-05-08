@@ -1,0 +1,7 @@
+{
+    "name": "UVC.TeamFeatures",
+    "references": ["UVC.Common", "UVC.UnityVersionControl"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

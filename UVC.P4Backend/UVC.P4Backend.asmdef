@@ -1,0 +1,7 @@
+{
+    "name": "UVC.P4Backend",
+    "references": ["UVC.Common", "UVC.CommandLine"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

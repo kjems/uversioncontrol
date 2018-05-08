@@ -1,7 +1,0 @@
-{
-    "name": "Playdead.UVC.Tests",
-    "references": ["Playdead.UVC.Common", "Playdead.UVC.CommandLine", "Playdead.UVC.SVNBackend", "Playdead.UVC.P4Backend"],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

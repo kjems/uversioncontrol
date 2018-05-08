@@ -1,0 +1,7 @@
+{
+    "name": "UVC.SVNBackend",
+    "references": ["UVC.Common", "UVC.CommandLine", "UVC.VCCDecorators"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

@@ -1,0 +1,7 @@
+{
+    "name": "UVC.UnityVersionControl",
+    "references": ["UVC.Common", "UVC.VCCDecorators", "UVC.SVNBackend", "UVC.P4Backend", "UVC.NoopBackend","UVC.CommandLine"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

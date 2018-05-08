@@ -1,0 +1,7 @@
+{
+    "name": "UVC.NoopBackend",
+    "references": ["UVC.Common"],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

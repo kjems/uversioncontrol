@@ -1,7 +1,0 @@
-{
-    "name": "Playdead.UVC.VCCDecorators",
-    "references": ["Playdead.UVC.Common"],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

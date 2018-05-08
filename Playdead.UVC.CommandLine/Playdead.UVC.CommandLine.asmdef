@@ -1,7 +1,0 @@
-{
-    "name": "Playdead.UVC.CommandLine",
-    "references": [],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

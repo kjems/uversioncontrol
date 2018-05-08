@@ -1,0 +1,7 @@
+{
+    "name": "UVC.CommandLine",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": []
+}

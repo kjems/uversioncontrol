@@ -35,46 +35,32 @@ namespace VersionControl.UserInterface
 
         private static void HierarchyWindowListElementOnGUI(int instanceID, Rect selectionRect)
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;
+            var obj = EditorUtility.InstanceIDToObject(instanceID);
 
-            var obj = EditorUtility.InstanceIDToObject(instanceID);            
             if (obj == null)
             {
                 string sceneAssetPath = SceneManagerUtilities.GetSceneAssetPathFromHandle(instanceID);
-                if (!string.IsNullOrEmpty(sceneAssetPath)) MultiSceneHierarchyElement(sceneAssetPath, selectionRect);
-                return;
+                if (!string.IsNullOrEmpty(sceneAssetPath))
+                {
+                    VCUtility.RequestStatus(sceneAssetPath, VCSettings.HierarchyReflectionMode);
+                    DrawIcon(selectionRect, IconUtils.rubyIcon, sceneAssetPath, null, -20f);
+                    return;
+                }
             }
-            if (EditorApplication.isPlayingOrWillChangePlaymode || !VCSettings.HierarchyIcons || !VCCommands.Active) return;
-            var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
-
-            string assetPath = obj.GetAssetPath();
-            bool changesStoredInPrefab = ObjectUtilities.ChangesStoredInPrefab(obj);
-            bool guiLockForPrefabs = VCSettings.PrefabGUI;
-
-            if (assetPath != SceneManagerUtilities.GetCurrentScenePath() && (!changesStoredInPrefab || guiLockForPrefabs))
+            else
             {
-                VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-                DrawIcon(selectionRect, GetHierarchyIcon(obj), assetPath, objectIndirection);
-            }
-        }
+                var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
+                string sceneAssetPath = ObjectUtilities.ObjectToAssetPath(obj, false);
+                DrawIcon(selectionRect, IconUtils.childIcon, sceneAssetPath, null, -20f);
 
-        private static void MultiSceneHierarchyElement(string assetPath, Rect selectionRect)
-        {
-            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-            DrawIcon(selectionRect, IconUtils.rubyIcon, assetPath, null, -20f);
-        }
-
-        private static IconUtils.Icon GetHierarchyIcon(Object obj)
-        {
-            IconUtils.Icon iconType = IconUtils.rubyIcon;
-            if (ObjectUtilities.ChangesStoredInPrefab(obj))
-            {
-                iconType = IconUtils.squareIcon;
+                if (ObjectUtilities.ChangesStoredInPrefab(obj) && VCSettings.PrefabGUI)
+                {
+                    string prefabPath = obj.GetAssetPath();
+                    VCUtility.RequestStatus(prefabPath, VCSettings.HierarchyReflectionMode);
+                    DrawIcon(selectionRect, IconUtils.squareIcon, prefabPath, objectIndirection);
+                }
             }
-            if (IsChildNode(obj))
-            {
-                iconType = IconUtils.childIcon;
-            }
-            return iconType;
         }
 
         private static void RefreshGUI()
@@ -83,7 +69,6 @@ namespace VersionControl.UserInterface
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
         }
-
 
         private static Rect GetRightAligned(Rect rect, float size)
         {

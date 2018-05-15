@@ -192,7 +192,7 @@ namespace VersionControl.UserInterface
         }
 
 
-        static byte[] child     = Decompress(System.Convert.FromBase64String("Y2AgDP7//w/G1AIjzLz/MABij5o3at6oeaPmDRfzAA=="));
+        static byte[] child     = Decompress(System.Convert.FromBase64String("Y2DADpiYmBhOnz4NxiA2qYAK+hmBeplAGMQmQ385UO8ZEAaxydA/G6j3PwiD2GTon4Gkf8ao/lH9g1E/AA=="));
         static byte[] circle    = Decompress(System.Convert.FromBase64String("Y2AYtuA/GiZJLzogwQwMvUSawYlPL5FmDGX9goTMIGA3XneQoBduBgP56YeHRPUDBgA="));
         static byte[] ruby      = Decompress(System.Convert.FromBase64String("Y2CgKfgPxWTphQEyzPiPDkgwA0MvCWbg1EuEGQT1EjCDUv2Uup8a4YfTDBL0YphBhl64GRToHRIAAA=="));
         static byte[] square    = Decompress(System.Convert.FromBase64String("Y2AYVGAzkRin/v8EwKj+4a2fSDwKoAAA"));

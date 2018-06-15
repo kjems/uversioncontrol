@@ -19,7 +19,7 @@ namespace VersionControl.UserInterface
 
         private static void SubscribeToInspector(Object[] targets)
         {
-            if (!VCSettings.MaterialGUI && targets.Length == 0) return;
+            if (!VCCommands.Active || !VCSettings.MaterialGUI || targets.Length == 0) return;
 
             var renderer = targets[0] as Renderer;
             var sharedMaterials = renderer.sharedMaterials;

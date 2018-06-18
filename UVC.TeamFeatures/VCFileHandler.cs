@@ -41,7 +41,7 @@ namespace VersionControl
             if (!string.IsNullOrEmpty(asset))
             {
                 string currentFolder = "";
-                foreach (var folderIt in Path.GetDirectoryName(asset).Split(pathSeparator))
+                foreach (var folderIt in Path.GetDirectoryName(asset).Replace("\\","/").Split(pathSeparator))
                 {
                     currentFolder += folderIt + pathSeparator;
                     parentFolders.Add(currentFolder.TrimEnd(pathSeparator));
@@ -83,6 +83,10 @@ namespace VersionControl
                             VCCommands.Instance.Status(new[] { topUnversionedFolder }, StatusLevel.Local);
                         }
                         if (result == 2) return AssetMoveResult.FailedMove;
+                    }
+                    if (InUnversionedParentFolder(from, out topUnversionedFolder))
+                    {
+                        return AssetMoveResult.DidNotMove;
                     }
                     if (VCCommands.Instance.Move(from, to))
                     {

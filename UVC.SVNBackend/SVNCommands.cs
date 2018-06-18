@@ -397,7 +397,8 @@ namespace VersionControl.Backend.SVN
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            File.WriteAllLines(svnTargetsFile, assets.Select(PrepareAssetPath).ToArray());
+            var filecontent = assets.Select(PrepareAssetPath).ToArray();
+            File.WriteAllLines(svnTargetsFile, filecontent);
             bool result = CreateOperation(arguments + " --targets " + svnTargetsFile);
             File.Delete(svnTargetsFile);
             result &= RequestStatus(assets, StatusLevel.Previous);
@@ -436,7 +437,7 @@ namespace VersionControl.Backend.SVN
 
         private static string ConcatAssetPaths(IEnumerable<string> assets)
         {
-            assets = assets.Select(PrepareAssetPath);
+            assets = assets.Select(PrepareAssetPath).Distinct();
             if (assets.Any()) return " \"" + assets.Aggregate((i, j) => i + "\" \"" + j) + "\"";
             return "";
         }
@@ -514,7 +515,7 @@ namespace VersionControl.Backend.SVN
 
         public bool Add(IEnumerable<string> assets)
         {
-            return CreateAssetOperation("add", assets);
+            return CreateAssetOperation("add", RemoveFilesIfParentFolderInList(assets));
         }
 
         public bool Revert(IEnumerable<string> assets)
@@ -726,7 +727,7 @@ namespace VersionControl.Backend.SVN
         IEnumerable<string> RemoveFilesIfParentFolderInList(IEnumerable<string> assets)
         {
             var folders = assets.Where(a => Directory.Exists(a));
-            assets = assets.Where(a => !folders.Any(f => a.StartsWith(f) && a != f));
+            assets = assets.Where(a => !folders.Any(f => a.StartsWith(f + "/" ) && a != f));
             return assets.ToArray();
         }
 

@@ -39,25 +39,26 @@ namespace VersionControl
 
         public override bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            assets = assets.NonEmpty().InVersionedFolder(vcc);
+            assets = ConsistentSlash(assets.NonEmpty().InVersionedFolder(vcc));
             return assets.Any() ? base.Status(assets, statusLevel) : true;
         }
 
         public override bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             if (assets == null) return true;
-            assets = assets.NonEmpty();
+            assets = ConsistentSlash(assets.NonEmpty());
             return assets.Any() ? base.RequestStatus(assets, statusLevel) : true;
         }
 
         public override bool Update(IEnumerable<string> assets = null)
         {
-            return base.Update((assets != null ? assets.Versioned(vcc) : null));
+            return base.Update((assets != null ? ConsistentSlash(assets.Versioned(vcc)) : null));
         }
 
         public override bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            var filesInFolders = assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc).ToArray();
+            assets = ConsistentSlash(assets);
+            var filesInFolders = ConsistentSlash(assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc));
             var deletedInFolders = assets.AddDeletedInFolders(vcc);
 
             D.Log("Deleted In Folders: " + deletedInFolders.AggregateString());
@@ -77,22 +78,23 @@ namespace VersionControl
 
         public override bool Add(IEnumerable<string> assets)
         {
-            return base.Add(assets.UnversionedInVersionedFolder(vcc));
+            return base.Add(ConsistentSlash(assets.UnversionedInVersionedFolder(vcc)));
         }
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            assets = assets.ShortestFirst();
+            assets = ConsistentSlash(assets.ShortestFirst());
             return assets.Any() ? base.Revert(assets) : true;
         }
 
         public override bool Delete(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.Delete(assets.Versioned(vcc), mode);
+            return base.Delete(ConsistentSlash(assets.Versioned(vcc)), mode);
         }
 
         public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
+            assets = ConsistentSlash(assets);
             try
             {
                 return base.GetLock(mode == OperationMode.Force ? assets.Versioned(vcc) : assets.NotLocked(vcc), mode);
@@ -107,23 +109,23 @@ namespace VersionControl
 
         public override bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            return base.Resolve(assets.FilesExist(), conflictResolution);
+            return base.Resolve(ConsistentSlash(assets.FilesExist()), conflictResolution);
         }
 
         public override bool ReleaseLock(IEnumerable<string> assets)
         {
-            return base.ReleaseLock(assets.Locked(vcc));
+            return base.ReleaseLock(ConsistentSlash(assets.Locked(vcc)));
         }
 
         public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
         {
-            assets = assets.NonEmpty().Versioned(vcc);
+            assets = ConsistentSlash(assets.NonEmpty().Versioned(vcc));
             return assets.Any() ? (base.ChangeListAdd(assets, changelist) && Status(assets, StatusLevel.Local)) : false;
         }
 
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
-            assets = assets.NonEmpty().Versioned(vcc).OnChangeList(vcc);
+            assets = ConsistentSlash(assets.NonEmpty().Versioned(vcc).OnChangeList(vcc));
             return assets.Any() ? base.ChangeListRemove(assets.FilesExist().OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
         }
 
@@ -132,6 +134,16 @@ namespace VersionControl
             if (vcc.GetAssetStatus(from).fileStatus == VCFileStatus.Unversioned) return false;
             if (to.InUnversionedParentFolder(vcc)) return false;
             return base.Move(from, to);
+        }
+
+        private static IEnumerable<string> ConsistentSlash(IEnumerable<string> assets)
+        {
+            return assets.Select(FixSlash).Distinct().ToArray();
+        }
+
+        private static string FixSlash(string assetpath)
+        {
+            return assetpath.Replace("\\", "/");
         }
 
     }

@@ -4,8 +4,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using UnityEngine;
 
-namespace VersionControl
+namespace UVC
 {
     public interface IComposedSetDatabase<T>
     {
@@ -19,15 +20,15 @@ namespace VersionControl
         public abstract T Compose(List<int> decomposed);
 
         public List<T> Parts { get { return parts; } }
-        
+
         public List<int> Decompose(T composed)
         {
             List<int> indices;
             lock (constructorLockToken)
             {
-                if (!composedToIndicies.TryGetValue(composed, out indices))
+                if (!composedToIndices.TryGetValue(composed, out indices))
                 {
-                    indices = new List<int>();                    
+                    indices = new List<int>();
                     foreach (var part in Split(composed))
                     {
                         int index;
@@ -43,7 +44,7 @@ namespace VersionControl
                             partToIndex.Add(part, newIndex);
                         }
                     }
-                    composedToIndicies.Add(composed, indices);
+                    composedToIndices.Add(composed, indices);
                 }
             }
             return indices;
@@ -52,7 +53,7 @@ namespace VersionControl
         private readonly object constructorLockToken = new object();
         private readonly List<T> parts = new List<T>();
         private readonly Dictionary<T, int> partToIndex = new Dictionary<T, int>();
-        private readonly Dictionary<T, List<int>> composedToIndicies = new Dictionary<T, List<int>>();
+        private readonly Dictionary<T, List<int>> composedToIndices = new Dictionary<T, List<int>>();
     }
 
     public class ComposedSet<T, TDB> where TDB : IComposedSetDatabase<T>, new()
@@ -63,34 +64,42 @@ namespace VersionControl
 
         // Instance
         protected readonly List<int> indices;
+        protected readonly int hashCode;
 
         // Constructors
         protected ComposedSet() { }
         protected ComposedSet(List<int> indices)
         {
             this.indices = indices;
+            hashCode = CalculateHashCode(indices);
         }
         public ComposedSet(ComposedSet<T, TDB> cset)
         {
             indices = new List<int>(cset.indices);
+            hashCode = CalculateHashCode(indices);
         }
         public ComposedSet(T composed)
         {
             indices = database.Decompose(composed);
-        } 
+            hashCode = CalculateHashCode(indices);
+        }
 
         public static implicit operator ComposedSet<T, TDB>(T composed)
         {
             return new ComposedSet<T, TDB>(composed);
         }
-
         public static ComposedSet<T, TDB> operator +(ComposedSet<T, TDB> a, ComposedSet<T, TDB> b)
         {
-            return new ComposedSet<T, TDB>(a.indices.Concat(b.indices).ToList());
+            var newIndicies = new List<int>(a.indices);
+            newIndicies.AddRange(b.indices);
+            return new ComposedSet<T, TDB>(newIndicies);
         }
         public static ComposedSet<T, TDB> operator +(ComposedSet<T, TDB> a, T b)
         {
-            return new ComposedSet<T, TDB>(a.indices.Concat(new ComposedSet<T, TDB>(b).indices).ToList());
+            var newIndicies = new List<int>(a.indices);
+            var bComposedSet = new ComposedSet<T, TDB>(b);
+            newIndicies.AddRange(bComposedSet.indices);
+            return new ComposedSet<T, TDB>(newIndicies);
         }
         public static bool operator ==(ComposedSet<T, TDB> a, ComposedSet<T, TDB> b)
         {
@@ -104,100 +113,132 @@ namespace VersionControl
         }
         public static bool IsNullOrEmpty(ComposedSet<T, TDB> cset)
         {
-            if (cset == null) return true;
-            if (cset.indices.Count == 0) return true;
-            return false;
+            return cset == null || cset.indices.Count == 0;
         }
-
+        private static int CalculateHashCode(List<int> indices)
+        {
+            int hash = 13;
+            for (int i = 0, length = indices.Count; i < length; ++i)
+                hash = (hash * 7) + indices[i];
+            return hash;
+        }
         public T Compose()
         {
             return database.Compose(indices);
         }
-
         public List<int> GetIndicesCopy()
         {
             return new List<int>(indices);
         }
-        public string GetIndiciesAsString()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("[");
-            for (int i = 0, length = indices.Count; i < length; ++i)
-            {
-                sb.Append(indices[i]);
-                if (i < length - 1) sb.Append(", ");
-            }
-            sb.Append("]");
-            return sb.ToString();
-        }
-        
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
             var other = obj as ComposedSet<T, TDB>;
             if ((object)other == null) return false;
-            if (other.indices.Count != indices.Count) return false;
+            if (other.hashCode != hashCode) return false;
+            
             for (int i = 0, length = indices.Count; i < length; ++i)
-            {
                 if (other.indices[i] != indices[i]) return false;
-            }
+            
             return true;
         }
+
+        public override string ToString()
+        {
+            return Compose().ToString();
+        }
+
         public override int GetHashCode()
         {
-            int hash = 13;
-            for (int i = 0, length = indices.Count; i < length; ++i)
-            {
-                hash = (hash * 7) + indices[i];
-            }
-            return hash;
+            return hashCode;
         }
         public bool EndsWith(ComposedSet<T, TDB> a)
         {
             int length = indices.Count;
-            int alength = a.indices.Count;
+            var aindices = a.indices;
+            int alength = aindices.Count;
+
             if (alength > length) return false;
             if (alength == 0) return false;
-            for (int i = 0; i < alength; ++i)
-            {
-                if (a.indices[alength - i - 1] != indices[length - i - 1]) return false;
-            }
+            
+            for (int i = 1, count = alength + 1; i < count ; ++i)
+                if (aindices[alength - i] != indices[length - i]) return false;
+            
             return true;
         }
         public bool StartsWith(ComposedSet<T, TDB> a)
         {
             int length = indices.Count;
             int alength = a.indices.Count;
+
             if (alength > length) return false;
+            if (alength == 0) return false;
+            
             for (int i = 0; i < alength; ++i)
-            {
                 if (a.indices[i] != indices[i]) return false;
-            }
+
             return true;
         }
         public ComposedSet<T, TDB> TrimEnd(ComposedSet<T, TDB> cset)
         {
-            if (EndsWith(cset))
-            {                
-                var trimmed = new ComposedSet<T, TDB>(this);
-                trimmed.indices.RemoveRange(trimmed.indices.Count - cset.indices.Count, cset.indices.Count);
-                return trimmed;
-            }
-            return this;
+            return EndsWith(cset) ? GetSubset(0, indices.Count - cset.indices.Count) : this;
         }
-        /*public List<int> FindAll(ComposedString<T> cset)
-        {
-            int startIndex = 0;
-            for (int i = 0, length = indices.Count; i < length; ++i)
-            {
-                for (int j = 0, flength = cset.indices.Count; j < flength; ++j)
-                {
 
+        public int FindFirstIndex(ComposedSet<T, TDB> a)
+        {
+            int length = indices.Count;
+            var aindices = a.indices;
+            int alength = aindices.Count;
+            if (alength > length) return -1;
+            if (alength == 0) return -1;
+            
+            for (int i = 0; i < length; i++)
+            {
+                if (indices[i] == aindices[0]) // First index match, now test the rest
+                {
+                    for (int j = 0; j < alength; j++)
+                    {
+                        if (aindices[j] != indices[i + j])
+                            break; // Mis-match continue searching for a matching first index
+                        if (j == alength - 1)
+                            return i; // Rest was a match, return index of matching start index
+                    }
                 }
             }
+            return -1;
         }
-        public void Replace(ComposedString<T> from, ComposedString<T> to)
+        
+        public int FindLastIndex(ComposedSet<T, TDB> a)
         {
-        }*/
+            int length = indices.Count;
+            var aindices = a.indices;
+            int alength = aindices.Count;
+            if (alength > length) return -1;
+            if (alength == 0) return -1;
+            
+            for (int i = length - 1; i > 0; i--) // look from end to start
+            {
+                if (indices[i] == aindices[0] && i + alength <= length) // First index match, now test the rest
+                {
+                    for (int j = 0; j < alength; j++)
+                    {
+                        if (aindices[j] != indices[i + j])
+                            break; // Mis-match continue searching for a matching first index
+                        if (j == alength - 1)
+                            return i; // Rest was a match, return index of matching start index
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public ComposedSet<T, TDB> GetSubset(int startIndex, int length)
+        {
+            if (startIndex == 0 && length == indices.Count)
+            {
+                return this;
+            }
+            return new ComposedSet<T, TDB>(indices.GetRange(startIndex, length));
+        }
     }
 }

@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
-namespace VersionControl.AssetPathFilters
+namespace UVC.AssetPathFilters
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static partial class AssetpathsFilters
@@ -64,7 +63,7 @@ namespace VersionControl.AssetPathFilters
         public static IEnumerable<string> AddFolders(this IEnumerable<string> assets, IVersionControlCommands vcc)
         {
             return assets
-                .Select(a => Path.GetDirectoryName(a))
+                .Select(GetDirectoryNameForwardSlash)
                 .Where(d => vcc.GetAssetStatus(d).fileStatus != VCFileStatus.Normal)
                 .Concat(assets)
                 .Distinct()
@@ -92,7 +91,7 @@ namespace VersionControl.AssetPathFilters
             if (!string.IsNullOrEmpty(asset))
             {
                 string currentFolder = "";
-                foreach (var folderIt in Path.GetDirectoryName(asset).Split(pathSeparator))
+                foreach (var folderIt in GetDirectoryNameForwardSlash(asset).Split(pathSeparator))
                 {
                     currentFolder += folderIt + pathSeparator;
                     parentFolders.Add(currentFolder.TrimEnd(pathSeparator));
@@ -129,6 +128,9 @@ namespace VersionControl.AssetPathFilters
         public static IEnumerable<string> AddMoveMatches(this IEnumerable<string> assetPaths, IVersionControlCommands vcc)
         {
             List<string> moveMatches = new List<string>();
+            //moveMatches.AddRange(assetPaths.Select(vcc.GetAssetStatus).Where(status => !ComposedString.IsNullOrEmpty(status.movedFrom)).Select(status => status.movedFrom.Compose()));
+            //UnityEngine.Debug.Log(moveMatches.Count > 0 ? moveMatches.AggregateString() : "Empty move match");
+            
             var allDeleted = vcc.GetFilteredAssets(status => status.fileStatus == VCFileStatus.Deleted);
             var allAdded = vcc.GetFilteredAssets(status => status.fileStatus == VCFileStatus.Added);
             var commitDeleted = assetPaths.Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Deleted);
@@ -140,7 +142,7 @@ namespace VersionControl.AssetPathFilters
                 {
                     moveMatches.Add(deletedPath);
                 }
-                if (commitAdded.Count(added => added.StartsWith(Path.GetDirectoryName(deletedPath)) && Path.GetExtension(deletedPath) == Path.GetExtension(added)) > 0)
+                if (commitAdded.Count(added => added.StartsWith(GetDirectoryNameForwardSlash(deletedPath)) && Path.GetExtension(deletedPath) == Path.GetExtension(added)) > 0)
                 {
                     moveMatches.Add(deletedPath);
                 }
@@ -153,12 +155,17 @@ namespace VersionControl.AssetPathFilters
                 {
                     moveMatches.Add(addedPath);
                 }
-                if (commitDeleted.Count(deleted => deleted.StartsWith(Path.GetDirectoryName(addedPath)) && Path.GetExtension(addedPath) == Path.GetExtension(deleted)) > 0)
+                if (commitDeleted.Count(deleted => deleted.StartsWith(GetDirectoryNameForwardSlash(addedPath)) && Path.GetExtension(addedPath) == Path.GetExtension(deleted)) > 0)
                 {
                     moveMatches.Add(addedPath);
                 }
             }
-            return assetPaths.Concat(moveMatches).ToArray();
+            return assetPaths.Concat(moveMatches.Distinct()).ToArray();
+        }
+
+        public static string GetDirectoryNameForwardSlash(string path)
+        {
+            return Path.GetDirectoryName(path).Replace("\\", "/");
         }
 
         public static IEnumerable<string> AddDeletedInFolders(this IEnumerable<string> assetPaths, IVersionControlCommands vcc)

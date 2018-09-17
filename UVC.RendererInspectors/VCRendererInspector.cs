@@ -5,7 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using Extensions;
 
@@ -50,7 +50,7 @@ namespace VersionControl.UserInterface
                     }
                     else
                     {
-                        savePath = Path.GetDirectoryName(assetPath);
+                        savePath = Path.GetDirectoryName(assetPath).Replace("\\","/");
                         fileName = Path.GetFileNameWithoutExtension(assetPath);
                     }
 

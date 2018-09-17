@@ -4,7 +4,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using Extensions;
     [InitializeOnLoad]
@@ -45,14 +45,13 @@ namespace VersionControl.UserInterface
                 {
                     VCUtility.RequestStatus(sceneAssetPath, VCSettings.HierarchyReflectionMode);
                     DrawIcon(selectionRect, IconUtils.rubyIcon, sceneAssetPath, null, -20f);
-                    return;
                 }
             }
             else
             {
                 var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
                 string sceneAssetPath = ObjectUtilities.ObjectToAssetPath(obj, false);
-                DrawIcon(selectionRect, IconUtils.childIcon, sceneAssetPath, null, -20f);
+                //DrawIcon(selectionRect, IconUtils.childIcon, sceneAssetPath, null, -20f);
 
                 if (ObjectUtilities.ChangesStoredInPrefab(obj) && VCSettings.PrefabGUI)
                 {

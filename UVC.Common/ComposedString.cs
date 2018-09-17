@@ -6,15 +6,16 @@ using System.Text;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class FilesAndFoldersComposedStringDatabase : BaseComposedSetDatabase<string>
     {
         const string regexSplitter = @"(\.)|(\/)|(\@)|(_)";
+        static Regex regex = new Regex(regexSplitter, RegexOptions.Compiled);
         public override string[] Split(string composed)
         {
-            return Regex.Split(composed, regexSplitter, RegexOptions.Compiled).Where(s => !string.IsNullOrEmpty(s)).ToArray();
+            return regex.Split(composed).Where(s => !string.IsNullOrEmpty(s)).ToArray();
         }
 
         public override string Compose(List<int> indices)

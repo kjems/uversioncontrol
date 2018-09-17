@@ -4,7 +4,7 @@
 using System.Threading;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     [InitializeOnLoad]
     public class ThreadUtility

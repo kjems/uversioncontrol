@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace VersionControl.Backend.P4
+namespace UVC.Backend.P4
 {
     using Logging;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;

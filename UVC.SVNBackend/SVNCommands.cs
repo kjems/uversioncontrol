@@ -9,7 +9,7 @@ using System.Threading;
 using System.Xml;
 using CommandLineExecution;
 
-namespace VersionControl.Backend.SVN
+namespace UVC.Backend.SVN
 {
     using Logging;
     using AssetPathFilters;
@@ -664,7 +664,7 @@ namespace VersionControl.Backend.SVN
 
         public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
         {
-            string[] conflictingFiles = Directory.GetFiles(Path.GetDirectoryName(assetPath), Path.GetFileName(assetPath) + ".r*").Where(a => Path.GetExtension(a).StartsWith(".r")).ToArray();
+            string[] conflictingFiles = Directory.GetFiles(Path.GetDirectoryName(assetPath).Replace("\\","/"), Path.GetFileName(assetPath) + ".r*").Where(a => Path.GetExtension(a).StartsWith(".r")).ToArray();
             string minePath = assetPath + ".mine";
 
             D.Log(string.Format("mine:{0}, theirs:{1}, base:{2}, length:{3}", minePath, conflictingFiles[1], conflictingFiles[0], conflictingFiles.Length));

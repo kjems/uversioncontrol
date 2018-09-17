@@ -4,7 +4,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     [InitializeOnLoad]
     internal static class VCSceneViewGUI
@@ -32,14 +32,20 @@ namespace VersionControl.UserInterface
             shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(SceneManagerUtilities.GetCurrentScenePath());
         }
 
+        private static VCGUIControls.ValidActions validActions;
+        private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
         static void SceneViewUpdate(SceneView sceneView)
         {
             if (!shouldDraw) return;
-
-            string assetPath = SceneManagerUtilities.GetCurrentScenePath();
-            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+            
+            if (Event.current.type == EventType.Layout)
+            {
+                string assetPath = SceneManagerUtilities.GetCurrentScenePath();
+                VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
+                vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+                validActions = VCGUIControls.GetValidActions(assetPath);
+            }
+            
             buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 80};
 
             backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
@@ -55,8 +61,6 @@ namespace VersionControl.UserInterface
 
             int numberOfButtons = 0;
             const int maxButtons = 4;
-
-            var validActions = VCGUIControls.GetValidActions(assetPath);                       
 
             using (GUILayoutHelper.Vertical())
             {

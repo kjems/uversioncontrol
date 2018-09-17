@@ -4,8 +4,8 @@
 using System;
 using UnityEditor;
 using UnityEngine;
-using VersionControl;
-using VersionControl.Logging;
+using UVC;
+using UVC.Logging;
 
 internal static class FogbugzUtilities
 {

@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Linq;
 
-namespace VersionControl
+namespace UVC
 {
     using Extensions;
 

@@ -9,7 +9,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VersionControl
+namespace UVC
 {
     using Extensions;
     internal class VCMenuItems : ScriptableObject
@@ -24,7 +24,8 @@ namespace VersionControl
         [MenuItem("Assets/UVC/" + Terminology.allowLocalEdit, true)]
         [MenuItem("Assets/UVC/" + Terminology.revert, true)]
         [MenuItem("Assets/UVC/" + Terminology.commit, true)]
-        [MenuItem("Assets/UVC/Open", true)]
+        [MenuItem("Assets/UVC/" + Terminology.getlock, true)]
+        [MenuItem("Assets/UVC/" + Terminology.unlock, true)]
         [MenuItem("CONTEXT/GameObject/" + Terminology.unlock, true)]
         [MenuItem("CONTEXT/GameObject/Force " + Terminology.getlock, true)]
         [MenuItem("CONTEXT/GameObject/" + Terminology.getlock, true)]
@@ -59,10 +60,16 @@ namespace VersionControl
             VCCommands.Instance.ReleaseLock(new[] {command.context.GetAssetPath()});
         }
 
-        [MenuItem("Assets/UVC/Open")]
+        [MenuItem("Assets/UVC/" + Terminology.getlock)]
         private static void VCGetLockProjectContext()
         {
             VCCommands.Instance.GetLock(GetAssetPathsOfSelected().ToArray());
+        }
+        
+        [MenuItem("Assets/UVC/" + Terminology.unlock)]
+        private static void VCGetUnLockProjectContext()
+        {
+            VCCommands.Instance.ReleaseLock(GetAssetPathsOfSelected().ToArray());
         }
 
         // Commit

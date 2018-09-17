@@ -4,9 +4,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using VersionControl.AssetPathFilters;
+using UVC.AssetPathFilters;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Logging;

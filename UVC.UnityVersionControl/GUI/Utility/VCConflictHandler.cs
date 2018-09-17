@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using VersionControl.Logging;
+using UVC.Logging;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal static class VCConflictHandler

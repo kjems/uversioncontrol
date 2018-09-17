@@ -8,7 +8,7 @@ using UnityEditor;
 using System.Linq;
 using System.IO;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     using Extensions;
@@ -84,7 +84,7 @@ namespace VersionControl
             if (!string.IsNullOrEmpty(asset))
             {
                 string currentFolder = "";
-                foreach (var folderIt in Path.GetDirectoryName(asset).Split(pathSeparator))
+                foreach (var folderIt in Path.GetDirectoryName(asset).Replace("\\","/").Split(pathSeparator))
                 {
                     currentFolder += folderIt + pathSeparator;
                     parentFolders.Add(currentFolder.TrimEnd(pathSeparator));

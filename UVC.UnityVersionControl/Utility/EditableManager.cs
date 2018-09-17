@@ -7,7 +7,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VersionControl
+namespace UVC
 {
     using Extensions;
     public static class EditableManager
@@ -19,8 +19,10 @@ namespace VersionControl
 
         public static void SetEditable(Object obj, bool editable)
         {
-            //D.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
-            if (obj != null && !AvoidGUILock(obj) && !IsBuiltinAsset(obj.GetAssetPath()) && 
+            //Debug.Log("Setting '" + obj + "' to " + (editable ? "editable" : "readonly"));
+            if (AvoidGUILock(obj))
+                editable = true;
+            if (obj != null && !IsBuiltinAsset(obj.GetAssetPath()) && !EditorUtility.IsPersistent(obj) &&
                 !(obj is GameObject && PrefabHelper.IsPrefabParent(obj))) // Do not modify object flags for Project-Prefab GameObjects
             {
                 if (editable && !IsEditable(obj)) obj.hideFlags &= ~HideFlags.NotEditable;
@@ -54,29 +56,22 @@ namespace VersionControl
             return VCSettings.LockScenes && assetPath.ToLowerInvariant().Contains(VCSettings.LockScenesFilter.ToLowerInvariant());
         }
 
-        public static bool LockMaterial(string assetPath)
-        {
-            return VCSettings.LockMaterials && assetPath.ToLowerInvariant().Contains(VCSettings.LockMaterialsFilter.ToLowerInvariant());
-        }
-
-        internal static void RefreshEditableMaterial(Material material)
-        {
-            SetEditable(material, VCUtility.HaveAssetControl(material) || !LockMaterial(material.GetAssetPath()));
-        }
-
         internal static void RefreshEditableObject(GameObject gameObject)
         {
-            bool editable = ShouleBeEditable(gameObject);
-            bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(SceneManagerUtilities.GetCurrentScenePath());
-            bool prefabHeadEditable = PrefabHelper.IsPrefabRoot(gameObject) && parentEditable;
-            
-            if (prefabHeadEditable) SetEditable(gameObject, true);
-            else SetEditable(gameObject, editable);
-
-            foreach (var componentIt in gameObject.GetComponents<Component>())
+            if (!EditorUtility.IsPersistent(gameObject))
             {
-                if (prefabHeadEditable && componentIt == gameObject.transform) SetEditable(gameObject.transform, true);                
-                else RefreshEditableComponent(gameObject, componentIt);
+                bool editable = ShouleBeEditable(gameObject);
+                bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(SceneManagerUtilities.GetCurrentScenePath());
+                bool prefabHeadEditable = PrefabHelper.IsPrefabRoot(gameObject) && parentEditable;
+
+                if (prefabHeadEditable) SetEditable(gameObject, true);
+                else SetEditable(gameObject, editable);
+
+                foreach (var componentIt in gameObject.GetComponents<Component>())
+                {
+                    if (prefabHeadEditable && componentIt == gameObject.transform) SetEditable(gameObject.transform, true);
+                    else RefreshEditableComponent(gameObject, componentIt);
+                }
             }
         }
 
@@ -121,7 +116,7 @@ namespace VersionControl
             var assetPath = material.GetAssetPath();
             var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
             bool materialStoredInScene = VCUtility.MaterialStoredInScene(material);
-            bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && LockMaterial(assetPath);
+            bool shouldLock = (materialStoredInScene ? gameObjectLocked : (VCUtility.ManagedByRepository(assetStatus) && !VCUtility.HaveAssetControl(assetStatus))) && VCSettings.LockAssets;
             SetEditable(material, !shouldLock);
         }
     }

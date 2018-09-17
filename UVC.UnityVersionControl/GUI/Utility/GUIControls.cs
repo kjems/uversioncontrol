@@ -4,7 +4,7 @@
 using System;
 using UnityEngine;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     internal static class GUIControls
     {

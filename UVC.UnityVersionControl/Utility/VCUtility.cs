@@ -11,7 +11,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Extensions;
@@ -194,7 +194,7 @@ namespace VersionControl
         static string GetBinaryConverterPath()
         {
             if (binary2TextPath == null)
-                binary2TextPath = EditorApplication.applicationPath.Replace("Unity.exe", "") + (Application.platform == RuntimePlatform.WindowsEditor ? "Data/Tools/binary2text.exe" : "Data/Tools/binary2text");
+                binary2TextPath = EditorApplication.applicationPath.Replace("Unity.exe", "") + (Application.platform == RuntimePlatform.WindowsEditor ? "Data/Tools/binary2text.exe" : "/Contents/Tools/binary2text");
             return binary2TextPath;
         }
 
@@ -206,14 +206,14 @@ namespace VersionControl
                 string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
                 if (!string.IsNullOrEmpty(baseAssetPath))
                 {
-                    if (EditorSettings.serializationMode == SerializationMode.ForceBinary)
+                    if (EditorSettings.serializationMode == SerializationMode.ForceBinary && requiresTextConversionPostfix.Any(new ComposedString(assetPath).EndsWith))
                     {
                         if (!Directory.Exists(tempDirectory))
                             Directory.CreateDirectory(tempDirectory);
                         string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-base";
                         string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-wc";
-                        //var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
-                        //var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
+                        var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
+                        var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
                         EditorUtility.InvokeDiffTool("Working Base : " + convertedWorkingCopyFile, convertedBaseFile, "Working Copy : " + convertedWorkingCopyFile, convertedWorkingCopyFile, convertedWorkingCopyFile, convertedBaseFile);
                     }
                     else

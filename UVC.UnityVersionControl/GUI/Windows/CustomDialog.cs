@@ -7,7 +7,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Text;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     public class CustomDialog : EditorWindow
     {

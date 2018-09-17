@@ -1,4 +1,4 @@
-namespace VersionControl.UnitTests
+namespace UVC.UnitTests
 {
     public class UnitTests
     {

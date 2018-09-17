@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     using UserInterface;
@@ -17,7 +17,7 @@ namespace VersionControl
             vcEnabled = EditorPrefs.GetBool("VCSSettings/vcEnabled", false);
             lockPrefabs = EditorPrefs.GetBool("VCSSettings/lockPrefabs", false);
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);
-            lockMaterials = EditorPrefs.GetBool("VCSSettings/lockMaterials", true);
+            lockAssets = EditorPrefs.GetBool("VCSSettings/lockAssets", true);
             sceneviewGUI = EditorPrefs.GetBool("VCSSettings/sceneviewGUI", true);
             prefabGUI = EditorPrefs.GetBool("VCSSettings/prefabGUI", true);
             materialGUI = EditorPrefs.GetBool("VCSSettings/materialGUI", true);            
@@ -31,7 +31,6 @@ namespace VersionControl
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
             lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
             lockPrefabsFilter = EditorPrefs.GetString("VCSSettings/lockPrefabsFilter");
-            lockMaterialsFilter = EditorPrefs.GetString("VCSSettings/lockMaterialsFilter");
             ClientPath = EditorPrefs.GetString("VCSSettings/clientPath"); // using ClientPath property instead of field by intention
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
@@ -48,7 +47,7 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/vcEnabled", vcEnabled);
                 EditorPrefs.SetBool("VCSSettings/lockPrefabs", lockPrefabs);
                 EditorPrefs.SetBool("VCSSettings/lockScenes", lockScenes);
-                EditorPrefs.SetBool("VCSSettings/lockMaterials", lockMaterials);
+                EditorPrefs.SetBool("VCSSettings/lockAssets", lockAssets);
                 EditorPrefs.SetBool("VCSSettings/sceneviewGUI", sceneviewGUI);
                 EditorPrefs.SetBool("VCSSettings/prefabGUI", prefabGUI);
                 EditorPrefs.SetBool("VCSSettings/materialGUI", materialGUI);
@@ -62,7 +61,6 @@ namespace VersionControl
                 EditorPrefs.SetBool("VCSSettings/logging", logging);
                 EditorPrefs.SetString("VCSSettings/lockScenesFilter", lockScenesFilter);
                 EditorPrefs.SetString("VCSSettings/lockPrefabsFilter", lockPrefabsFilter);
-                EditorPrefs.SetString("VCSSettings/lockMaterialsFilter", lockMaterialsFilter);
                 EditorPrefs.SetString("VCSSettings/clientPath", clientPath);
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
@@ -80,7 +78,7 @@ namespace VersionControl
         public enum ESaveAssetsStrategy { Unity, VersionControl, User }
         public enum EHandleFileMove { None, Simple, TeamLicense }
 
-        public static event Action SettingChanged;        
+        public static event Action SettingChanged;
         
         private static bool vcEnabled = true;
         public static bool VCEnabled
@@ -151,8 +149,8 @@ namespace VersionControl
         public static bool LockScenes { get { return lockScenes; } set { if (lockScenes != value) { lockScenes = value; OnSettingsChanged(); } } }
 
         
-        private static bool lockMaterials;
-        public static bool LockMaterials { get { return lockMaterials; } set { if (lockMaterials != value) { lockMaterials = value; OnSettingsChanged(); } } }
+        private static bool lockAssets;
+        public static bool LockAssets { get { return lockAssets; } set { if (lockAssets != value) { lockAssets = value; OnSettingsChanged(); } } }
 
         
         private static bool sceneviewGUI;
@@ -195,9 +193,6 @@ namespace VersionControl
         
         private static string lockPrefabsFilter;
         public static string LockPrefabsFilter { get { return lockPrefabsFilter; } set { if (lockPrefabsFilter != value) { lockPrefabsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
-        
-        private static string lockMaterialsFilter;
-        public static string LockMaterialsFilter { get { return lockMaterialsFilter; } set { if (lockMaterialsFilter != value) { lockMaterialsFilter = value.TrimStart(new[] { ' ', '/' }); } } }
 
         private static bool autoCloseAfterSuccess;
         public static bool AutoCloseAfterSuccess { get { return autoCloseAfterSuccess; } set { if (autoCloseAfterSuccess != value) { autoCloseAfterSuccess = value; OnSettingsChanged(); } } }

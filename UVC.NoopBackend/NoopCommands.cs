@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 #pragma warning disable 0067
 
-namespace VersionControl.Backend.Noop
+namespace UVC.Backend.Noop
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class NoopCommands : IVersionControlCommands

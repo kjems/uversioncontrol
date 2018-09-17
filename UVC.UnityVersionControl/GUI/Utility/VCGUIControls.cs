@@ -8,7 +8,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using Extensions;
     public static class VCGUIControls
@@ -108,15 +108,18 @@ namespace VersionControl.UserInterface
         {
             public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate, showForceOpen, showDisconnect;
         }
-
+        static readonly ValidActions noAction = new ValidActions();
         public static ValidActions GetValidActions(string assetPath, Object instance = null)
         {
+            if (!VCCommands.Active || string.IsNullOrEmpty(assetPath))
+                return noAction;
+            
             var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
 
             ValidActions validActions;
             bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
             bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
-            bool isFolder = Directory.Exists(assetPath);
+            bool isFolder = AssetDatabase.IsValidFolder(assetPath);
             bool diffableAsset = VCUtility.IsDiffableAsset(assetPath);
             bool mergableAsset = VCUtility.IsMergableAsset(assetPath);
             bool modifiedDiffableAsset = diffableAsset && assetStatus.fileStatus != VCFileStatus.Normal;

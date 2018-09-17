@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 

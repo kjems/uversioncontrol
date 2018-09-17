@@ -3,8 +3,8 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using System.Threading.Tasks;
-using VersionControl;
-using ComposedString = VersionControl.ComposedSet<string, VersionControl.FilesAndFoldersComposedStringDatabase>;
+using UVC;
+using ComposedString = UVC.ComposedSet<string, UVC.FilesAndFoldersComposedStringDatabase>;
 
 public static class VersionControlStatusExtension
 {

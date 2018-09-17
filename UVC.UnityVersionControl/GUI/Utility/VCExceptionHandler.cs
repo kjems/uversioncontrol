@@ -8,7 +8,7 @@ using UnityEditor;
 
 
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     using UserInterface;

@@ -4,7 +4,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     using UnityEditor.SceneManagement;
     using UnityEngine.SceneManagement;

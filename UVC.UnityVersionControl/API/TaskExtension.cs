@@ -3,9 +3,9 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using System.Threading.Tasks;
-using VersionControl;
+using UVC;
 
-namespace VersionControl
+namespace UVC
 {
     public static class TaskExtensions
     {

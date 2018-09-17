@@ -6,11 +6,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
+using UVC.UserInterface;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     using AssetPathFilters;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCFileHandler : UnityEditor.AssetModificationProcessor
     {
 
@@ -147,6 +150,23 @@ namespace VersionControl
             return toBeSaved.ToArray();
         }
 
+        private static bool IsOpenForEdit(string assetPath, out string message)
+        {
+            if (VCCommands.Active && VCSettings.LockAssets)
+            {
+                var ap = new ComposedString(assetPath).TrimEnd(VCCAddMetaFiles.meta);
+                if (!VCUtility.IsMergableAsset(ap) && ap.StartsWith("Assets/"))
+                {
+                    var status = VCCommands.Instance.GetAssetStatus(ap);
+                    message = AssetStatusUtils.GetStatusText(status);
+                    return VCUtility.HaveAssetControl(status);
+                }
+            }
+            
+            message = "";
+            return true;
+            
+        }
     }
 }
 

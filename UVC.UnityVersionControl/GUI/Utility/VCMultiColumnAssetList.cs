@@ -6,11 +6,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-using VersionControl.Logging;
-using MultiColumnState = MultiColumnState<VersionControl.VersionControlStatus, UnityEngine.GUIContent>;
-using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<VersionControl.VersionControlStatus>;
+using UVC.Logging;
+using MultiColumnState = MultiColumnState<UVC.VersionControlStatus, UnityEngine.GUIContent>;
+using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<UVC.VersionControlStatus>;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCMultiColumnAssetList : IDisposable

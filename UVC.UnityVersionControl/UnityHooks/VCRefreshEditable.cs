@@ -4,7 +4,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     [InitializeOnLoad]
@@ -18,12 +18,18 @@ namespace VersionControl
             EditorApplication.update += RefreshEditable;
             VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
+            Undo.postprocessModifications += mod =>
+            {
+                RefreshGUI();
+                return mod;
+            };
         }
 
         static void RefreshGUI()
         {
             previousSelectionHash = 0;
             RefreshEditable();
+            UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
         }
 
         private static void MakeEditable(Object obj)
@@ -74,11 +80,7 @@ namespace VersionControl
                 MakePreviousEditable();
                 foreach (var selectionIt in selection)
                 {
-                    if (selectionIt is Material)
-                    {
-                        EditableManager.RefreshEditableMaterial(selectionIt as Material);
-                    }
-                    else if (selectionIt is GameObject)
+                    if (selectionIt is GameObject)
                     {
                         EditableManager.RefreshEditableObject(selectionIt as GameObject);
                     }

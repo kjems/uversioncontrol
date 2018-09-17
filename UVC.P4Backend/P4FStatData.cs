@@ -1,7 +1,7 @@
 // Copyright (c) <2013> <E-Line Media, LLC>
 using System;
 
-namespace VersionControl.Backend.P4
+namespace UVC.Backend.P4
 {
     using Logging;
     public class P4FStatData

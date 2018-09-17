@@ -2,14 +2,14 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
-using VersionControl.Backend.Noop;
-using VersionControl.Backend.SVN;
-using VersionControl.Backend.P4;
+using UVC.Backend.P4;
 using UnityEngine;
 using UnityEditor;
 using System;
+using UVC.Backend.Noop;
+using UVC.Backend.SVN;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     public static class VersionControlFactory

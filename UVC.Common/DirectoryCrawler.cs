@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace VersionControl
+namespace UVC
 {
    // this class builds a list of directories under the desired parent directory
    public class DirectoryCrawler

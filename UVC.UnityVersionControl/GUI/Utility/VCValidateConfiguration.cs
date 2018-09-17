@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     [InitializeOnLoad]
     internal static class VCValidateConfiguration

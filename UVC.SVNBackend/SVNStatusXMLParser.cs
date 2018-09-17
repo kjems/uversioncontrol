@@ -7,8 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using UnityEngine;
 
-namespace VersionControl.Backend.SVN
+namespace UVC.Backend.SVN
 {
     using Logging;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
@@ -43,9 +44,11 @@ namespace VersionControl.Backend.SVN
     }
     #endregion
     
-
+    
     public static class SVNStatusXMLParser
     {
+        private static readonly ComposedString dot = new ComposedString(".");
+        private static readonly ComposedString slash = new ComposedString("/");
         public static StatusDatabase SVNParseStatusXML(string svnStatusXML)
         {
             var xmlStatusDocument = new XmlDocument();
@@ -63,7 +66,7 @@ namespace VersionControl.Backend.SVN
             foreach (XmlNode entryIt in entries)
             {
                 ComposedString assetPath = new ComposedString((entryIt.Attributes["path"].InnerText.Replace('\\', '/')).Trim());
-                var status = ParseXMLNode(entryIt);
+                var status = ParseXMLNode(entryIt, assetPath);
                 status.assetPath = assetPath;
                 statusDatabase[assetPath] = status;
             }
@@ -109,7 +112,7 @@ namespace VersionControl.Backend.SVN
             return statusDatabase;
         }
 
-        private static VersionControlStatus ParseXMLNode(XmlNode entryIt)
+        private static VersionControlStatus ParseXMLNode(XmlNode entryIt, ComposedString assetPath)
         {
             var versionControlStatus = new VersionControlStatus();
             XmlElement reposStatus = entryIt["repos-status"];
@@ -134,6 +137,23 @@ namespace VersionControl.Backend.SVN
                 if (wcStatus.Attributes["revision"] != null) versionControlStatus.revision = Int32.Parse(wcStatus.Attributes["revision"].InnerText);
                 if (wcStatus.Attributes["wc-locked"] != null && wcStatus.Attributes["wc-locked"].InnerText == "true") versionControlStatus.repositoryStatus = VCRepositoryStatus.Locked;
                 if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
+                /*if (wcStatus.Attributes["moved-from"] != null)
+                {
+                    var movedFrom = new ComposedString(wcStatus.Attributes["moved-from"].InnerText.Replace('\\', '/').Trim());
+                    if (movedFrom.StartsWith(dot))
+                    {
+                        var lastIndex = assetPath.FindLastIndex(slash);
+                        if (lastIndex != -1)
+                        {
+                            versionControlStatus.movedFrom = assetPath.GetSubset(0, lastIndex + 1) + movedFrom;
+                        }
+                    }
+                    else
+                    {
+                        versionControlStatus.movedFrom = movedFrom;
+                    }
+                    Debug.Log($"Moved From {movedFrom} => {assetPath} : {versionControlStatus.movedFrom}");
+                }*/
 
                 XmlElement commit = wcStatus["commit"];
                 if (commit != null)

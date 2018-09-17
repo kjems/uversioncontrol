@@ -7,7 +7,7 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     using UnityEngine;
@@ -454,6 +454,7 @@ namespace VersionControl
             return HandleExceptions(() =>
             {
                 FlushFiles();
+                //assets = assets.Concat(assets.Select(vcc.GetAssetStatus).Where(status => !ComposedString.IsNullOrEmpty(status.movedFrom)).Select(status => status.movedFrom.Compose()) ).ToArray();
                 Status(assets, StatusLevel.Local);
                 var beforeStatus = StoreCurrentStatus(assets);
                 bool revertSuccess = vcc.Revert(assets);

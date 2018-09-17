@@ -4,7 +4,7 @@
 using System;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     [InitializeOnLoad]
     class EnvironmentManager

@@ -6,7 +6,7 @@ using UnityEngine.Profiling;
 using UnityEditor;
 using System.Diagnostics;
 
-namespace VersionControl
+namespace UVC
 {
     public static class ProfilerUtilities
     {

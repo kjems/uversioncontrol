@@ -7,7 +7,7 @@ using System.IO.Compression;
 using UnityEditor;
 using UnityEngine;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using Logging;
     public static class IconUtils

@@ -3,7 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System.Collections.Generic;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class StatusDatabase : Dictionary<ComposedString, VersionControlStatus>

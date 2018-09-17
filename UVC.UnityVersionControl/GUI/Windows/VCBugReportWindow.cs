@@ -5,7 +5,7 @@ using System;
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     [Serializable]
     internal class VCBugReportWindow : EditorWindow

@@ -8,7 +8,7 @@ using System.Xml;
 using CommandLineExecution;
 using System.Timers;
 
-namespace VersionControl.Backend.P4
+namespace UVC.Backend.P4
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     using Logging;

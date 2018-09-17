@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public class VCCAddMetaFiles : VCCDecorator
@@ -16,6 +16,7 @@ namespace VersionControl
         public const string metaStr = ".meta";
         public static readonly ComposedString meta = new ComposedString(metaStr);
         private const string assetsFolder = "Assets/";
+        private const string packageFolder = "Packages/";
 
         public VCCAddMetaFiles(IVersionControlCommands vcc) : base(vcc) { }
 
@@ -93,7 +94,7 @@ namespace VersionControl
         {
             if (assets == null || !assets.Any()) return assets;
             return assets
-                .Where(ap => !ap.EndsWith(metaStr) && ap.StartsWith(assetsFolder))
+                .Where(ap => !ap.EndsWith(metaStr) && (ap.StartsWith(assetsFolder) || ap.StartsWith(packageFolder)))
                 .Select(ap => ap + metaStr)
                 .Concat(assets)
                 .Distinct()

@@ -4,13 +4,13 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     public static class PrefabHelper
     {
         #region UnityEditorProxys
         public static PrefabType GetPrefabType(Object obj) { return PrefabUtility.GetPrefabType(obj); }
-        public static Object GetPrefabParent(Object obj) { return PrefabUtility.GetPrefabParent(obj); }
+        public static Object GetPrefabParent(Object obj) { return PrefabUtility.GetCorrespondingObjectFromSource(obj); }
         public static GameObject FindPrefabRoot(GameObject go) { return PrefabUtility.FindPrefabRoot(go); }
         public static Object InstantiatePrefab(Object obj) { return PrefabUtility.InstantiatePrefab(obj); }
         public static bool ReconnectToLastPrefab(GameObject go) { return PrefabUtility.ReconnectToLastPrefab(go); }

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 
-namespace VersionControl.AssetPathFilters
+namespace UVC.AssetPathFilters
 {
     public static class UnityAssetpathsFilters
     {

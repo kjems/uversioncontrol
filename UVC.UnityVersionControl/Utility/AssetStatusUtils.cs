@@ -5,7 +5,7 @@ using System;
 using UnityEngine;
 #pragma warning disable 414
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static class AssetStatusUtils

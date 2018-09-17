@@ -6,10 +6,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using UVC.Logging;
 
-namespace VersionControl
+namespace UVC
 {
-    using VersionControl.Logging;
+    using UVC.Logging;
     [InitializeOnLoad]
     public static class GoogleAnalytics
     {

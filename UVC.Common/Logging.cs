@@ -4,7 +4,7 @@
 using System;
 using System.Diagnostics;
 
-namespace VersionControl.Logging
+namespace UVC.Logging
 {
     public static class D
     {

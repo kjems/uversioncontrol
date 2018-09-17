@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 #pragma warning disable 0067 // event progressInformation not used, but needed to implement interface
 
-namespace VersionControl.UnitTests
+namespace UVC.UnitTests
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class DataCarrier

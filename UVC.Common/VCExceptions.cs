@@ -3,7 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 
-namespace VersionControl
+namespace UVC
 {
     using Logging;
     [Serializable]

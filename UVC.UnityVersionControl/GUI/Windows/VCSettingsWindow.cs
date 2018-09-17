@@ -6,7 +6,7 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     [Serializable]
     internal class VCSettingsWindow : EditorWindow
@@ -76,10 +76,11 @@ namespace VersionControl.UserInterface
                 using (GUILayoutHelper.Horizontal())
                 {
                     VCSettings.MaterialGUI = GUILayout.Toggle(VCSettings.MaterialGUI, new GUIContent("Material GUI", "Show Version Control GUI for material interaction on the Renderer inspector\nDefault: On"));
-                    using (GUILayoutHelper.Enabled(VCSettings.MaterialGUI, true))
-                    {
-                        VCSettings.LockMaterials = GUILayout.Toggle(VCSettings.MaterialGUI && VCSettings.LockMaterials, new GUIContent("GUI Lock", "Version Control allowed to lock Inspector GUI for materials which are not " + Terminology.getlock + "\nDefault: On"), GUILayout.ExpandWidth(true), GUILayout.Width(180));
-                    }
+                }
+
+                using (GUILayoutHelper.Horizontal())
+                {
+                    VCSettings.LockAssets = GUILayout.Toggle(VCSettings.LockAssets, new GUIContent("Project Asset Lock", "Version Control allowed to lock Inspector GUI for project assets which are " + Terminology.getlock + "\nDefault: On"), GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
             }
 
@@ -102,11 +103,6 @@ namespace VersionControl.UserInterface
                         {
                             GUILayout.Label(new GUIContent("Prefabs", "The Inspector GUI locks will only be active on assetpaths that contains the following filter.\neg. assets/prefabs/"));
                             VCSettings.LockPrefabsFilter = EditorGUILayout.TextField(VCSettings.LockPrefabsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
-                        }
-                        using (GUILayoutHelper.Horizontal())
-                        {
-                            GUILayout.Label(new GUIContent("Materials", "The Inspector GUI locks will only be active on assetpaths that contains the following filter.\neg. assets/materials/"));
-                            VCSettings.LockMaterialsFilter = EditorGUILayout.TextField(VCSettings.LockMaterialsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                         }
                     }
                 }

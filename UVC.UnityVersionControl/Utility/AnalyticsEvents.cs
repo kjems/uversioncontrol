@@ -5,7 +5,7 @@
 using System;
 using UnityEditor;
 
-namespace VersionControl
+namespace UVC
 {
     [InitializeOnLoad]
     internal static class AnalyticsEvents

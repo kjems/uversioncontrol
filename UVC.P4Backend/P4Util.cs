@@ -2,9 +2,9 @@ using System;
 using CommandLineExecution;
 using System.Collections.Generic;
 using System.Linq;
-using VersionControl;
+using UVC;
 
-namespace VersionControl.Backend.P4
+namespace UVC.Backend.P4
 {
     using Logging;
     public class P4Util

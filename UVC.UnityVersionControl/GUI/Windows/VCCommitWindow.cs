@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     using Logging;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;

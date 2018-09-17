@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
-namespace VersionControl.UserInterface
+namespace UVC.UserInterface
 {
     internal class VCWindow : EditorWindow
     {

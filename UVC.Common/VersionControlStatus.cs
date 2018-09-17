@@ -3,7 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 
-namespace VersionControl
+namespace UVC
 {
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 
@@ -101,6 +101,8 @@ namespace VersionControl
         public VCProperty property = VCProperty.Normal;
         public VCTreeConflictStatus treeConflictStatus = VCTreeConflictStatus.Normal;
         public ComposedString assetPath;
+        //public ComposedString movedFrom;
+        //public ComposedString movedTo;
         public ComposedString changelist = ComposedString.empty;
         public string user;
         public string owner;

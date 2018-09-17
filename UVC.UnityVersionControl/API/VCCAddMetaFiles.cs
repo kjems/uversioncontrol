@@ -14,9 +14,10 @@ namespace UVC
     public class VCCAddMetaFiles : VCCDecorator
     {
         public const string metaStr = ".meta";
-        public static readonly ComposedString meta = new ComposedString(metaStr);
-        private const string assetsFolder = "Assets/";
-        private const string packageFolder = "Packages/";
+        public static readonly ComposedString  meta = new ComposedString(metaStr);
+        const string assetsFolder  = "Assets/";
+        const string packageFolder = "Packages/";
+        const string manifest      = "manifest.json";
 
         public VCCAddMetaFiles(IVersionControlCommands vcc) : base(vcc) { }
 
@@ -94,7 +95,7 @@ namespace UVC
         {
             if (assets == null || !assets.Any()) return assets;
             return assets
-                .Where(ap => !ap.EndsWith(metaStr) && (ap.StartsWith(assetsFolder) || ap.StartsWith(packageFolder)))
+                .Where(ap => !ap.EndsWith(metaStr) && (ap.StartsWith(assetsFolder) || (ap.StartsWith(packageFolder) && !ap.EndsWith(manifest))))
                 .Select(ap => ap + metaStr)
                 .Concat(assets)
                 .Distinct()

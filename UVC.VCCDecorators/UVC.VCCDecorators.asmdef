@@ -1,7 +1,0 @@
-{
-    "name": "UVC.VCCDecorators",
-    "references": ["UVC.Common"],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

@@ -1,7 +1,0 @@
-{
-    "name": "UVC.Common",
-    "references": [],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

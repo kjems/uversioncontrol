@@ -1,6 +1,6 @@
 {
     "name": "UVC.Tests",
-    "references": ["UVC.Common", "UVC.CommandLine", "UVC.SVNBackend", "UVC.P4Backend"],
+    "references": ["UVC"],
     "optionalUnityReferences": [],
     "includePlatforms": ["Editor"],
     "excludePlatforms": []

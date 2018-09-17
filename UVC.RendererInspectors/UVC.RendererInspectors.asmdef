@@ -1,7 +1,0 @@
-{
-    "name": "UVC.RendererInspectors",
-    "references": ["UVC.Common", "UVC.UnityVersionControl"],
-    "optionalUnityReferences": [],
-    "includePlatforms": ["Editor"],
-    "excludePlatforms": []
-}

@@ -21,11 +21,11 @@ UVersionControl README
  7) Press the red 'On/Off' toggle button and if all went well you should be ready to go
 
 ## Usage Guide
- a) Check the settings menu by clicking the settings button in the Overview Window
- b) Use the icons in project and hierarchy view to do version control actions
- c) Use the button in Sceneview to perform version control actions on current scene
- d) In project view right-click a selection of objects and under UVC select action to perform
- e) Use the Overview Window to perform actions and see the state of files under version control
+ * Check the settings menu by clicking the settings button in the Overview Window
+ * Use the icons in project and hierarchy view to do version control actions
+ * Use the button in Sceneview to perform version control actions on current scene
+ * In project view right-click a selection of objects and under UVC select action to perform
+ * Use the Overview Window to perform actions and see the state of files under version control
 
 ## Subversion-Related Notes
 

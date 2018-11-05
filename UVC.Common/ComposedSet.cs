@@ -90,16 +90,16 @@ namespace UVC
         }
         public static ComposedSet<T, TDB> operator +(ComposedSet<T, TDB> a, ComposedSet<T, TDB> b)
         {
-            var newIndicies = new List<int>(a.indices);
-            newIndicies.AddRange(b.indices);
-            return new ComposedSet<T, TDB>(newIndicies);
+            var newIndices = new List<int>(a.indices);
+            newIndices.AddRange(b.indices);
+            return new ComposedSet<T, TDB>(newIndices);
         }
         public static ComposedSet<T, TDB> operator +(ComposedSet<T, TDB> a, T b)
         {
-            var newIndicies = new List<int>(a.indices);
+            var newIndices = new List<int>(a.indices);
             var bComposedSet = new ComposedSet<T, TDB>(b);
-            newIndicies.AddRange(bComposedSet.indices);
-            return new ComposedSet<T, TDB>(newIndicies);
+            newIndices.AddRange(bComposedSet.indices);
+            return new ComposedSet<T, TDB>(newIndices);
         }
         public static bool operator ==(ComposedSet<T, TDB> a, ComposedSet<T, TDB> b)
         {
@@ -184,15 +184,21 @@ namespace UVC
             return EndsWith(cset) ? GetSubset(0, indices.Count - cset.indices.Count) : this;
         }
 
+        public bool Contains(ComposedSet<T, TDB> a)
+        {
+            return FindFirstIndex(a) != -1;
+        }
+
         public int FindFirstIndex(ComposedSet<T, TDB> a)
         {
             int length = indices.Count;
             var aindices = a.indices;
             int alength = aindices.Count;
+            if (length == 0) return -1;
             if (alength > length) return -1;
             if (alength == 0) return -1;
             
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < length - (alength - 1); i++)
             {
                 if (indices[i] == aindices[0]) // First index match, now test the rest
                 {
@@ -213,10 +219,11 @@ namespace UVC
             int length = indices.Count;
             var aindices = a.indices;
             int alength = aindices.Count;
+            if (length == 0) return -1;
             if (alength > length) return -1;
             if (alength == 0) return -1;
             
-            for (int i = length - 1; i > 0; i--) // look from end to start
+            for (int i = length - 1; i >= 0; i--) // look from end to start
             {
                 if (indices[i] == aindices[0] && i + alength <= length) // First index match, now test the rest
                 {

@@ -18,6 +18,7 @@ namespace UVC.UnitTests
             Assert.AreEqual    (abcd.GetHashCode()              , abcd.GetHashCode());
             Assert.AreEqual    (CCSet("").GetHashCode()         , CCSet("").GetHashCode());
             Assert.AreNotEqual (CCSet("A.B.C.D").GetHashCode()  , CCSet("A.B.C.E")  .GetHashCode());
+            Assert.AreNotEqual (CCSet("A.B.C.D").GetHashCode()  , CCSet("a.B.C.D")  .GetHashCode());
             Assert.AreNotEqual (CCSet(" ").GetHashCode()        , CCSet("").GetHashCode());
         }
         
@@ -132,14 +133,43 @@ namespace UVC.UnitTests
             Assert.AreEqual(CCSet("A...B")   .FindFirstIndex(CCSet("..")), 1);
             Assert.AreEqual(CCSet("B.B.C.D") .FindFirstIndex(CCSet("A")), -1);
             Assert.AreEqual(CCSet("AB.C.C")  .FindFirstIndex(CCSet("C")),  2);
+            Assert.AreEqual(CCSet("")        .FindFirstIndex(CCSet("C")), -1);
+            Assert.AreEqual(CCSet("")        .FindFirstIndex(CCSet("")),  -1);
+            Assert.AreEqual(CCSet("A")       .FindFirstIndex(CCSet("")),  -1);
             
             // FindLastIndex
-            Assert.AreEqual(CCSet("A.B.C.D") .FindLastIndex(CCSet("B")),  2);
+            Assert.AreEqual(CCSet("A.B.C.D") .FindLastIndex(CCSet("A")),  0);
+            Assert.AreEqual(CCSet("A.B.C.D") .FindLastIndex(CCSet("B.C")),2);
+            Assert.AreEqual(CCSet("C.C.D.D") .FindLastIndex(CCSet("C.C")),0);
             Assert.AreEqual(CCSet("A.B.C/D") .FindLastIndex(CCSet("D")),  6);
             Assert.AreEqual(CCSet("A.B.CD")  .FindLastIndex(CCSet("CD")), 4);
             Assert.AreEqual(CCSet("AB.C.C")  .FindLastIndex(CCSet("C")),  4);
             Assert.AreEqual(CCSet("....")    .FindLastIndex(CCSet("..")), 2);
             Assert.AreEqual(CCSet("A...B")   .FindLastIndex(CCSet("..")), 2);
+        }
+        
+        [Test]
+        public void ContainsTest()
+        {
+            // True
+            Assert.IsTrue (CCSet("A.B.C.D") .Contains(CCSet("A.B.C.D")));
+            Assert.IsTrue (CCSet("A.B.C.D") .Contains(CCSet("B.C")));
+            Assert.IsTrue (CCSet("A.B.C/D") .Contains(CCSet("D")));
+            Assert.IsTrue (CCSet("A.B.CD")  .Contains(CCSet("CD")));
+            Assert.IsTrue (CCSet("AB.C.C")  .Contains(CCSet("AB.C")));
+            Assert.IsTrue (CCSet("A.BC.D.") .Contains(CCSet("BC")));
+            Assert.IsTrue (CCSet("....")    .Contains(CCSet("..")));
+            Assert.IsTrue (CCSet("A...B")   .Contains(CCSet("..")));
+            Assert.IsTrue (CCSet("AB.C.C")  .Contains(CCSet("C")));
+            
+            // False
+            Assert.IsFalse (CCSet("B.B.C.D").Contains(CCSet("A")));
+            Assert.IsFalse (CCSet("AB.C.C") .Contains(CCSet("")));
+            Assert.IsFalse (CCSet("AB.C.C") .Contains(CCSet("A.B.C")));
+            Assert.IsFalse (CCSet("AB.C.C") .Contains(CCSet("C.c")));
+            Assert.IsFalse (CCSet("AB.C.C") .Contains(CCSet("CC")));
+            Assert.IsFalse (CCSet("")       .Contains(CCSet("A")));
+            Assert.IsFalse (CCSet("")       .Contains(CCSet("X")));
         }
         
     }

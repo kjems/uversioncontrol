@@ -247,7 +247,7 @@ namespace UVC.Backend.P4
                         versionControlStatus.owner = fileData.actionOwner;
                         break;
                     default:
-                        D.LogError(String.Format("Unexpected action type: {0} for file {1} - status may be incorrect.", fileData.action, fileData.clientFile));
+                        DebugLog.LogError(String.Format("Unexpected action type: {0} for file {1} - status may be incorrect.", fileData.action, fileData.clientFile));
                         break;
                 }
             }

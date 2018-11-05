@@ -11,7 +11,7 @@ namespace UVC
     {
         public string ErrorMessage { get { return base.Message; } }
         public string ErrorDetails { get; private set; }
-        public VCException(string errorMessage, string errorDetails) : base(errorMessage) { ErrorDetails = errorDetails + "\n\n" + D.GetCallstack(); }
+        public VCException(string errorMessage, string errorDetails) : base(errorMessage) { ErrorDetails = errorDetails + "\n\n" + DebugLog.GetCallstack(); }
         public VCException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, innerEx) { ErrorDetails = innerEx.Message + "\n\n" + innerEx.StackTrace; }
     }
 

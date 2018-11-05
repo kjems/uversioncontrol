@@ -7,11 +7,14 @@ using UnityEngine;
 namespace UVC.UserInterface
 {
     [InitializeOnLoad]
-    internal static class VCSceneViewGUI
+    public static class VCSceneViewGUI
     {
+        public static System.Func<string> currentContext = SceneManagerUtilities.GetCurrentScenePath;
+        
         private static GUIStyle buttonStyle;
         private static GUIStyle backgroundGuiStyle;
         private static bool shouldDraw = true;
+        private static string selectionPath = "";
 
         static VCSceneViewGUI()
         {
@@ -21,26 +24,33 @@ namespace UVC.UserInterface
             EditorApplication.update += EditorUpdate;
         }
 
+        static string GetSelectionsPersistentAssetPath()
+        {
+            return currentContext();
+        }
+
         static void Refresh()
         {
-            VCUtility.RequestStatus(SceneManagerUtilities.GetCurrentScenePath(), VCSettings.HierarchyReflectionMode);
+            VCUtility.RequestStatus(GetSelectionsPersistentAssetPath(), VCSettings.HierarchyReflectionMode);
             SceneView.RepaintAll();
         }
 
         static void EditorUpdate()
         {
-            shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(SceneManagerUtilities.GetCurrentScenePath());
+            selectionPath = GetSelectionsPersistentAssetPath();
+            shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(selectionPath );
         }
 
         private static VCGUIControls.ValidActions validActions;
         private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
         static void SceneViewUpdate(SceneView sceneView)
         {
+            EditorUpdate();
             if (!shouldDraw) return;
             
             if (Event.current.type == EventType.Layout)
             {
-                string assetPath = SceneManagerUtilities.GetCurrentScenePath();
+                string assetPath = selectionPath;
                 VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
                 vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
                 validActions = VCGUIControls.GetValidActions(assetPath);
@@ -54,10 +64,14 @@ namespace UVC.UserInterface
             backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
             backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
 
-            var rect = new Rect(5, 5, 200, 100);
+            var rect = new Rect(5, 5, 800, 100);
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
+            GUILayout.BeginHorizontal();
             GUILayout.TextField(AssetStatusUtils.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
+            GUILayout.Label(selectionPath.Substring(selectionPath.LastIndexOf('/') + 1));
+            GUILayout.EndHorizontal();
+            
 
             int numberOfButtons = 0;
             const int maxButtons = 4;
@@ -72,7 +86,7 @@ namespace UVC.UserInterface
                         if (GUILayout.Button(Terminology.add, buttonStyle))
                         {
                             SceneManagerUtilities.SaveActiveScene();
-                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { selectionPath }));
                         }
                     }
                     if (validActions.showOpen)
@@ -80,7 +94,7 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.getlock, buttonStyle))
                         {
-                            VCCommands.Instance.GetLockTask(new[] { SceneManagerUtilities.GetCurrentScenePath() });
+                            VCCommands.Instance.GetLockTask(new[] { selectionPath });
                         }
                     }
                     if (validActions.showCommit)
@@ -88,7 +102,7 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.commit, buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] { selectionPath }));
                         }
                     }
                     if (validActions.showRevert)
@@ -96,12 +110,10 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
                         {
-                            var sceneAssetPath = new[] { SceneManagerUtilities.GetCurrentScenePath() };
+                            var sceneAssetPath = new[] { selectionPath };
                             if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
                             {
-                                SceneManagerUtilities.SaveActiveScene();
                                 VCCommands.Instance.Revert(sceneAssetPath);
-                                OnNextUpdate.Do(AssetDatabase.Refresh);
                             }
                         }
                     }
@@ -110,7 +122,7 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
                         {
-                            VCCommands.Instance.AllowLocalEdit(new[] { SceneManagerUtilities.GetCurrentScenePath() });
+                            VCCommands.Instance.AllowLocalEdit(new[] { selectionPath });
                         }
                     }
                     if (validActions.showUnlock)
@@ -118,7 +130,7 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button(Terminology.unlock, buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { SceneManagerUtilities.GetCurrentScenePath() }));
+                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] { selectionPath }));
                         }
                     }
                     if (validActions.showForceOpen)
@@ -126,7 +138,7 @@ namespace UVC.UserInterface
                         numberOfButtons++;
                         if (GUILayout.Button("Force Open", buttonStyle))
                         {
-                            OnNextUpdate.Do(() => VCUtility.GetLock(SceneManagerUtilities.GetCurrentScenePath(), OperationMode.Force));
+                            OnNextUpdate.Do(() => VCUtility.GetLock(selectionPath, OperationMode.Force));
                         }
                     }
 

@@ -123,7 +123,7 @@ namespace UVC.Backend.P4
                     }
                     else
                     {
-                        D.Log("ERROR: " + errStr + " " + commandLine.ToString());
+                        DebugLog.Log("ERROR: " + errStr + " " + commandLine.ToString());
                     }
 
                     //					D.Log(commandLineOutput.OutputStr);
@@ -146,7 +146,7 @@ namespace UVC.Backend.P4
 			catch (AppDomainUnloadedException) { }
             catch (Exception e)
             {
-                D.Log("ERROR: Check that your commandline P4 client is installed correctly - " + e.Message);
+                DebugLog.Log("ERROR: Check that your commandline P4 client is installed correctly - " + e.Message);
             }
             return null;
         }

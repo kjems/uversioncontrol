@@ -29,6 +29,7 @@ namespace UVC
     {
         Update,
         Revert,
+        Add,
         Commit,
         GetLock,
         ReleaseLock,
@@ -36,7 +37,7 @@ namespace UVC
         Move,
         CleanUp,
         Resolve,
-        AllowLocalEdit,
+        AllowLocalEdit
     }
 
     /// <summary>
@@ -60,6 +61,7 @@ namespace UVC
         public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;
         public event Action StatusCompleted;
+        public event Action<OperationType, VersionControlStatus[]> OperationStarting;
         public event Action<OperationType, VersionControlStatus[], VersionControlStatus[], bool> OperationCompleted;
         public event Action<List<string>> PreCommit;
         public event Action Started;
@@ -172,17 +174,17 @@ namespace UVC
                 }
                 catch (Exception e)
                 {
-                    D.LogError("Unhandled exception: " + e.Message + "\n" + D.GetCallstack());
+                    DebugLog.LogError("Unhandled exception: " + e.Message + "\n" + DebugLog.GetCallstack());
                     throw;
                 }
                 finally
                 {
-                    D.Log(new System.Diagnostics.StackTrace(1, true).GetFrames()[0].GetMethod().Name + " took " + stopWatch.ElapsedMilliseconds + "ms");
+                    DebugLog.Log(new System.Diagnostics.StackTrace(1, true).GetFrames()[0].GetMethod().Name + " took " + stopWatch.ElapsedMilliseconds + "ms");
                 }
             }
             else
             {
-                D.Log("VC Action ignored due to not being active");
+                DebugLog.Log("VC Action ignored due to not being active");
             }
             return default(T);
         }
@@ -195,6 +197,7 @@ namespace UVC
         private bool PerformOperation(OperationType operationType, IEnumerable<string> assets, Func<IEnumerable<string>, bool> operation)
         {
             var beforeStatus = StoreCurrentStatus(assets);
+            OnOperationStarting(operationType, beforeStatus);
             bool result = operation(assets);
             var afterStatus = StoreCurrentStatus(assets);
             OnOperationCompleted(operationType, beforeStatus, afterStatus, result);
@@ -258,13 +261,13 @@ namespace UVC
             if (EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) > 0 && EditorPrefs.GetBool("kAutoRefresh", false))
             {
                 EditorPrefs.SetInt("kAutoRefreshDisableCount", 0);
-                D.Log("Resetting kAutoRefreshDisableCount");
+                DebugLog.Log("Resetting kAutoRefreshDisableCount");
             }
             if(EditorPrefs.GetInt("kAutoRefreshDisableCount", 0) < 0)
             {
                 EditorPrefs.SetInt("kAutoRefreshDisableCount", 0);
                 EditorPrefs.SetBool("kAutoRefresh", true);
-                D.Log("Resetting kAutoRefreshDisableCount");
+                DebugLog.Log("Resetting kAutoRefreshDisableCount");
             }
         }
 
@@ -329,6 +332,7 @@ namespace UVC
         public Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
+            OnOperationStarting(OperationType.Update, StoreCurrentStatus(assets));
             DisableAutoRefresh();
             var updateTask = StartTask(() => Update(assets));
             updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
@@ -338,6 +342,7 @@ namespace UVC
         public Task<bool> AddTask(IEnumerable<string> assets)
         {
             assets = new List<string>(assets);
+            OnOperationStarting(OperationType.Add, StoreCurrentStatus(assets));
             return StartTask(() => Add(assets));
         }
 
@@ -345,12 +350,14 @@ namespace UVC
         {
             assets = new List<string>(assets);
             FlushFiles();
+            OnOperationStarting(OperationType.Commit, StoreCurrentStatus(assets));
             return StartTask(() => Commit(assets, commitMessage));
         }
 
         public Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             assets = new List<string>(assets);
+            OnOperationStarting(OperationType.GetLock, StoreCurrentStatus(assets));
             return StartTask(() => GetLock(assets, mode));
         }
 
@@ -358,6 +365,7 @@ namespace UVC
         {
             assets = new List<string>(assets);
             FlushFiles();
+            OnOperationStarting(OperationType.Revert, StoreCurrentStatus(assets));
             return StartTask(() => Revert(assets));
         }
         #endregion
@@ -421,6 +429,7 @@ namespace UVC
         public bool Update(IEnumerable<string> assets = null)
         {
             var beforeStatus = StoreCurrentStatus(assets);
+            OnOperationStarting(OperationType.Update, beforeStatus);
             updating = true;
             bool updateResult = vcc.Update(assets);
             updating = false;
@@ -438,6 +447,7 @@ namespace UVC
                 FlushFiles();
                 Status(assets, StatusLevel.Local);
                 var beforeStatus = StoreCurrentStatus(assets);
+                OnOperationStarting(OperationType.Commit, beforeStatus);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 Status(assets, StatusLevel.Local);
                 var afterStatus = StoreCurrentStatus(assets); ;
@@ -447,7 +457,7 @@ namespace UVC
         }
         public bool Add(IEnumerable<string> assets)
         {
-            return HandleExceptions(() => vcc.Add(assets));
+            return HandleExceptions(() => PerformOperation(OperationType.Add, assets, vcc.Add));
         }
         public bool Revert(IEnumerable<string> assets)
         {
@@ -457,6 +467,7 @@ namespace UVC
                 //assets = assets.Concat(assets.Select(vcc.GetAssetStatus).Where(status => !ComposedString.IsNullOrEmpty(status.movedFrom)).Select(status => status.movedFrom.Compose()) ).ToArray();
                 Status(assets, StatusLevel.Local);
                 var beforeStatus = StoreCurrentStatus(assets);
+                OnOperationStarting(OperationType.Revert, beforeStatus);
                 bool revertSuccess = vcc.Revert(assets);
                 Status(assets, StatusLevel.Local);
                 RequestAssetDatabaseRefresh();
@@ -474,6 +485,7 @@ namespace UVC
             return HandleExceptions(() =>
             {
                 var beforeStatus = StoreCurrentStatus(assets);
+                OnOperationStarting(OperationType.Delete, beforeStatus);
                 bool filesOSDeleted = false;
                 var deleteAssets = new List<string>();
                 foreach (string assetIt in assets)
@@ -543,6 +555,7 @@ namespace UVC
             return HandleExceptions(() =>
             {
                 var beforeStatus = StoreCurrentStatus(assets);
+                OnOperationStarting(OperationType.Resolve, beforeStatus);
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
                 var afterStatus = StoreCurrentStatus(assets);
                 RequestAssetDatabaseRefresh();
@@ -556,6 +569,7 @@ namespace UVC
             {
                 FlushFiles();
                 var beforeStatus = new[] {GetAssetStatus(from)};
+                OnOperationStarting(OperationType.Move, beforeStatus);
                 bool moveSuccess = vcc.Move(from, to);
                 RequestAssetDatabaseRefresh();
                 OnOperationCompleted(OperationType.Move, beforeStatus, new[] { GetAssetStatus(to) }, moveSuccess);
@@ -612,6 +626,14 @@ namespace UVC
             //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));            
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
             RefreshAssetDatabase();
+        }
+
+        private void OnOperationStarting(OperationType operation, VersionControlStatus[] statuses)
+        {
+            if (OperationStarting != null && ThreadUtility.IsMainThread())
+            {
+                OperationStarting(operation, statuses);
+            }
         }
 
         private void OnOperationCompleted(OperationType operation, VersionControlStatus[] statusBefore, VersionControlStatus[] statusAfter, bool success)

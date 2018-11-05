@@ -131,8 +131,8 @@ namespace UVC.Backend.SVN
             XmlElement wcStatus = entryIt["wc-status"];
             if (wcStatus != null)
             {
-                if (wcStatus.Attributes["item"] == null || !SVNToVersionControlStatusMap.fileStatusMap.TryGetValue(wcStatus.Attributes["item"].InnerText, out versionControlStatus.fileStatus)) D.Log("SVN: Unknown file status: " + wcStatus.Attributes["item"].InnerText);
-                if (wcStatus.Attributes["props"] == null || !SVNToVersionControlStatusMap.propertyMap.TryGetValue(wcStatus.Attributes["props"].InnerText, out versionControlStatus.property)) D.Log("SVN: Unknown property: " + wcStatus.Attributes["props"].InnerText);
+                if (wcStatus.Attributes["item"] == null || !SVNToVersionControlStatusMap.fileStatusMap.TryGetValue(wcStatus.Attributes["item"].InnerText, out versionControlStatus.fileStatus)) DebugLog.Log("SVN: Unknown file status: " + wcStatus.Attributes["item"].InnerText);
+                if (wcStatus.Attributes["props"] == null || !SVNToVersionControlStatusMap.propertyMap.TryGetValue(wcStatus.Attributes["props"].InnerText, out versionControlStatus.property)) DebugLog.Log("SVN: Unknown property: " + wcStatus.Attributes["props"].InnerText);
 
                 if (wcStatus.Attributes["revision"] != null) versionControlStatus.revision = Int32.Parse(wcStatus.Attributes["revision"].InnerText);
                 if (wcStatus.Attributes["wc-locked"] != null && wcStatus.Attributes["wc-locked"].InnerText == "true") versionControlStatus.repositoryStatus = VCRepositoryStatus.Locked;
@@ -177,7 +177,7 @@ namespace UVC.Backend.SVN
         {
             if (!Directory.Exists(assetPath))
             {
-                D.LogWarning("Directory not found: " + assetPath);
+                DebugLog.LogWarning("Directory not found: " + assetPath);
                 return new string[] { };
             }
 

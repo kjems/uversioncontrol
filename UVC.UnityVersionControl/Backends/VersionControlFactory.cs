@@ -60,7 +60,7 @@ namespace UVC
 
             if (!success)
             {
-                D.LogWarning(backend + " backend initialization failed!");
+                DebugLog.LogWarning(backend + " backend initialization failed!");
             }
             
             return success;
@@ -80,13 +80,13 @@ namespace UVC
             }
             catch (Exception e)
             {
-                D.ThrowException(e);
+                DebugLog.ThrowException(e);
             }
             finally
             {
                 if (!valid && uvc != null) uvc.Dispose();
             }
-            D.Log("CreateVersionControl took : " + watch.ElapsedMilliseconds + "ms");
+            DebugLog.Log("CreateVersionControl took : " + watch.ElapsedMilliseconds + "ms");
             return valid;
         }
 

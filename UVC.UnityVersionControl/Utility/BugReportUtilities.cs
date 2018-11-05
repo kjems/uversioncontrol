@@ -40,7 +40,7 @@ internal static class FogbugzUtilities
             bool success = string.IsNullOrEmpty(www.error) && www.text.Contains("<Success>");
             if (success)
             {
-                D.Log("Bug successfully reported to the 'Unity Version Control' FogBugz database.");
+                DebugLog.Log("Bug successfully reported to the 'Unity Version Control' FogBugz database.");
             }
             else
             {
@@ -50,7 +50,7 @@ internal static class FogbugzUtilities
                 }
                 else
                 {
-                    D.LogError("Bug report failed:\n" + www.error);
+                    DebugLog.LogError("Bug report failed:\n" + www.error);
                 }
             }
         });

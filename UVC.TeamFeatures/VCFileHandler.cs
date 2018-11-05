@@ -93,7 +93,7 @@ namespace UVC
                     }
                     if (VCCommands.Instance.Move(from, to))
                     {
-                        D.Log("Version Control Move: " + from + " => " + to);
+                        DebugLog.Log("Version Control Move: " + from + " => " + to);
                         return AssetMoveResult.DidMove;
                     }
                     return AssetMoveResult.DidNotMove;

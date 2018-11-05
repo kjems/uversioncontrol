@@ -51,7 +51,7 @@ namespace UVC
                     }
                     catch (Exception e)
                     {
-                        D.ThrowException(e);
+                        DebugLog.ThrowException(e);
                     }
                 }
             }

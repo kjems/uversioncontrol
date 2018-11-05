@@ -61,7 +61,7 @@ namespace UVC
             var filesInFolders = ConsistentSlash(assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc));
             var deletedInFolders = assets.AddDeletedInFolders(vcc);
 
-            D.Log("Deleted In Folders: " + deletedInFolders.AggregateString());
+            DebugLog.Log("Deleted In Folders: " + deletedInFolders.AggregateString());
 
             bool result =
                 base.Add(filesInFolders.UnversionedInVersionedFolder(vcc)) &&
@@ -101,7 +101,7 @@ namespace UVC
             }
             catch (VCLockedByOther e)
             {
-                D.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a, b) => a + ", " + b) + "\n" + e.Message);
+                DebugLog.Log("Locked by other, so requesting remote status on : " + assets.Aggregate((a, b) => a + ", " + b) + "\n" + e.Message);
                 RequestStatus(assets, StatusLevel.Remote);
                 return false;
             }

@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace UVC.Logging
 {
-    public static class D
+    public static class DebugLog
     {
         public static string GetCallstack()
         {

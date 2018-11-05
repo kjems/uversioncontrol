@@ -90,7 +90,7 @@ namespace UVC
             if (!VCSettings.Analytics || !HasInternet()) return;
 
             string requestURL = GenerateRequestURL(page, pageTitle, category, action, label, value);
-            D.Assert(!requestURL.Contains(archivedURLSeperator), () => "URL contains the 'archivedURLSeperator'");
+            DebugLog.Assert(!requestURL.Contains(archivedURLSeperator), () => "URL contains the 'archivedURLSeperator'");
             requestQueue.Enqueue(requestURL);
             ProcessRequestQueue();
         }

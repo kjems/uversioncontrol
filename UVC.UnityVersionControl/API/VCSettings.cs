@@ -121,7 +121,7 @@ namespace UVC
                     if (value == EVersionControlBackend.None) VCSettings.VCEnabled = false;
                     string errors = "";
                     Action<string> addToErrors = err => errors += "\n" + err;
-                    D.combinedShorthandCallback += addToErrors;
+                    DebugLog.combinedShorthandCallback += addToErrors;
                     
                     if (VersionControlFactory.CreateVersionControlCommands(value))
                     {
@@ -134,7 +134,7 @@ namespace UVC
                         dialog.AddButton("OK", () => dialog.Close());
                         dialog.ShowUtility();
                     }
-                    D.combinedShorthandCallback -= addToErrors;
+                    DebugLog.combinedShorthandCallback -= addToErrors;
                     
                 } 
             } 
@@ -239,13 +239,13 @@ namespace UVC
                     logging = value;
                     if (logging)
                     {
-                        D.writeLogCallback += Debug.Log;
-                        D.writeWarningCallback += Debug.LogWarning;
+                        DebugLog.writeLogCallback += Debug.Log;
+                        DebugLog.writeWarningCallback += Debug.LogWarning;
                     }
                     else
                     {
-                        if (D.writeLogCallback != null) D.writeLogCallback -= Debug.Log;
-                        if (D.writeWarningCallback != null) D.writeWarningCallback -= Debug.LogWarning;
+                        if (DebugLog.writeLogCallback != null) DebugLog.writeLogCallback -= Debug.Log;
+                        if (DebugLog.writeWarningCallback != null) DebugLog.writeWarningCallback -= Debug.LogWarning;
                     }
                 }
             }

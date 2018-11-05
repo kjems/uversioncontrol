@@ -48,7 +48,7 @@ namespace UVC.UserInterface
 
         public void SetAssetPaths(IEnumerable<string> assets, IEnumerable<string> dependencies)
         {
-            D.Log("VCCommitWindow:SetAssetPaths");
+            DebugLog.Log("VCCommitWindow:SetAssetPaths");
             ProfilerUtilities.BeginSample("CommitWindow::SetAssetPaths");
             assetPaths = assets.Select(s => new ComposedString(s)).ToList();
             depedencyAssetPaths = dependencies.Select(s => new ComposedString(s)).ToList();

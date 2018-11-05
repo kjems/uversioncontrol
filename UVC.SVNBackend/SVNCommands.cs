@@ -72,7 +72,7 @@ namespace UVC.Backend.SVN
             catch (AppDomainUnloadedException) { }
             catch (Exception e)
             {
-                D.ThrowException(e);
+                DebugLog.ThrowException(e);
             }
             if (!requestRefreshLoopStop) RefreshLoop();
         }
@@ -293,7 +293,7 @@ namespace UVC.Backend.SVN
             }
             catch (XmlException e)
             {
-                D.ThrowException(e);
+                DebugLog.ThrowException(e);
                 return false;
             }
             return true;
@@ -328,7 +328,7 @@ namespace UVC.Backend.SVN
             CommandLineOutput commandLineOutput;
             try
             {
-                D.Log(commandLine.ToString());
+                DebugLog.Log(commandLine.ToString());
                 currentExecutingOperation = commandLine;
                 //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
                 commandLineOutput = commandLine.Execute();
@@ -494,7 +494,7 @@ namespace UVC.Backend.SVN
                         if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
                         else if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
                         else if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
-                        else D.LogWarning("Unhandled previous state");
+                        else DebugLog.LogWarning("Unhandled previous state");
                     }
                 }
             }
@@ -667,7 +667,7 @@ namespace UVC.Backend.SVN
             string[] conflictingFiles = Directory.GetFiles(Path.GetDirectoryName(assetPath).Replace("\\","/"), Path.GetFileName(assetPath) + ".r*").Where(a => Path.GetExtension(a).StartsWith(".r")).ToArray();
             string minePath = assetPath + ".mine";
 
-            D.Log(string.Format("mine:{0}, theirs:{1}, base:{2}, length:{3}", minePath, conflictingFiles[1], conflictingFiles[0], conflictingFiles.Length));
+            DebugLog.Log(string.Format("mine:{0}, theirs:{1}, base:{2}, length:{3}", minePath, conflictingFiles[1], conflictingFiles[0], conflictingFiles.Length));
 
             if (conflictingFiles.Length == 2 && File.Exists(minePath) && File.Exists(conflictingFiles[0]) && File.Exists(conflictingFiles[1]))
             {
@@ -693,7 +693,7 @@ namespace UVC.Backend.SVN
             }
             if (!string.IsNullOrEmpty(error))
             {
-                D.LogWarning(error);
+                DebugLog.LogWarning(error);
                 return false;
             }
             return true;
@@ -714,7 +714,7 @@ namespace UVC.Backend.SVN
 
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
-            D.Log("Remove from DB: "+ assets.Aggregate((a,b) => a + ", " + b));
+            DebugLog.Log("Remove from DB: "+ assets.Aggregate((a,b) => a + ", " + b));
             lock (statusDatabaseLockToken)
             {
                 foreach (var assetIt in assets)

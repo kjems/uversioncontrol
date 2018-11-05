@@ -135,7 +135,7 @@ namespace UVC.Backend.P4
             catch (AppDomainUnloadedException) { }
             catch (Exception e)
             {
-                D.ThrowException(e);
+                DebugLog.ThrowException(e);
             }
             if (!requestRefreshLoopStop) RefreshLoop();
         }
@@ -478,7 +478,7 @@ namespace UVC.Backend.P4
             }
             catch (Exception e)
             {
-                D.ThrowException(e);
+                DebugLog.ThrowException(e);
                 return false;
             }
 
@@ -719,7 +719,7 @@ namespace UVC.Backend.P4
                         if (currentReflectionLevel == VCReflectionLevel.Repository) AddToRemoteStatusQueue(assetIt);
                         else if (currentReflectionLevel == VCReflectionLevel.Local) AddToLocalStatusQueue(assetIt);
                         else if (currentReflectionLevel == VCReflectionLevel.None) AddToLocalStatusQueue(assetIt);
-                        else D.LogWarning("Unhandled previous state");
+                        else DebugLog.LogWarning("Unhandled previous state");
                     }
                 }
             }
@@ -865,19 +865,19 @@ namespace UVC.Backend.P4
 
         public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            D.LogWarning("P4Commands.SetIgnore not implemented");
+            DebugLog.LogWarning("P4Commands.SetIgnore not implemented");
             return false;
         }
 
         public IEnumerable<string> GetIgnore(string path)
         {
-            D.LogWarning("P4Commands.GetIgnore not implemented");
+            DebugLog.LogWarning("P4Commands.GetIgnore not implemented");
             return null;
         }
 
         public string GetRevision()
         {
-            D.LogWarning("P4Commands.GetRevisionNumber not implemented");
+            DebugLog.LogWarning("P4Commands.GetRevisionNumber not implemented");
             return null;
         }
 
@@ -895,7 +895,7 @@ namespace UVC.Backend.P4
 
         public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
         {
-            D.LogWarning("P4Commands.GetConflict not implemented");
+            DebugLog.LogWarning("P4Commands.GetConflict not implemented");
             basePath = null;
             mine = null;
             theirs = null;

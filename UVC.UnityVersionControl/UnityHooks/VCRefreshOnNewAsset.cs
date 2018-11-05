@@ -20,7 +20,7 @@ namespace UVC
         {
             if (VCCommands.Active)
             {
-                D.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
+                DebugLog.Log("OnPostprocessAllAssets : imported: " + importedAssets.Length + ", deleted: " + deletedAssets.Length + ", moved: " + movedAssets.Length + ", movedFrom: " + movedAssets.Length);
 
                 if (VCSettings.HandleFileMove == VCSettings.EHandleFileMove.Simple)
                 {

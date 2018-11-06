@@ -62,11 +62,11 @@ namespace UVC.UserInterface
             using (PushStateUtility.Profiler("CommitWindow::BaseFilter"))
             {
                 var metaStatus = vcStatus.MetaStatus();
-                bool interresting = (vcStatus.fileStatus != VCFileStatus.None &&
+                bool interesting = (vcStatus.fileStatus != VCFileStatus.None &&
                                     (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
                                     vcStatus.lockStatus == VCLockStatus.LockedHere;
 
-                if (!interresting) return false;
+                if (!interesting) return false;
                 ComposedString key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);
                 return (assetPaths.Contains(key) || depedencyAssetPaths.Contains(key));
             }

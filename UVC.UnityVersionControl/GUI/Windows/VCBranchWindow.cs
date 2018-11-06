@@ -14,24 +14,22 @@ namespace UVC.UserInterface
     {
         BranchMulticolumnList branchColumnList;
 
-        private GUIContent branchPathContent = new GUIContent("Branch path", "default is '^/branches/'");
-
         private string currentBranch = "";
-        
+        private string trunkpath = null;
         private string branchpath = null;
         public string BranchPath
         {
-            get { return branchpath ?? (branchpath = EditorPrefs.GetString("VCBranchWindow/BranchPath", "^/branches/")); }
+            get { return branchpath ?? (branchpath = EditorPrefs.GetString("BranchWindow/BranchPath")); }
             set
             {
                 branchpath = value;
-                EditorPrefs.SetString("VCBranchWindow/BranchPath", branchpath);
+                EditorPrefs.SetString("BranchWindow/BranchPath", branchpath);
             }
         }
         
         public static void Init()
         {
-            GetWindow<BranchWindow>("Branch");
+            GetWindow<BranchWindow>("Branches");
         }
 
         private void OnDisable()
@@ -40,7 +38,9 @@ namespace UVC.UserInterface
 
         private void OnEnable()
         {
-            branchColumnList = new BranchMulticolumnList(Repaint);
+            if (string.IsNullOrEmpty(branchpath)) branchpath = VCCommands.Instance.GetBranchDefaultPath();
+            if (string.IsNullOrEmpty(trunkpath)) trunkpath = VCCommands.Instance.GetTrunkPath();
+            branchColumnList = new BranchMulticolumnList();
             Refresh();
         }
 
@@ -59,7 +59,7 @@ namespace UVC.UserInterface
             GUI.enabled = false;
             GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
             GUI.enabled = true;
-            GUILayout.Label(branchPathContent, EditorStyles.miniLabel, GUILayout.Width(70));
+            GUILayout.Label("Branch Path", EditorStyles.miniLabel, GUILayout.Width(70));
             string newBranchPath = GUILayout.TextField(BranchPath, EditorStyles.toolbarTextField, GUILayout.MinWidth(150));
             if (newBranchPath != BranchPath)
             {
@@ -74,19 +74,28 @@ namespace UVC.UserInterface
             if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var selection = branchColumnList.GetSelection().First();
-                Debug.Log($"switch {selection}");
                 VCCommands.Instance.SwitchBranch(selection);
+                Refresh();
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var selection = branchColumnList.GetSelection().First();
-                Debug.Log($"merge {selection}");
-                VCCommands.Instance.MergeBranch(selection);
+                if (VCCommands.Instance.MergeBranch(selection))
+                {
+                    VCCommands.Instance.Commit($"Merged {selection} to {currentBranch}");
+                }
+                Refresh();
             }
             GUI.enabled = true;
-            if (GUILayout.Button(Terminology.createbranch, EditorStyles.toolbarButton, GUILayout.Width(50)))
+            if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
-                
+                var newBranchWindow = CreateInstance<NewBranchWindow>();
+                newBranchWindow.minSize = new Vector2(440, 50);
+                newBranchWindow.titleContent = new GUIContent("Create Branch");
+                newBranchWindow.fromPath = currentBranch;
+                newBranchWindow.toPath = BranchPath + DateTime.Now.ToString("yyyy-MM-dd_");
+                newBranchWindow.refresh = Refresh;
+                newBranchWindow.ShowUtility();
             }
         }
 
@@ -94,7 +103,7 @@ namespace UVC.UserInterface
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
             var branches = VCCommands.Instance.RemoteList(BranchPath).Select(p => branchpath + p).ToList();
-            branches.Add("^/trunk/");
+            branches.Add(trunkpath);
             branchColumnList.SetBranches(branches);
             currentBranch = VCCommands.Instance.GetCurrentBranch();
         }
@@ -108,15 +117,12 @@ namespace UVC.UserInterface
 
     internal class BranchMulticolumnList
     {
-        private HashSet<string> masterSelection = new HashSet<string>();
         private MultiColumnState         multiColumnState;
         private MultiColumnViewOption    options;
         private MultiColumnState.Column  columnPath;
-        private Action repaint;
 
-        public BranchMulticolumnList(Action repaint = null)
+        public BranchMulticolumnList()
         {
-            this.repaint = repaint;;
             Initialize();
         }
 
@@ -168,7 +174,7 @@ namespace UVC.UserInterface
             options.rowStyle.padding = new RectOffset(0, 0, 0, 0);
             
             multiColumnState.AddColumn(columnPath);
-            options.widthTable.Add(columnPath.GetHeader().text, 500);
+            options.widthTable.Add(columnPath.GetHeader().text, 750);
             
         }
 

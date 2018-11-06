@@ -53,6 +53,10 @@ namespace UVC.Backend.Noop
         {
             return true;
         }
+        public virtual bool Commit(string commitMessage = "")
+        {
+            return true;
+        }
         public virtual bool Add(IEnumerable<string> assets)
         {
             return true;
@@ -89,10 +93,10 @@ namespace UVC.Backend.Noop
         {
             return true;
         }
-        public virtual bool CreateBranch(string url, string path = "")
+        public virtual bool CreateBranch(string from, string to)
         {
             return true;
-        }   
+        }
         public virtual bool MergeBranch(string url, string path = "")
         {
             return true;
@@ -102,6 +106,14 @@ namespace UVC.Backend.Noop
             return true;
         }
         public virtual string GetCurrentBranch()
+        {
+            return null;
+        }
+        public virtual string GetBranchDefaultPath()
+        {
+            return null;
+        }
+        public virtual string GetTrunkPath()
         {
             return null;
         }

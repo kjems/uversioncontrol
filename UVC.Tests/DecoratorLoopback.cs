@@ -119,6 +119,11 @@ namespace UVC.UnitTests
             return true;
         }
 
+        public bool Commit(string commitMessage = "")
+        {
+            return true;
+        }
+
         public bool Add(IEnumerable<string> assets)
         {
             dataCarrier.assets = assets.ToList();
@@ -166,7 +171,7 @@ namespace UVC.UnitTests
             return true;
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
             return true;
         }
@@ -181,7 +186,17 @@ namespace UVC.UnitTests
             return true;
         }
         
-        public virtual string GetCurrentBranch()
+        public string GetCurrentBranch()
+        {
+            return null;
+        }
+        
+        public string GetBranchDefaultPath()
+        {
+            return null;
+        }
+        
+        public string GetTrunkPath()
         {
             return null;
         }

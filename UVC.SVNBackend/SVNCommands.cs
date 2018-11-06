@@ -512,6 +512,11 @@ namespace UVC.Backend.SVN
         {
             return CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
         }
+        
+        public bool Commit(string commitMessage = "")
+        {
+            return CreateOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"");
+        }
 
         public bool Add(IEnumerable<string> assets)
         {
@@ -560,9 +565,9 @@ namespace UVC.Backend.SVN
             return CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
-            return CreateOperation("branch \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+            return CreateOperation("copy \"" + from + "\" \"" + to + "\" -m \"Creating new Branch from UVC\" ");
         }
         
         public bool MergeBranch(string url, string path = "")
@@ -585,6 +590,16 @@ namespace UVC.Backend.SVN
                 return xmlDoc?.GetElementsByTagName("entry")?.Item(0)["relative-url"]?.InnerText;
             }
             return null;
+        }
+        
+        public string GetBranchDefaultPath()
+        {
+            return "^/branches/";
+        }
+        
+        public string GetTrunkPath()
+        {
+            return "^/trunk/";
         }
         
         public List<string> RemoteList(string path)

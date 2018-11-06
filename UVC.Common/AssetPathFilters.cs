@@ -194,7 +194,7 @@ namespace UVC.AssetPathFilters
 
         public static string AggregateString(this IEnumerable<string> assets)
         {
-            return assets.Aggregate((a, b) => a + ", " + b);
+            return !assets.Any() ? "" : assets.Aggregate((a, b) => a + ", " + b);
         }
     }
 }

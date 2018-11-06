@@ -774,6 +774,10 @@ namespace UVC.Backend.P4
             }
             return success;
         }
+        public virtual bool Commit(string commitMessage = "")
+        {
+            return true;
+        }
 
         private void UpdateAfterOperation(IEnumerable<string> assets)
         {
@@ -842,7 +846,7 @@ namespace UVC.Backend.P4
             return true;
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
             return true;
         }
@@ -858,6 +862,16 @@ namespace UVC.Backend.P4
         }
         
         public string GetCurrentBranch()
+        {
+            return null;
+        }
+        
+        public virtual string GetBranchDefaultPath()
+        {
+            return null;
+        }
+        
+        public virtual string GetTrunkPath()
         {
             return null;
         }

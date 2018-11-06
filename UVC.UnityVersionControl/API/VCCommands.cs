@@ -463,10 +463,14 @@ namespace UVC
                 OnOperationStarting(OperationType.Commit, beforeStatus);
                 bool commitSuccess = vcc.Commit(assets, commitMessage);
                 Status(assets, StatusLevel.Local);
-                var afterStatus = StoreCurrentStatus(assets); ;
+                var afterStatus = StoreCurrentStatus(assets);
                 OnOperationCompleted(OperationType.Commit, beforeStatus, afterStatus, commitSuccess);
                 return commitSuccess;
             });
+        }
+        public bool Commit(string commitMessage = "")
+        {
+            return HandleExceptions(() => PerformOperation(OperationType.Commit, () => vcc.Commit(commitMessage)));
         }
         public bool Add(IEnumerable<string> assets)
         {
@@ -563,9 +567,9 @@ namespace UVC
         {
             return HandleExceptions(() => PerformOperation(OperationType.Checkout, () => vcc.Checkout(url, path)));
         }        
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
-            return HandleExceptions(() => PerformOperation(OperationType.CreateBranch, () => vcc.CreateBranch(url, path)));
+            return HandleExceptions(() => PerformOperation(OperationType.CreateBranch, () => vcc.CreateBranch(from, to)));
         }        
         public bool MergeBranch(string url, string path = "")
         {
@@ -578,6 +582,14 @@ namespace UVC
         public string GetCurrentBranch()
         {
             return vcc.GetCurrentBranch();
+        }
+        public string GetBranchDefaultPath()
+        {
+            return vcc.GetBranchDefaultPath();
+        }
+        public string GetTrunkPath()
+        {
+            return vcc.GetTrunkPath();
         }
         public List<string> RemoteList(string path)
         {

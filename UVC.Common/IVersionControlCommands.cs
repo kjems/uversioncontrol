@@ -55,6 +55,7 @@ namespace UVC
         bool Status(IEnumerable<string> assets, StatusLevel statusLevel);
         bool Update(IEnumerable<string> assets = null);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
+        bool Commit(string commitMessage = "");
         bool Add(IEnumerable<string> assets);
         bool Revert(IEnumerable<string> assets);
         bool Delete(IEnumerable<string> assets, OperationMode mode);
@@ -64,10 +65,12 @@ namespace UVC
         bool ChangeListRemove(IEnumerable<string> assets);
         bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution);
         bool Checkout(string url, string path = "");
-        bool CreateBranch(string url, string path = "");
+        bool CreateBranch(string from, string to);
         bool MergeBranch(string url, string path = "");
         bool SwitchBranch(string url, string path = "");
         string GetCurrentBranch();
+        string GetBranchDefaultPath();
+        string GetTrunkPath();
         List<string> RemoteList(string path);
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);

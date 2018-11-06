@@ -104,6 +104,11 @@ namespace UVC
         {
             return vcc.Commit(assets, commitMessage);
         }
+        
+        public bool Commit(string commitMessage = "")
+        {
+            return vcc.Commit(commitMessage);
+        }
 
         public virtual bool Add(IEnumerable<string> assets)
         {
@@ -150,9 +155,9 @@ namespace UVC
             return vcc.Checkout(url, path);
         }
         
-        public virtual bool CreateBranch(string url, string path = "")
+        public virtual bool CreateBranch(string from, string to)
         {
-            return vcc.CreateBranch(url, path);
+            return vcc.CreateBranch(from, to);
         }
         
         public virtual bool MergeBranch(string url, string path = "")
@@ -162,12 +167,22 @@ namespace UVC
         
         public virtual bool SwitchBranch(string url, string path = "")
         {
-            return true;
+            return vcc.SwitchBranch(url, path);
         }
         
         public virtual string GetCurrentBranch()
         {
             return vcc.GetCurrentBranch();
+        }
+        
+        public virtual string GetBranchDefaultPath()
+        {
+            return vcc.GetBranchDefaultPath();
+        }
+        
+        public virtual string GetTrunkPath()
+        {
+            return vcc.GetTrunkPath();
         }
         
         public List<string> RemoteList(string path)

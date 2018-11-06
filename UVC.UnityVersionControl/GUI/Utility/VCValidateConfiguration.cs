@@ -14,7 +14,9 @@ namespace UVC
     {
         static readonly string[] defaultIgnores = 
         { "Library", "Temp", "obj", ".targets.tmp" , "*.booproj", "*.unityproj", "*.csproj", "*.sln", 
-          "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*", ".vs" };
+          "*.suo", "*.user", "*.pidb", "*.userprefs", "*.user", "*.ide", "_ReSharper.*", ".vs", ".idea",
+          "Logs", ".git"
+        };
 
         static VCValidateConfiguration()
         {
@@ -52,6 +54,5 @@ namespace UVC
                 }
             }
         }
-
     }
 }

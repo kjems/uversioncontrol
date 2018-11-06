@@ -97,6 +97,18 @@ namespace UVC.Backend.Noop
         {
             return true;
         }
+        public virtual bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        public virtual string GetCurrentBranch()
+        {
+            return null;
+        }
+        public virtual List<string> RemoteList(string path)
+        {
+            return null;
+        }
         public virtual bool AllowLocalEdit(IEnumerable<string> assets) 
         {
             return true;

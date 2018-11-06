@@ -150,14 +150,29 @@ namespace UVC
             return vcc.Checkout(url, path);
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public virtual bool CreateBranch(string url, string path = "")
         {
             return vcc.CreateBranch(url, path);
         }
         
-        public bool MergeBranch(string url, string path = "")
+        public virtual bool MergeBranch(string url, string path = "")
         {
             return vcc.MergeBranch(url, path);
+        }
+        
+        public virtual bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public virtual string GetCurrentBranch()
+        {
+            return vcc.GetCurrentBranch();
+        }
+        
+        public List<string> RemoteList(string path)
+        {
+            return vcc.RemoteList(path);
         }
 
         public virtual bool AllowLocalEdit(IEnumerable<string> assets)

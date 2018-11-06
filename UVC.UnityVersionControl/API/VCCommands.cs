@@ -40,7 +40,8 @@ namespace UVC
         AllowLocalEdit,
         Checkout,
         CreateBranch,
-        MergeBranch
+        MergeBranch,
+        SwitchBranch
     }
 
     /// <summary>
@@ -569,6 +570,18 @@ namespace UVC
         public bool MergeBranch(string url, string path = "")
         {
             return HandleExceptions(() => PerformOperation(OperationType.MergeBranch, () => vcc.MergeBranch(url, path)));
+        }
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return HandleExceptions(() => PerformOperation(OperationType.SwitchBranch, () => vcc.SwitchBranch(url, path)));
+        }
+        public string GetCurrentBranch()
+        {
+            return vcc.GetCurrentBranch();
+        }
+        public List<string> RemoteList(string path)
+        {
+            return HandleExceptions(() => vcc.RemoteList(path));
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {

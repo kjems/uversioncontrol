@@ -569,6 +569,42 @@ namespace UVC.Backend.SVN
         {
             return CreateOperation("merge \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
+        
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return CreateOperation("switch \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+        }
+        
+        public string GetCurrentBranch()
+        {
+            var svnInfo = CreateSVNCommandLine("info --xml ").Execute();
+            if (!svnInfo.Failed)
+            {
+                var xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(svnInfo.OutputStr);
+                return xmlDoc?.GetElementsByTagName("entry")?.Item(0)["relative-url"]?.InnerText;
+            }
+            return null;
+        }
+        
+        public List<string> RemoteList(string path)
+        {
+            List<string> remoteList = null;
+            using (var commandLineOperation = CreateSVNCommandLine($"list \"{path}\""))
+            {
+                var commandLineOutput = ExecuteOperation(commandLineOperation);
+                if (!commandLineOutput.Failed)
+                {
+                    remoteList = commandLineOutput.OutputStr
+                        .Split('\n')
+                        .Select(ignore => ignore.Trim('\r', '\n', '\t', ' '))
+                        .Distinct()
+                        .Where(ignore => !string.IsNullOrEmpty(ignore))
+                        .ToList();
+                }
+            }
+            return remoteList;
+        }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {

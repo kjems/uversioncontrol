@@ -66,6 +66,9 @@ namespace UVC
         bool Checkout(string url, string path = "");
         bool CreateBranch(string url, string path = "");
         bool MergeBranch(string url, string path = "");
+        bool SwitchBranch(string url, string path = "");
+        string GetCurrentBranch();
+        List<string> RemoteList(string path);
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);

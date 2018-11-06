@@ -176,6 +176,21 @@ namespace UVC.UnitTests
             return true;
         }
 
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public virtual string GetCurrentBranch()
+        {
+            return null;
+        }
+
+        public List<string> RemoteList(string path)
+        {
+            return null;
+        }
+
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {
             dataCarrier.assets = assets.ToList();

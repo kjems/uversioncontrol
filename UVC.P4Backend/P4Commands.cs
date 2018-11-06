@@ -851,6 +851,21 @@ namespace UVC.Backend.P4
         {
             return true;
         }
+        
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public string GetCurrentBranch()
+        {
+            return null;
+        }
+        
+        public List<string> RemoteList(string path)
+        {
+            return null;
+        }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {

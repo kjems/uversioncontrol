@@ -149,6 +149,16 @@ namespace UVC
         {
             return vcc.Checkout(url, path);
         }
+        
+        public bool CreateBranch(string url, string path = "")
+        {
+            return vcc.CreateBranch(url, path);
+        }
+        
+        public bool MergeBranch(string url, string path = "")
+        {
+            return vcc.MergeBranch(url, path);
+        }
 
         public virtual bool AllowLocalEdit(IEnumerable<string> assets)
         {

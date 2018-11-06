@@ -89,6 +89,14 @@ namespace UVC.Backend.Noop
         {
             return true;
         }
+        public virtual bool CreateBranch(string url, string path = "")
+        {
+            return true;
+        }   
+        public virtual bool MergeBranch(string url, string path = "")
+        {
+            return true;
+        }
         public virtual bool AllowLocalEdit(IEnumerable<string> assets) 
         {
             return true;

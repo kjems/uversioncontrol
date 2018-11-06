@@ -256,8 +256,21 @@ namespace UVC.UserInterface
                     {
                         VCCommands.Instance.CommitDialog(GetSelectedAssets().ToArray(), true);
                     }
+                    if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
+                    {
+                        
+                    }
+                    if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, buttonLayout))
+                    {
+                        
+                    }
+                    if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, buttonLayout))
+                    {
+                        
+                    }
+                    
                 }
-
+                
                 GUILayout.FlexibleSpace();
 
                 bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });

@@ -37,7 +37,10 @@ namespace UVC
         Move,
         CleanUp,
         Resolve,
-        AllowLocalEdit
+        AllowLocalEdit,
+        Checkout,
+        CreateBranch,
+        MergeBranch
     }
 
     /// <summary>
@@ -54,6 +57,7 @@ namespace UVC
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
         private static System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+        static readonly VersionControlStatus[] emptyVersionControlStatusArray = new VersionControlStatus[0];
 
         private IVersionControlCommands vcc;        
         private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
@@ -201,6 +205,14 @@ namespace UVC
             bool result = operation(assets);
             var afterStatus = StoreCurrentStatus(assets);
             OnOperationCompleted(operationType, beforeStatus, afterStatus, result);
+            return result;
+        }
+
+        private bool PerformOperation(OperationType operationType, Func<bool> operation)
+        {
+            OnOperationStarting(operationType, emptyVersionControlStatusArray);
+            bool result = operation();
+            OnOperationCompleted(operationType, emptyVersionControlStatusArray, emptyVersionControlStatusArray, result);
             return result;
         }
 
@@ -548,7 +560,15 @@ namespace UVC
         }
         public bool Checkout(string url, string path = "")
         {
-            return HandleExceptions(() => vcc.Checkout(url, path));
+            return HandleExceptions(() => PerformOperation(OperationType.Checkout, () => vcc.Checkout(url, path)));
+        }        
+        public bool CreateBranch(string url, string path = "")
+        {
+            return HandleExceptions(() => PerformOperation(OperationType.CreateBranch, () => vcc.CreateBranch(url, path)));
+        }        
+        public bool MergeBranch(string url, string path = "")
+        {
+            return HandleExceptions(() => PerformOperation(OperationType.MergeBranch, () => vcc.MergeBranch(url, path)));
         }
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {

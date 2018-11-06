@@ -64,6 +64,8 @@ namespace UVC
         bool ChangeListRemove(IEnumerable<string> assets);
         bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution);
         bool Checkout(string url, string path = "");
+        bool CreateBranch(string url, string path = "");
+        bool MergeBranch(string url, string path = "");
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);

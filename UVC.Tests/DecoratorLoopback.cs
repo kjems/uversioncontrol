@@ -165,6 +165,16 @@ namespace UVC.UnitTests
         {
             return true;
         }
+        
+        public bool CreateBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public bool MergeBranch(string url, string path = "")
+        {
+            return true;
+        }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {

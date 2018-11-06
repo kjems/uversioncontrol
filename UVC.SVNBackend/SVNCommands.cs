@@ -559,6 +559,16 @@ namespace UVC.Backend.SVN
         {
             return CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
+        
+        public bool CreateBranch(string url, string path = "")
+        {
+            return CreateOperation("branch \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+        }
+        
+        public bool MergeBranch(string url, string path = "")
+        {
+            return CreateOperation("merge \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
+        }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {

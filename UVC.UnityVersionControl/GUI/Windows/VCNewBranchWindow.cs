@@ -11,21 +11,12 @@ namespace UVC.UserInterface
     {
         public string fromPath;
         public string toPath;
-        public Action refresh = () => { };
         
         private bool switchToNewBranch = true;
 
         public static void Init()
         {
             GetWindow<NewBranchWindow>("New Branch");
-        }
-
-        private void OnDisable()
-        {
-        }
-
-        private void OnEnable()
-        {
         }
 
         private void OnGUI()
@@ -46,12 +37,13 @@ namespace UVC.UserInterface
                 switchToNewBranch = GUILayout.Toggle(switchToNewBranch, "Switch To New Branch");
                 if (GUILayout.Button("Create"))
                 {
-                    VCCommands.Instance.CreateBranch(fromPath, toPath);
-                    if (switchToNewBranch)
-                        VCCommands.Instance.SwitchBranch(toPath);
-
-                    refresh();
-                    Close();
+                    VCCommands.Instance.CreateBranchTask(fromPath, toPath).ContinueWithOnNextUpdate(result =>
+                    {
+                        if (switchToNewBranch)
+                            VCCommands.Instance.SwitchBranchTask(toPath);
+                        
+                        Close();
+                    });                   
                 }
             }
         }

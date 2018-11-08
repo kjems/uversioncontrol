@@ -34,6 +34,7 @@ namespace UVC.UserInterface
         private bool updateInProgress = false;
         private bool refreshInProgress = false;
         private string commandInProgress = "";
+        private string currentBranch = "<unknown>";
         private VCMultiColumnAssetList vcMultiColumnAssetList;
         private VCSettingsWindow settingsWindow;
         private Rect rect;
@@ -109,6 +110,8 @@ namespace UVC.UserInterface
             VCSettings.SettingChanged += Repaint;            
 
             rect = new Rect(0, statusHeight, position.width, 40.0f);
+
+            RefreshCurrentBranch();
         }
 
         virtual protected void OnDisable()
@@ -154,8 +157,18 @@ namespace UVC.UserInterface
             }
         }
 
+        private void RefreshCurrentBranch()
+        {
+            VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(cb =>
+            {
+                currentBranch = cb;
+                Repaint();
+            });
+        }
+
         private void RefreshGUI()
         {
+            RefreshCurrentBranch();
             Repaint();
         }
 
@@ -259,7 +272,7 @@ namespace UVC.UserInterface
                 }
                 GUILayout.Space(7);
                 GUI.enabled = false;
-                GUILayout.TextField(VCCommands.Instance.GetCurrentBranch(), EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
+                GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
                 GUI.enabled = true;
                 GUILayout.FlexibleSpace();
 

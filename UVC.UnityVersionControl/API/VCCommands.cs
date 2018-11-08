@@ -83,7 +83,7 @@ namespace UVC
 
         private void OnVersionControlBackendChanged(IVersionControlCommands newVcc)
         {
-            if (vcc != null) vcc.Dispose();
+            vcc?.Dispose();
             vcc = newVcc;
             vcc.ProgressInformation += progress =>
             {
@@ -104,12 +104,7 @@ namespace UVC
             }
         }
 
-        public bool Ready { 
-            get 
-            {
-                return Active && vcc.IsReady() && !EditorApplication.isCompiling; 
-            } 
-        }
+        public bool Ready => Active && vcc.IsReady() && !EditorApplication.isCompiling;
 
         public void Dispose()
         {            
@@ -121,7 +116,7 @@ namespace UVC
             if (Active)
             {
                 vcc.Start();
-                if (Started != null) Started();
+                Started?.Invoke();
             }
         }
 
@@ -134,7 +129,7 @@ namespace UVC
                 var detailLevel = remoteProjectReflection ? DetailLevel.Verbose : DetailLevel.Normal;
                 vcc.Start();
                 StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t => ActivateRefreshLoop());
-                if (Started != null) Started();
+                Started?.Invoke();
             }
         }
 
@@ -324,62 +319,100 @@ namespace UVC
 
         #region IVersionControlCommands Tasks
 
-        private Task<bool> StartTask(Func<bool> work)
+        private async Task<T> StartTask<T>(Func<T> work)
         {
-            var task = Active ? new Task<bool>(work) : new Task<bool>(() => false);
+            var task = Active ? new Task<T>(work) : new Task<T>(() => default(T));
             task.Start(); // Sync: task.RunSynchronously();
-            return task;
+            return await task;
         }
 
-        public Task<bool> StatusTask(StatusLevel statusLevel, DetailLevel detailLevel)
+        public async Task<bool> StatusTask(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return StartTask(() => Status(statusLevel, detailLevel));
+            return await StartTask(() => Status(statusLevel, detailLevel));
         }
 
-        public Task<bool> StatusTask(IEnumerable<string> assets, StatusLevel statusLevel)
+        public async Task<bool> StatusTask(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             assets = new List<string>(assets);
-            return StartTask(() => Status(assets, statusLevel));
+            return await StartTask(() => Status(assets, statusLevel));
         }
 
-        public Task<bool> UpdateTask(IEnumerable<string> assets = null)
+        public async Task<bool> UpdateTask(IEnumerable<string> assets = null)
         {
             if (assets != null) assets = new List<string>(assets);
             OnOperationStarting(OperationType.Update, StoreCurrentStatus(assets));
             DisableAutoRefresh();
             var updateTask = StartTask(() => Update(assets));
             updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
-            return updateTask;
+            return await updateTask;
         }
 
-        public Task<bool> AddTask(IEnumerable<string> assets)
+        public async Task<bool> AddTask(IEnumerable<string> assets)
         {
             assets = new List<string>(assets);
             OnOperationStarting(OperationType.Add, StoreCurrentStatus(assets));
-            return StartTask(() => Add(assets));
+            return await StartTask(() => Add(assets));
         }
 
-        public Task<bool> CommitTask(IEnumerable<string> assets, string commitMessage = "")
+        public async Task<bool> CommitTask(IEnumerable<string> assets, string commitMessage = "")
         {
             assets = new List<string>(assets);
             FlushFiles();
             OnOperationStarting(OperationType.Commit, StoreCurrentStatus(assets));
-            return StartTask(() => Commit(assets, commitMessage));
+            return await StartTask(() => Commit(assets, commitMessage));
         }
 
-        public Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
+        public async Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             assets = new List<string>(assets);
             OnOperationStarting(OperationType.GetLock, StoreCurrentStatus(assets));
-            return StartTask(() => GetLock(assets, mode));
+            return await StartTask(() => GetLock(assets, mode));
         }
 
-        public Task<bool> RevertTask(IEnumerable<string> assets)
+        public async Task<bool> RevertTask(IEnumerable<string> assets)
         {
             assets = new List<string>(assets);
             FlushFiles();
             OnOperationStarting(OperationType.Revert, StoreCurrentStatus(assets));
-            return StartTask(() => Revert(assets));
+            return await StartTask(() => Revert(assets));
+        }
+
+        public async Task<bool> CreateBranchTask(string from, string to)
+        {
+            OnOperationStarting(OperationType.CreateBranch, null);
+            return await StartTask(() => CreateBranch(from, to));
+        }
+        
+        public async Task<bool> MergeBranchTask(string url, string path = "")
+        {
+            OnOperationStarting(OperationType.MergeBranch, null);
+            return await StartTask(() => MergeBranch(url, path));
+        }
+        
+        public async Task<bool> SwitchBranchTask(string url, string path = "")
+        {
+            OnOperationStarting(OperationType.SwitchBranch, null);
+            return await StartTask(() => SwitchBranch(url, path));
+        }
+        
+        public async Task<string> GetCurrentBranchTask()
+        {
+            return await StartTask(GetCurrentBranch);
+        }
+        
+        public async Task<string> GetBranchDefaultPathTask()
+        {
+            return await StartTask(GetBranchDefaultPath);
+        }
+        
+        public async Task<string> GetTrunkPathTask()
+        {
+            return await StartTask(GetTrunkPath);
+        }
+        
+        public async Task<List<string>> RemoteListTask(string path)
+        {
+            return await StartTask(() => RemoteList(path));
         }
         #endregion
 

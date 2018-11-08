@@ -32,15 +32,22 @@ namespace UVC.UserInterface
             GetWindow<BranchWindow>("Branches");
         }
 
-        private void OnDisable()
-        {
-        }
-
         private void OnEnable()
         {
             if (string.IsNullOrEmpty(branchpath)) branchpath = VCCommands.Instance.GetBranchDefaultPath();
             if (string.IsNullOrEmpty(trunkpath)) trunkpath = VCCommands.Instance.GetTrunkPath();
             branchColumnList = new BranchMulticolumnList();
+            VCCommands.Instance.OperationCompleted += InstanceOnOperationCompleted;
+            Refresh();
+        }
+
+        private void OnDisable()
+        {
+            VCCommands.Instance.OperationCompleted -= InstanceOnOperationCompleted;
+        }
+        
+        private void InstanceOnOperationCompleted(OperationType operation, VersionControlStatus[] beforeStatus, VersionControlStatus[] afterStatus, bool success)
+        {
             Refresh();
         }
 
@@ -94,7 +101,6 @@ namespace UVC.UserInterface
                 newBranchWindow.titleContent = new GUIContent("Create Branch");
                 newBranchWindow.fromPath = currentBranch;
                 newBranchWindow.toPath = BranchPath + DateTime.Now.ToString("yyyy-MM-dd_");
-                newBranchWindow.refresh = Refresh;
                 newBranchWindow.ShowUtility();
             }
         }
@@ -102,10 +108,19 @@ namespace UVC.UserInterface
         void Refresh()
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
-            var branches = VCCommands.Instance.RemoteList(BranchPath).Select(p => branchpath + p).ToList();
-            branches.Add(trunkpath);
-            branchColumnList.SetBranches(branches);
-            currentBranch = VCCommands.Instance.GetCurrentBranch();
+
+            VCCommands.Instance.RemoteListTask(BranchPath).ContinueWithOnNextUpdate(relativeBranches =>
+            {
+                var branches = relativeBranches.Select(p => branchpath + p).ToList();
+                branches.Add(trunkpath);
+                branchColumnList.SetBranches(branches);
+                Repaint();
+            });
+
+            VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(b =>
+            {
+                currentBranch = b; Repaint();
+            });
         }
 
         void BranchListGUI()

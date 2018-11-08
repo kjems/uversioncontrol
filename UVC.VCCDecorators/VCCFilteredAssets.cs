@@ -129,6 +129,12 @@ namespace UVC
             return assets.Any() ? base.ChangeListRemove(assets.FilesExist().OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
         }
 
+        public override bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            assets = ConsistentSlash(assets.NonEmpty().Versioned(vcc));
+            return assets.Any() ? (base.AllowLocalEdit(assets) && Status(assets, StatusLevel.Local)) : false;
+        }
+
         public override bool Move(string from, string to)
         {
             if (vcc.GetAssetStatus(from).fileStatus == VCFileStatus.Unversioned) return false;

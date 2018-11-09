@@ -274,9 +274,17 @@ namespace UVC.UserInterface
                     }
                 }
                 GUILayout.Space(7);
-                GUI.enabled = false;
                 GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
-                GUI.enabled = true;
+                
+                #if ENABLE_BRANCH
+                if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
+                {
+                    var branchWindow = CreateInstance<BranchWindow>();
+                    branchWindow.minSize = new Vector2(220, 140);
+                    branchWindow.titleContent = new GUIContent(Terminology.branch);
+                    branchWindow.ShowUtility();
+                }
+                #endif
                 GUILayout.FlexibleSpace();
 
                 bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });
@@ -322,18 +330,6 @@ namespace UVC.UserInterface
                         settingsWindow.Close();
                     }
                 }
-                
-                GUILayout.Space(7.0f);
-                
-                #if ENABLE_BRANCH
-                if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
-                {
-                    var branchWindow = CreateInstance<BranchWindow>();
-                    branchWindow.minSize = new Vector2(220, 140);
-                    branchWindow.titleContent = new GUIContent(Terminology.branch);
-                    branchWindow.ShowUtility();
-                }
-                #endif
 
                 GUILayout.Space(7.0f);
 

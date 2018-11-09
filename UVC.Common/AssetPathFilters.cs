@@ -103,7 +103,8 @@ namespace UVC.AssetPathFilters
         {
             foreach (var assetIt in new List<string>(assets))
             {
-                if (Directory.Exists(assetIt) && (!versionedFoldersOnly || vcc.GetAssetStatus(assetIt).fileStatus != VCFileStatus.Unversioned))
+                var status = vcc.GetAssetStatus(assetIt);
+                if (Directory.Exists(assetIt) && (!versionedFoldersOnly || status.fileStatus != VCFileStatus.Unversioned) && status.property != VCProperty.Modified)
                 {
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)

@@ -70,6 +70,9 @@ namespace UVC.UserInterface
             bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal) && vcStatus.fileStatus != VCFileStatus.Ignored;
             if (assetCriteria) return true;
 
+            bool property = vcStatus.property == VCProperty.Modified || vcStatus.property == VCProperty.Conflicted;
+            if (property) return true;
+
             bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;
             if (localLock) return true;
 

@@ -510,12 +510,12 @@ namespace UVC.Backend.SVN
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            return CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
+            return CreateAssetOperation("commit --depth empty -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
         }
         
         public bool Commit(string commitMessage = "")
         {
-            return CreateOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"");
+            return CreateOperation("commit --depth empty -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"");
         }
 
         public bool Add(IEnumerable<string> assets)

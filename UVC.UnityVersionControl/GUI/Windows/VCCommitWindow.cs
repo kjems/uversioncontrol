@@ -64,7 +64,8 @@ namespace UVC.UserInterface
                 var metaStatus = vcStatus.MetaStatus();
                 bool interesting = (vcStatus.fileStatus != VCFileStatus.None &&
                                     (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
-                                    vcStatus.lockStatus == VCLockStatus.LockedHere;
+                                    vcStatus.lockStatus == VCLockStatus.LockedHere ||
+                                    vcStatus.property == VCProperty.Modified;
 
                 if (!interesting) return false;
                 ComposedString key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);

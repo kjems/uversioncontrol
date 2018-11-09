@@ -26,6 +26,7 @@ namespace UVC.UserInterface
         private static readonly Color lockedOtherColor = new Color(0.9f, 0.3f, 0.3f);
         private static readonly Color modifiedColor = pastelBlue;
         private static readonly Color modifiedNoLockColor = orange;
+        private static readonly Color modifiedPropertyColor = new Color(0.29f, 1f, 0.94f);
         private static readonly Color localEditColor = new Color(1.0f, 1.0f, 0.2f);
         private static readonly Color unversionedColor = new Color(0.4f, 0.4f, 0.3f);
         private static readonly Color remoteModifiedColor = new Color(1.0f, 0.9f, 0.9f, 0.4f);
@@ -51,6 +52,7 @@ namespace UVC.UserInterface
             }
 
             if (assetStatus.fileStatus == VCFileStatus.Modified) return modifiedColor;
+            if (assetStatus.property == VCProperty.Modified) return modifiedPropertyColor;
             if (assetStatus.reflectionLevel == VCReflectionLevel.Pending) return pendingColor;
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return unversionedColor;
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return remoteModifiedColor;
@@ -71,6 +73,7 @@ namespace UVC.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;
             if (assetStatus.fileStatus == VCFileStatus.Added) return "Added";
+            if (assetStatus.property == VCProperty.Modified) return "[Merge Info]";
             if (assetStatus.fileStatus == VCFileStatus.Replaced) return "Replaced";
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return "Ignored";
             if (assetStatus.remoteStatus == VCRemoteFileStatus.Modified) return "Modified on server";

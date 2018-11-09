@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using UVC.Logging;
 
 namespace UVC.UserInterface
@@ -86,12 +87,20 @@ namespace UVC.UserInterface
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
-                var selection = branchColumnList.GetSelection().First();
-                if (VCCommands.Instance.MergeBranch(selection))
+                if (!GetChangedAssets().Any())
                 {
-                    VCCommands.Instance.Commit($"Merged {selection} to {currentBranch}");
+                    var selection = branchColumnList.GetSelection().First();
+                    if (VCCommands.Instance.MergeBranch(selection))
+                    {
+                        VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
+                        VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {selection} to {currentBranch}");
+                    }
+                    Refresh();
                 }
-                Refresh();
+                else
+                {
+                    EditorUtility.DisplayDialog("Local Copy Modified", "Before doing a merge your local copy needs to be without any modification. Please revert or commit all changes before doing a merge", "OK");
+                }                
             }
             GUI.enabled = true;
             if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))
@@ -103,6 +112,19 @@ namespace UVC.UserInterface
                 newBranchWindow.toPath = BranchPath + DateTime.Now.ToString("yyyy-MM-dd_");
                 newBranchWindow.ShowUtility();
             }
+        }
+
+        static IEnumerable<VersionControlStatus> GetChangedAssets()
+        {
+            return VCCommands.Instance.GetFilteredAssets(status => 
+                    status.fileStatus == VCFileStatus.Modified ||
+                    status.fileStatus == VCFileStatus.Added ||
+                    status.fileStatus == VCFileStatus.Conflicted ||
+                    status.fileStatus == VCFileStatus.Deleted ||
+                    status.fileStatus == VCFileStatus.Merged ||
+                    status.fileStatus == VCFileStatus.Replaced ||
+                    status.property == VCProperty.Modified ||
+                    status.property == VCProperty.Conflicted);
         }
 
         void Refresh()

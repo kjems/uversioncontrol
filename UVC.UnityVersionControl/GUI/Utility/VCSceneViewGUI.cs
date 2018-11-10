@@ -3,6 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using UnityEditor;
 using UnityEngine;
+#pragma warning disable CS4014
 
 namespace UVC.UserInterface
 {

@@ -7,7 +7,7 @@
 // SVNIntegration is used to get state and execute commands on the repository.
 //
 // Although functional the general quality of this file is poor and need a refactor
-
+#pragma warning disable CS4014
 
 using UnityEngine;
 using UnityEditor;

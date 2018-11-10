@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
+#pragma warning disable CS4014
 
 namespace UVC.UserInterface
 {

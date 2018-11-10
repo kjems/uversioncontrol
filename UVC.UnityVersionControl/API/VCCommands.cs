@@ -343,7 +343,7 @@ namespace UVC
             OnOperationStarting(OperationType.Update, StoreCurrentStatus(assets));
             DisableAutoRefresh();
             var updateTask = StartTask(() => Update(assets));
-            updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
+            await updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
             return await updateTask;
         }
 

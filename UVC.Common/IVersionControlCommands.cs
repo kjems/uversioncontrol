@@ -12,6 +12,7 @@ namespace UVC
     {
         Mine,
         Theirs,
+        Working,
         Ignore
     }
     public enum StatusLevel

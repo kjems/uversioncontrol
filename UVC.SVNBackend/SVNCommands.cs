@@ -374,6 +374,8 @@ namespace UVC.Backend.SVN
                     throw new VCMissingCredentialsException(errStr, commandLine.ToString());
                 else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
                     throw new VCNewerVersionException(errStr, commandLine.ToString());
+                else if (errStr.Contains("E195020") || errStr.Contains("mixed-revision"))
+                    throw new VCMixedRevisionException(errStr, commandLine.ToString());
                 else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
                     throw new VCCriticalException(errStr, commandLine.ToString());
                 else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
@@ -526,7 +528,7 @@ namespace UVC.Backend.SVN
 
         public bool Revert(IEnumerable<string> assets)
         {
-            bool revertSuccess = CreateAssetOperation("revert --depth=infinity", assets);
+            bool revertSuccess = CreateAssetOperation("revert", assets);
             Status(assets, StatusLevel.Previous);
             bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
             bool releaseSuccess = true;
@@ -627,11 +629,17 @@ namespace UVC.Backend.SVN
             return ChangeListAdd(assets, localEditChangeList);
         }
 
+        private static readonly Dictionary<ConflictResolution, string> conflictParameterLookup = new Dictionary<ConflictResolution, string>
+        {
+            {ConflictResolution.Mine,     "--accept mine-full"},
+            {ConflictResolution.Theirs,   "--accept theirs-full"},
+            {ConflictResolution.Working,  "--accept working"},
+        };
+        
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
             if (conflictResolution == ConflictResolution.Ignore) return true;
-            string conflictparameter = conflictResolution == ConflictResolution.Theirs ? "--accept theirs-full" : "--accept mine-full";
-            return CreateAssetOperation("resolve " + conflictparameter, assets);
+            return CreateAssetOperation("resolve " + conflictParameterLookup[conflictResolution], assets);
         }
 
         public bool Move(string from, string to)

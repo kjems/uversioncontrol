@@ -4,12 +4,16 @@
 
 // This script includes common SVN related operations
 
+using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using UVC.Logging;
+using System.Threading.Tasks;
+using Object = UnityEngine.Object;
 
 namespace UVC
 {
@@ -223,9 +227,46 @@ namespace UVC
                 }
             }
         }
+        
+        public static void ResolveConflict(string assetPath)
+        {
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                var workingDirectory = Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
+                var path = Path.GetDirectoryName(assetPath);
+                var file = Path.GetFileName(assetPath);
+                string basepath =  Directory.GetFiles(path, $"{file}.merge-left.r*").First();
+                string theirs = Directory.GetFiles(path, $"{file}.merge-right.r*").First();
+                string yours = $"{assetPath}.working";
+                
+                var baseConvertCommand = new CommandLineExecution.CommandLine($"/Applications/p4merge.app/Contents/MacOS/p4merge", $"\"{basepath}\" \"{theirs}\" \"{yours}\" \"{assetPath}\"" , workingDirectory);
+                baseConvertCommand.OutputReceived += Debug.Log;
+                var output = baseConvertCommand.Execute();
+                Debug.Log(output.ErrorStr ?? output.OutputStr);
+                if (!output.Failed)
+                {
+                    if (EditorUtility.DisplayDialog("Merge Successful?", "Did the merge complete successfully?", "Yes", "No"))
+                    {
+                        VCCommands.Instance.Resolve(new[] {assetPath}, ConflictResolution.Working);
+                    }
+                }
+                
+                /*Task.Run(() => baseConvertCommand.Execute()).ContinueWithOnNextUpdate(output =>
+                {
+                    DebugLog.Log(output.ErrorStr ?? output.OutputStr);
+                    if (!output.Failed)
+                    {
+                        if (EditorUtility.DisplayDialog("Merge Successful?", "Did the merge complete successfully?", "Yes", "No"))
+                        {
+                            VCCommands.Instance.Resolve(new[] {assetPath}, ConflictResolution.Mine);
+                        }
+                    }
+                });*/
+            }
+        }
 
-        static readonly ComposedString[] requiresTextConversionPostfix  = new ComposedString[] { ".unity", ".prefab", ".mat", ".asset" };
-        static readonly ComposedString[] mergablePostfix                = new ComposedString[] { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml", ".json", ".asmdef", ".manifest", ".compute" };
+        static readonly ComposedString[] requiresTextConversionPostfix  = { ".unity", ".prefab", ".mat", ".asset" };
+        static readonly ComposedString[] mergablePostfix                = { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml", ".json", ".asmdef", ".manifest", ".compute" };
         
         public static bool IsDiffableAsset(ComposedString assetPath)
         {

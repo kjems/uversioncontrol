@@ -40,6 +40,7 @@ namespace UVC
                     if (e is VCConnectionTimeoutException) HandleConnectionTimeOut(e as VCConnectionTimeoutException);
                     else if (e is VCLocalCopyLockedException) HandleLocalCopyLocked(e as VCLocalCopyLockedException);
                     else if (e is VCNewerVersionException) HandleNewerVersion(e as VCNewerVersionException);
+                    else if (e is VCMixedRevisionException) HandleMixedRevision(e as VCMixedRevisionException);
                     else if (e is VCOutOfDate) HandleOutOfDate(e as VCOutOfDate);
                     else if (e is VCCriticalException) HandleCritical(e as VCCriticalException);
                     else if (e is VCMissingCredentialsException) HandleUserCredentials();
@@ -75,6 +76,14 @@ namespace UVC
         {
             DebugLog.Log(e.ErrorMessage);
             var dialog = CustomDialogs.CreateExceptionDialog("Newer Version", "There is a newer version of the file and need to update first and then try again", e);
+            dialog.AddButton("Update", () => { VCCommands.Instance.UpdateTask(); dialog.Close(); });
+            dialog.ShowUtility();
+        }
+        
+        private static void HandleMixedRevision(VCMixedRevisionException e)
+        {
+            DebugLog.Log(e.ErrorMessage);
+            var dialog = CustomDialogs.CreateExceptionDialog("Mixed Revision", "Cannot merge into mixed-revision working copy, try updating first", e);
             dialog.AddButton("Update", () => { VCCommands.Instance.UpdateTask(); dialog.Close(); });
             dialog.ShowUtility();
         }

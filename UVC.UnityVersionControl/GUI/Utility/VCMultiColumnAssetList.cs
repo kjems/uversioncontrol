@@ -164,7 +164,9 @@ namespace UVC.UserInterface
                 widths = new float[] { 200 },
                 doubleClickAction = status =>
                 {
-                    if (VCUtility.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
+                    if (VCUtility.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Conflicted)
+                        VCUtility.ResolveConflict(status.assetPath.Compose());
+                    else if (VCUtility.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
                         VCUtility.DiffWithBase(status.assetPath.Compose());
                     else
                         AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.Compose()));

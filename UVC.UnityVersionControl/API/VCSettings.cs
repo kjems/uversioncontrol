@@ -39,6 +39,7 @@ namespace UVC
             saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/saveStrategy", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
             handleFileMove = (EHandleFileMove)EditorPrefs.GetInt("VCSSettings/handleFileMove", (int)EHandleFileMove.TeamLicense);
+            mergetool = EditorPrefs.GetString("VCSSettings/mergetool", "P4Merge");
 
             OnSettingsChanged();
 
@@ -69,6 +70,7 @@ namespace UVC
                 EditorPrefs.SetInt("VCSSettings/saveStrategy", (int)saveStrategy);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
                 EditorPrefs.SetInt("VCSSettings/handleFileMove", (int)handleFileMove);
+                EditorPrefs.SetString("VCSSettings/mergetool", mergetool);
             };
         }
 
@@ -212,6 +214,8 @@ namespace UVC
         private static EHandleFileMove handleFileMove;
         public static EHandleFileMove HandleFileMove { get { return handleFileMove; } set { if (handleFileMove != value) { handleFileMove = value; OnSettingsChanged(); } } }
 
+        private static string mergetool;
+        public static string Mergetool { get { return mergetool; } set { if(mergetool != value) { mergetool = value; OnSettingsChanged(); } } }
 
         private static string clientPath;
         public static string ClientPath

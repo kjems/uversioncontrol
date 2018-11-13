@@ -18,5 +18,15 @@ namespace UVC
         {
             return t => OnNextUpdate.Do(() => postAction(t.Result));
         }
+        
+        public static Task ContinueWithOnNextUpdate(this Task task, Action postAction)
+        {
+            return task.ContinueWith(NextUpdate(postAction));
+        }
+
+        private static Action<Task> NextUpdate(Action postAction)
+        {
+            return t => OnNextUpdate.Do(postAction);
+        }
     }
 }

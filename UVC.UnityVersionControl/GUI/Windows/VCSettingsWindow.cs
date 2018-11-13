@@ -3,6 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -174,6 +175,12 @@ namespace UVC.UserInterface
                 {
                     GUILayout.Label(new GUIContent("Version Control System", "The selected Version Control will be used if a valid local copy can be found"));
                     VCSettings.VersionControlBackend = (VCSettings.EVersionControlBackend)EditorGUILayout.EnumPopup(VCSettings.VersionControlBackend, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                }
+                using (GUILayoutHelper.Horizontal())
+                {
+                    GUILayout.Label(new GUIContent("External Merge Tool", "The selected Merge Tool must be installed"));
+                    int index = EditorGUILayout.Popup(MergeHandler.MergeToolIndex(VCSettings.Mergetool), MergeHandler.mergeTools.Select(mt => mt.name).ToArray(), GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                    VCSettings.Mergetool = MergeHandler.mergeTools[index].name;
                 }
             }
             EditorGUILayout.EndScrollView();

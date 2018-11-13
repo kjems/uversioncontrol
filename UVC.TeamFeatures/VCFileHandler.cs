@@ -155,7 +155,7 @@ namespace UVC
             if (VCCommands.Active && VCSettings.LockAssets)
             {
                 var ap = new ComposedString(assetPath).TrimEnd(VCCAddMetaFiles.meta);
-                if (!VCUtility.IsMergableAsset(ap) && ap.StartsWith("Assets/"))
+                if (!MergeHandler.IsMergableAsset(ap) && ap.StartsWith("Assets/"))
                 {
                     var status = VCCommands.Instance.GetAssetStatus(ap);
                     message = AssetStatusUtils.GetStatusText(status);

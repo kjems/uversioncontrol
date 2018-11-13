@@ -121,8 +121,8 @@ namespace UVC.UserInterface
             bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
             bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
             bool isFolder = AssetDatabase.IsValidFolder(assetPath);
-            bool diffableAsset = VCUtility.IsDiffableAsset(assetPath);
-            bool mergableAsset = VCUtility.IsMergableAsset(assetPath);
+            bool diffableAsset = MergeHandler.IsDiffableAsset(assetPath);
+            bool mergableAsset = MergeHandler.IsMergableAsset(assetPath);
             bool modifiedDiffableAsset = diffableAsset && assetStatus.fileStatus != VCFileStatus.Normal;
             bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
             bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
@@ -138,12 +138,13 @@ namespace UVC.UserInterface
             bool haveLock = VCUtility.HaveVCLock(assetStatus);
             bool allowLocalEdit = assetStatus.LocalEditAllowed();
             bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
+            bool mergeinfo = assetStatus.property == VCProperty.Modified;
 
             validActions.showAdd        = !pending && !ignored && unversioned;
             validActions.showOpen       = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
             validActions.showDiff       = !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
-            validActions.showCommit     = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta);
-            validActions.showRevert     = !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta);
+            validActions.showCommit     = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
+            validActions.showRevert     = !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta || mergeinfo);
             validActions.showDelete     = !pending && !ignored && !deleted && !lockedByOther;
             validActions.showOpenLocal  = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset;
             validActions.showUnlock     = !pending && !ignored && !allowLocalEdit && haveLock;
@@ -164,7 +165,7 @@ namespace UVC.UserInterface
                     if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = SceneManagerUtilities.GetCurrentScenePath();
                     var validActions = GetValidActions(assetPath, instance);                    
 
-                    if (validActions.showDiff)      menu.AddItem(new GUIContent(Terminology.diff),              false, () => VCUtility.DiffWithBase(assetPath));
+                    if (validActions.showDiff)      menu.AddItem(new GUIContent(Terminology.diff),              false, () => MergeHandler.DiffWithBase(assetPath));
                     if (validActions.showAdd)       menu.AddItem(new GUIContent(Terminology.add),               false, () => VCCommands.Instance.Add(new[] { assetPath }));
                     if (validActions.showOpen)      menu.AddItem(new GUIContent(Terminology.getlock),           false, () => GetLock(assetPath, instance));
                     if (validActions.showOpenLocal) menu.AddItem(new GUIContent(Terminology.allowLocalEdit),    false, () => AllowLocalEdit(assetPath, instance));

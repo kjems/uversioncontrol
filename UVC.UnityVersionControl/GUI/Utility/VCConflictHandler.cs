@@ -21,7 +21,7 @@ namespace UVC
                 foreach (var conflictIt in conflicts)
                 {
                     if (ignoredConflicts.Contains(conflictIt)) continue;
-                    bool mergable = VCUtility.IsMergableAsset(conflictIt);
+                    bool mergable = MergeHandler.IsMergableAsset(conflictIt);
                     const string explanation = "\nTheirs :\nUse the file from the server and discard local changes to the file\n\nMine :\nUse my version of the file and discard the changes someone else made on the server";
                     const string mergeExplanation = "\nMerge External :\nIgnore the conflict in UVC and handle the conflict in an external program";
                     const string ignoreExplanation = "\nIgnore :\nIgnore the conflict for now although the file will not be readable by Unity";

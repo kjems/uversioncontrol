@@ -68,6 +68,33 @@ namespace UVC
                                  "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[base]' '[theirs]' '[yours]' '[merge]'\""
             }
             #endif
+            #if UNITY_EDITOR_WIN
+            new MergeTool
+            {
+                name = "P4Merge",
+                pathDiff  = "D:/Perforce/p4merge.exe",
+                pathMerge = "D:/Perforce/p4merge.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\""
+            },
+            new MergeTool
+            {
+                name = "Beyond Compare 4",
+                pathDiff  = "C:/Program Files/Beyond Compare 4/BComp.exe",
+                pathMerge = "C:/Program Files/Beyond Compare 4/BComp.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[theirs]\" \"[yours]\" \"[base]\" \"[merge]\""
+            },
+            new MergeTool
+            {
+                name = "Semantic Merge (P4 diff)",
+                pathDiff  = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
+                pathMerge = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
+                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
+            }
+            #endif
         };
 
         public static void AddMergeTool(MergeTool mergeTool)
@@ -108,7 +135,7 @@ namespace UVC
             return binary2TextPath;
         }
 
-        const string tempDirectory = "Temp/UVC/";
+        const string tempDirectory = "Library/UVC/";
         public static void DiffWithBase(string assetPath)
         {
             if (!string.IsNullOrEmpty(assetPath))

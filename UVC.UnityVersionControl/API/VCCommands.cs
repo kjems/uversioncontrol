@@ -62,6 +62,7 @@ namespace UVC
 
         private IVersionControlCommands vcc;        
         private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
+        private string customTrunkPath = null;
 
         public bool FlusingFiles { get; private set; }
         public event Action<string> ProgressInformation;
@@ -622,7 +623,11 @@ namespace UVC
         }
         public string GetTrunkPath()
         {
-            return vcc.GetTrunkPath();
+            return customTrunkPath ?? vcc.GetTrunkPath();
+        }
+        public void SetCustomTrunkPath(string path)
+        {
+            customTrunkPath = path;
         }
         public List<string> RemoteList(string path)
         {
@@ -675,9 +680,9 @@ namespace UVC
             return vcc.GetBasePath(assetPath);
         }
 
-        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
-            return vcc.GetConflict(assetPath, out basePath, out mine, out theirs);
+            return vcc.GetConflict(assetPath, out basePath, out yours, out theirs);
         }
         public bool CleanUp()
         {

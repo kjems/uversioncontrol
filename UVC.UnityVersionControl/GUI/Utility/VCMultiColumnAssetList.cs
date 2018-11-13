@@ -165,7 +165,11 @@ namespace UVC.UserInterface
                 doubleClickAction = status =>
                 {
                     if (MergeHandler.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Conflicted)
-                        MergeHandler.ResolveConflict(status.assetPath.Compose());
+                    {
+                        var assetPath = status.assetPath.Compose();
+                        VCCommands.Instance.GetConflict(assetPath, out var basePath, out var yours, out var theirs);
+                        MergeHandler.ResolveConflict(assetPath, basePath, theirs, yours);
+                    }
                     else if (MergeHandler.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
                         MergeHandler.DiffWithBase(status.assetPath.Compose());
                     else

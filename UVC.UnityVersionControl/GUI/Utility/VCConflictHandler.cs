@@ -34,14 +34,14 @@ namespace UVC
                     else
                     {
                         ignoredConflicts.Add(conflictIt);
-                        /*if (mergable)
+                        if (mergable)
                         {
-                            string mine, theirs, basePath;
-                            if(VCCommands.Instance.GetConflict(conflictIt.Compose(), out basePath, out mine, out theirs))
+                            string assetPath = conflictIt.Compose();
+                            if(VCCommands.Instance.GetConflict(assetPath, out var basePath, out var yours, out var theirs))
                             {
-                                EditorUtility.InvokeDiffTool("Mine : " + mine, mine, "Theirs : " + theirs, theirs, "Base: " + basePath, basePath);
+                                MergeHandler.ResolveConflict(assetPath, basePath, theirs, yours);
                             }
-                        }*/
+                        }
                     }
                 }
                 OnNextUpdate.Do(AssetDatabase.Refresh);

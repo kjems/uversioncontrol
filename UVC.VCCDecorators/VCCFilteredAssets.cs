@@ -83,7 +83,7 @@ namespace UVC
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            assets = ConsistentSlash(assets.ShortestFirst());
+            assets = ConsistentSlash(assets.AddFilesInFolders(vcc, true).LongestFirst());
             return assets.Any() ? base.Revert(assets) : true;
         }
 

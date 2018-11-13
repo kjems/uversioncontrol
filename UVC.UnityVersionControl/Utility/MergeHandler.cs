@@ -64,7 +64,7 @@ namespace UVC
                 pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
                 pathMerge = "/Applications/semanticmerge.app/Contents/MacOS/semanticmerge",
                 argumentsDiff  = "'[theirs]' '[yours]'",
-                argumentsMerge = "[yours] [theirs] [base] [merge] " +
+                argumentsMerge = "'[yours]' '[theirs]' '[base]' '[merge]' " +
                                  "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[base]' '[theirs]' '[yours]' '[merge]'\""
             }
             #endif
@@ -177,17 +177,17 @@ namespace UVC
             return Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
         }
         
-        public static void ResolveConflict(string assetPath)
+        public static void ResolveConflict(string assetPath, string basepath, string theirs, string yours)
         {
             if (!string.IsNullOrEmpty(assetPath))
             {
-                var workingDirectory = GetWorkingDirectory();
-                var path = Path.GetDirectoryName(assetPath);
-                var file = Path.GetFileName(assetPath);
-                string basepath = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-left.r*").First());
-                string theirs   = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-right.r*").First());
-                string yours    = Path.GetFullPath($"{assetPath}.working");
-                string merge    = Path.GetFullPath(assetPath);
+                var workingDirectory   = GetWorkingDirectory();
+                var path               = Path.GetDirectoryName(assetPath);
+                var file               = Path.GetFileName(assetPath);
+                basepath               = Path.GetFullPath(basepath);
+                theirs                 = Path.GetFullPath(theirs);
+                yours                  = Path.GetFullPath(yours);
+                string merge           = Path.GetFullPath(assetPath);
                 DateTime lastWriteTime = File.GetLastWriteTime(assetPath);
 
                 var (toolpath, args) = GetMergeCommandLine(VCSettings.Mergetool, basepath, theirs, yours, merge);

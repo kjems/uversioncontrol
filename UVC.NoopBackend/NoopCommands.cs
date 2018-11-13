@@ -147,10 +147,10 @@ namespace UVC.Backend.Noop
             return "";
         }
 
-        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public virtual bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
             basePath = null;
-            mine = null;
+            yours = null;
             theirs = null;
             return false;
         }

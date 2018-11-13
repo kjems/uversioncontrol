@@ -99,7 +99,7 @@ namespace UVC
                 .Select(ap => ap + metaStr)
                 .Concat(assets)
                 .Distinct()
-                .OrderBy(s => s.Length)
+                .OrderByDescending(s => s.Length)
                 .ToArray();
         }
 

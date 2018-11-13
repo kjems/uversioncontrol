@@ -187,6 +187,11 @@ namespace UVC.AssetPathFilters
         {
             return assets.OrderBy(s => s.Length);
         }
+        
+        public static IEnumerable<string> LongestFirst(this IEnumerable<string> assets)
+        {
+            return assets.OrderByDescending(s => s.Length);
+        }
 
         public static IEnumerable<string> FilesExist(this IEnumerable<string> assets)
         {

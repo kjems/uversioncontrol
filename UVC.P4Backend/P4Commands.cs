@@ -932,11 +932,11 @@ namespace UVC.Backend.P4
             return "";
         }
 
-        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
             DebugLog.LogWarning("P4Commands.GetConflict not implemented");
             basePath = null;
-            mine = null;
+            yours = null;
             theirs = null;
             return false;
         }

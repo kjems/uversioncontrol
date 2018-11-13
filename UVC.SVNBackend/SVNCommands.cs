@@ -732,25 +732,14 @@ namespace UVC.Backend.SVN
             return "";
         }
 
-        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public bool GetConflict(string assetPath, out string basepath, out string yours, out string theirs)
         {
-            string[] conflictingFiles = Directory.GetFiles(Path.GetDirectoryName(assetPath).Replace("\\","/"), Path.GetFileName(assetPath) + ".r*").Where(a => Path.GetExtension(a).StartsWith(".r")).ToArray();
-            string minePath = assetPath + ".mine";
-
-            DebugLog.Log(string.Format("mine:{0}, theirs:{1}, base:{2}, length:{3}", minePath, conflictingFiles[1], conflictingFiles[0], conflictingFiles.Length));
-
-            if (conflictingFiles.Length == 2 && File.Exists(minePath) && File.Exists(conflictingFiles[0]) && File.Exists(conflictingFiles[1]))
-            {
-                basePath = conflictingFiles[0];
-                mine = minePath;
-                theirs = conflictingFiles[1];
-                return true;
-            }
-
-            basePath = null;
-            mine = null;
-            theirs = null;
-            return false;
+            var path = Path.GetDirectoryName(assetPath);
+            var file = Path.GetFileName(assetPath);
+            basepath = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-left.r*").First());
+            theirs   = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-right.r*").First());
+            yours    = Path.GetFullPath($"{assetPath}.working");
+            return true;
         }
 
         public bool HasValidLocalCopy()

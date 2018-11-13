@@ -79,7 +79,7 @@ namespace UVC
         IEnumerable<string> GetIgnore(string path);
         string GetRevision();
         string GetBasePath(string assetPath);
-        bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs);
+        bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs);
         bool CleanUp();
         void ClearDatabase();
         void RemoveFromDatabase(IEnumerable<string> assets);

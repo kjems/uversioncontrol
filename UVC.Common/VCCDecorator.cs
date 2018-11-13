@@ -220,9 +220,9 @@ namespace UVC
             return vcc.GetBasePath(assetPath);
         }
 
-        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public virtual bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
-            return vcc.GetConflict(assetPath, out basePath, out mine, out theirs);
+            return vcc.GetConflict(assetPath, out basePath, out yours, out theirs);
         }
 
         public virtual bool CleanUp()

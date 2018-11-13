@@ -16,7 +16,8 @@ namespace UVC
         public struct MergeTool
         {
             public string name;
-            public string path;
+            public string pathDiff;
+            public string pathMerge;
             public string argumentsDiff;
             public string argumentsMerge;
 
@@ -25,7 +26,7 @@ namespace UVC
                 StringBuilder diffargs = new StringBuilder(argumentsDiff);
                 diffargs.Replace("[theirs]", theirs);
                 diffargs.Replace("[yours]", yours);
-                return (path, diffargs.ToString());
+                return (pathDiff, diffargs.ToString());
             }
             public (string, string) GetMergeCommandLine(string basepath, string theirs, string yours, string merge)
             {
@@ -34,7 +35,7 @@ namespace UVC
                 mergeargs.Replace("[theirs]", theirs);
                 mergeargs.Replace("[yours]", yours);
                 mergeargs.Replace("[merge]", merge);
-                return (path, mergeargs.ToString());
+                return (pathMerge, mergeargs.ToString());
             }
         }
         
@@ -44,24 +45,26 @@ namespace UVC
             new MergeTool
             {
                 name = "P4Merge",
-                path = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                pathMerge = "/Applications/p4merge.app/Contents/MacOS/p4merge",
                 argumentsDiff  = "'[theirs]' '[yours]'",
                 argumentsMerge = "'[base]' '[theirs]' '[yours]' '[merge]'"
             },
             new MergeTool
             {
                 name = "Beyond Compare 4",
-                path = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
+                pathDiff  = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
+                pathMerge = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
                 argumentsDiff  = "'[theirs]' '[yours]'",
                 argumentsMerge = "'[theirs]' '[yours]' '[base]' '[merge]'"
             },
             new MergeTool
             {
-                name = "Semantic Merge",
-                path = "/Applications/semanticmerge.app/Contents/MacOS/semanticmerge",
-                argumentsDiff  = "-d=[theirs] -s=[yours] " +
-                                 "--nolangwarn -edt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[theirs]' '[yours]'\"",
-                argumentsMerge = "-b=[base] -d=[theirs] -s=[yours] -r=[merge] " +
+                name = "Semantic Merge (P4 diff)",
+                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                pathMerge = "/Applications/semanticmerge.app/Contents/MacOS/semanticmerge",
+                argumentsDiff  = "'[theirs]' '[yours]'",
+                argumentsMerge = "[yours] [theirs] [base] [merge] " +
                                  "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[base]' '[theirs]' '[yours]' '[merge]'\""
             }
             #endif

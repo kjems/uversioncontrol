@@ -13,118 +13,21 @@ namespace UVC
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static class MergeHandler
     {
-        public struct MergeTool
+        public static (string, string) GetDiffCommandLine(string theirs, string yours)
         {
-            public string name;
-            public string pathDiff;
-            public string pathMerge;
-            public string argumentsDiff;
-            public string argumentsMerge;
-
-            public (string, string) GetDiffCommandLine(string theirs, string yours)
-            {
-                StringBuilder diffargs = new StringBuilder(argumentsDiff);
-                diffargs.Replace("[theirs]", theirs);
-                diffargs.Replace("[yours]", yours);
-                return (pathDiff, diffargs.ToString());
-            }
-            public (string, string) GetMergeCommandLine(string basepath, string theirs, string yours, string merge)
-            {
-                StringBuilder mergeargs = new StringBuilder(argumentsMerge);
-                mergeargs.Replace("[base]", basepath);
-                mergeargs.Replace("[theirs]", theirs);
-                mergeargs.Replace("[yours]", yours);
-                mergeargs.Replace("[merge]", merge);
-                return (pathMerge, mergeargs.ToString());
-            }
+            StringBuilder args = new StringBuilder(VCSettings.DifftoolArgs);
+            args.Replace("[theirs]", theirs);
+            args.Replace("[yours]", yours);
+            return (VCSettings.DifftoolPath, args.ToString());
         }
-        
-        public static List<MergeTool> mergeTools = new List<MergeTool>
+        public static (string, string) GetMergeCommandLine(string basepath, string theirs, string yours, string merge)
         {
-            #if UNITY_EDITOR_OSX
-            new MergeTool
-            {
-                name = "P4Merge",
-                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
-                pathMerge = "/Applications/p4merge.app/Contents/MacOS/p4merge",
-                argumentsDiff  = "'[theirs]' '[yours]'",
-                argumentsMerge = "'[base]' '[theirs]' '[yours]' '[merge]'"
-            },
-            new MergeTool
-            {
-                name = "Beyond Compare 4",
-                pathDiff  = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
-                pathMerge = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
-                argumentsDiff  = "'[theirs]' '[yours]'",
-                argumentsMerge = "'[theirs]' '[yours]' '[base]' '[merge]'"
-            },
-            new MergeTool
-            {
-                name = "Semantic Merge (P4 diff)",
-                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
-                pathMerge = "/Applications/semanticmerge.app/Contents/MacOS/semanticmerge",
-                argumentsDiff  = "'[theirs]' '[yours]'",
-                argumentsMerge = "'[yours]' '[theirs]' '[base]' '[merge]' " +
-                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[base]' '[theirs]' '[yours]' '[merge]'\""
-            }
-            #endif
-            #if UNITY_EDITOR_WIN
-            new MergeTool
-            {
-                name = "P4Merge",
-                pathDiff  = "D:/Perforce/p4merge.exe",
-                pathMerge = "D:/Perforce/p4merge.exe",
-                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
-                argumentsMerge = "\"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\""
-            },
-            new MergeTool
-            {
-                name = "Beyond Compare 4",
-                pathDiff  = "C:/Program Files/Beyond Compare 4/BComp.exe",
-                pathMerge = "C:/Program Files/Beyond Compare 4/BComp.exe",
-                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
-                argumentsMerge = "\"[theirs]\" \"[yours]\" \"[base]\" \"[merge]\""
-            },
-            new MergeTool
-            {
-                name = "Semantic Merge (P4 diff)",
-                pathDiff  = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
-                pathMerge = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
-                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
-                argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
-                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
-            }
-            #endif
-        };
-
-        public static void AddMergeTool(MergeTool mergeTool)
-        {
-            mergeTools.Add(mergeTool);
-        }
-        
-        public static void RemoveMergeTool(Predicate<MergeTool> mergeToolPredicate)
-        {
-            mergeTools.RemoveAll(mergeToolPredicate);
-        }
-        
-        public static int MergeToolIndex(string name)
-        {
-            for (int i = 0; i < mergeTools.Count; i++)
-            {
-                if (mergeTools[i].name == name)
-                    return i;
-            }
-            return -1;
-        }
-        
-        public static (string, string) GetMergeCommandLine(string name, string basepath, string theirs, string yours, string merge)
-        {
-            return mergeTools.First(mt => mt.name == name).GetMergeCommandLine(basepath, theirs, yours, merge);
-        }
-        
-        public static (string, string) GetDiffCommandLine(string name, string theirs, string yours)
-        {
-            return mergeTools.First(mt => mt.name == name).GetDiffCommandLine(theirs, yours);
+            StringBuilder args = new StringBuilder(VCSettings.MergetoolArgs);
+            args.Replace("[base]", basepath);
+            args.Replace("[theirs]", theirs);
+            args.Replace("[yours]", yours);
+            args.Replace("[merge]", merge);
+            return (VCSettings.MergetoolPath, args.ToString());
         }
         
         static string binary2TextPath = null;
@@ -152,7 +55,7 @@ namespace UVC
                         string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".wc";
                         var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
                         var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
-                        var (toolpath, args) = GetDiffCommandLine(VCSettings.Mergetool, Path.GetFullPath(convertedBaseFile), Path.GetFullPath(convertedWorkingCopyFile));
+                        var (toolpath, args) = GetDiffCommandLine(Path.GetFullPath(convertedBaseFile), Path.GetFullPath(convertedWorkingCopyFile));
                         var diffCommand = new CommandLineExecution.CommandLine(toolpath, args, workingDirectory);
                         Task.Run(() => diffCommand.Execute());
                     }
@@ -164,7 +67,7 @@ namespace UVC
                         if(File.Exists(copiedBaseAssetPath))
                             File.Delete(copiedBaseAssetPath);
                         File.Copy(baseAssetPath, copiedBaseAssetPath);
-                        var (toolpath, args) = GetDiffCommandLine(VCSettings.Mergetool, copiedBaseAssetPath, Path.GetFullPath(assetPath));
+                        var (toolpath, args) = GetDiffCommandLine(copiedBaseAssetPath, Path.GetFullPath(assetPath));
                         var baseConvertCommand = new CommandLineExecution.CommandLine(toolpath, args, workingDirectory);
                         Task.Run(() => baseConvertCommand.Execute());
                     }
@@ -190,7 +93,7 @@ namespace UVC
                 string merge           = Path.GetFullPath(assetPath);
                 DateTime lastWriteTime = File.GetLastWriteTime(assetPath);
 
-                var (toolpath, args) = GetMergeCommandLine(VCSettings.Mergetool, basepath, theirs, yours, merge);
+                var (toolpath, args) = GetMergeCommandLine(basepath, theirs, yours, merge);
                 var mergeCommand = new CommandLineExecution.CommandLine(toolpath, args, workingDirectory);
                 Task.Run(() =>
                 {

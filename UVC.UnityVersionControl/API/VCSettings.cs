@@ -4,6 +4,8 @@
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace UVC
 {
@@ -31,7 +33,6 @@ namespace UVC
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
             lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
             lockPrefabsFilter = EditorPrefs.GetString("VCSSettings/lockPrefabsFilter");
-            ClientPath = EditorPrefs.GetString("VCSSettings/clientPath"); // using ClientPath property instead of field by intention
             autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
             includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
             requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
@@ -39,7 +40,11 @@ namespace UVC
             saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/saveStrategy", (int)ESaveAssetsStrategy.Unity);
             versionControlBackend = (EVersionControlBackend)EditorPrefs.GetInt("VCSSettings/versionControlBackend", (int)EVersionControlBackend.None);
             handleFileMove = (EHandleFileMove)EditorPrefs.GetInt("VCSSettings/handleFileMove", (int)EHandleFileMove.TeamLicense);
-            mergetool = EditorPrefs.GetString("VCSSettings/mergetool", "P4Merge");
+            mergeToolPath = EditorPrefs.GetString("VCSSettings/mergetoolpath", mergeTools[0].pathMerge);
+            mergeToolArgs = EditorPrefs.GetString("VCSSettings/mergetoolargs", mergeTools[0].argumentsMerge);
+            diffToolPath  = EditorPrefs.GetString("VCSSettings/difftoolpath", mergeTools[0].pathDiff);
+            diffToolArgs  = EditorPrefs.GetString("VCSSettings/difftoolargs", mergeTools[0].argumentsDiff);
+            mergeToolIndex  = EditorPrefs.GetInt("VCSSettings/mergeToolIndex", 0);
 
             OnSettingsChanged();
 
@@ -62,7 +67,6 @@ namespace UVC
                 EditorPrefs.SetBool("VCSSettings/logging", logging);
                 EditorPrefs.SetString("VCSSettings/lockScenesFilter", lockScenesFilter);
                 EditorPrefs.SetString("VCSSettings/lockPrefabsFilter", lockPrefabsFilter);
-                EditorPrefs.SetString("VCSSettings/clientPath", clientPath);
                 EditorPrefs.SetBool("VCSSettings/autoCloseAfterSuccess", autoCloseAfterSuccess);
                 EditorPrefs.SetBool("VCSSettings/includeDepedenciesAsDefault", includeDepedenciesAsDefault);
                 EditorPrefs.SetBool("VCSSettings/requireLockBeforeCommit", requireLockBeforeCommit);
@@ -70,7 +74,11 @@ namespace UVC
                 EditorPrefs.SetInt("VCSSettings/saveStrategy", (int)saveStrategy);
                 EditorPrefs.SetInt("VCSSettings/versionControlBackend", (int)versionControlBackend);
                 EditorPrefs.SetInt("VCSSettings/handleFileMove", (int)handleFileMove);
-                EditorPrefs.SetString("VCSSettings/mergetool", mergetool);
+                EditorPrefs.SetString("VCSSettings/mergetoolpath", mergeToolPath);
+                EditorPrefs.SetString("VCSSettings/mergetoolargs", mergeToolArgs);
+                EditorPrefs.SetString("VCSSettings/difftoolpath", diffToolPath );
+                EditorPrefs.SetString("VCSSettings/difftoolargs", diffToolArgs );
+                EditorPrefs.SetInt("VCSSettings/mergeToolIndex", mergeToolIndex);
             };
         }
 
@@ -214,24 +222,97 @@ namespace UVC
         private static EHandleFileMove handleFileMove;
         public static EHandleFileMove HandleFileMove { get { return handleFileMove; } set { if (handleFileMove != value) { handleFileMove = value; OnSettingsChanged(); } } }
 
-        private static string mergetool;
-        public static string Mergetool { get { return mergetool; } set { if(mergetool != value) { mergetool = value; OnSettingsChanged(); } } }
-
-        private static string clientPath;
-        public static string ClientPath
+        private static string mergeToolPath;
+        public static string MergetoolPath { get { return mergeToolPath; } set { if(mergeToolPath != value) { mergeToolPath = value; OnSettingsChanged(); } } }
+        
+        private static string mergeToolArgs;
+        public static string MergetoolArgs { get { return mergeToolArgs; } set { if(mergeToolArgs != value) { mergeToolArgs = value; OnSettingsChanged(); } } }
+        
+        private static string diffToolPath;
+        public static string DifftoolPath { get { return diffToolPath; } set { if(diffToolPath != value) { diffToolPath = value; OnSettingsChanged(); } } }
+        
+        private static string diffToolArgs;
+        public static string DifftoolArgs { get { return diffToolArgs; } set { if(diffToolArgs != value) { diffToolArgs = value; OnSettingsChanged(); } } }
+        
+        private static int mergeToolIndex;
+        public static int MergeToolIndex { get { return mergeToolIndex; } set { if(mergeToolIndex != value) { mergeToolIndex = value; OnSettingsChanged(); } } }
+        
+        
+        public struct MergeTool
         {
-            get { return clientPath; }
-            set
+            public string name;
+            public string pathDiff;
+            public string pathMerge;
+            public string argumentsDiff;
+            public string argumentsMerge;
+        }       
+        
+        public static List<MergeTool> mergeTools = new List<MergeTool>
+        {
+            #if UNITY_EDITOR_OSX
+            new MergeTool
             {
-                if (clientPath != value)
-                {
-                    clientPath = value;
-                    if (!string.IsNullOrEmpty(clientPath)) EnvironmentManager.AddPathEnvironment(clientPath, ":");
-                    else EnvironmentManager.ResetPathEnvironment();
-                }
+                name = "Apple File Merge",
+                pathDiff  = "/Applications/Xcode.app/Contents/Applications/FileMerge.app/Contents/MacOS/FileMerge",
+                pathMerge = "/Applications/Xcode.app/Contents/Applications/FileMerge.app/Contents/MacOS/FileMerge",
+                argumentsDiff  = "'[theirs]' '[yours]'",
+                argumentsMerge = "'[base]' '[theirs]' '[yours]' '[merge]'"
+            },
+            new MergeTool
+            {
+                name = "P4Merge",
+                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                pathMerge = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                argumentsDiff  = "'[theirs]' '[yours]'",
+                argumentsMerge = "'[base]' '[theirs]' '[yours]' '[merge]'"
+            },
+            new MergeTool
+            {
+                name = "Beyond Compare 4",
+                pathDiff  = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
+                pathMerge = "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
+                argumentsDiff  = "'[theirs]' '[yours]'",
+                argumentsMerge = "'[theirs]' '[yours]' '[base]' '[merge]'"
+            },
+            new MergeTool
+            {
+                name = "Semantic Merge (P4 diff)",
+                pathDiff  = "/Applications/p4merge.app/Contents/MacOS/p4merge",
+                pathMerge = "/Applications/semanticmerge.app/Contents/MacOS/semanticmerge",
+                argumentsDiff  = "'[theirs]' '[yours]'",
+                argumentsMerge = "'[yours]' '[theirs]' '[base]' '[merge]' " +
+                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge '[base]' '[theirs]' '[yours]' '[merge]'\""
             }
-        }
-
+            #endif
+            #if UNITY_EDITOR_WIN
+            new MergeTool
+            {
+                name = "P4Merge",
+                pathDiff  = "D:/Perforce/p4merge.exe",
+                pathMerge = "D:/Perforce/p4merge.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\""
+            },
+            new MergeTool
+            {
+                name = "Beyond Compare 4",
+                pathDiff  = "C:/Program Files/Beyond Compare 4/BComp.exe",
+                pathMerge = "C:/Program Files/Beyond Compare 4/BComp.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[theirs]\" \"[yours]\" \"[base]\" \"[merge]\""
+            },
+            new MergeTool
+            {
+                name = "Semantic Merge (P4 diff)",
+                pathDiff  = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
+                pathMerge = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
+                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
+            }
+            #endif
+        };       
+        
         public static bool Logging
         {
             get { return logging; }

@@ -2,6 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -36,7 +37,6 @@ namespace UVC.UserInterface
     [Serializable]
     internal class VCSettingsGUI
     {
-        private string clientPath = null;
         private bool filterSettingsOpen = false;
         private Vector2 scrollViewVector;
 
@@ -162,15 +162,6 @@ namespace UVC.UserInterface
                     GUILayout.Label(new GUIContent(string.Format("Who Controls Asset Saves", Terminology.getlock), string.Format("Select {0} to only let Unity save files that are either {1} or {2} \nDefault: {3}", VCSettings.ESaveAssetsStrategy.VersionControl.ToString(), Terminology.allowLocalEdit, Terminology.getlock, VCSettings.ESaveAssetsStrategy.Unity.ToString())));
                     VCSettings.SaveStrategy = (VCSettings.ESaveAssetsStrategy)EditorGUILayout.EnumPopup(VCSettings.SaveStrategy, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
-                if (clientPath == null) clientPath = VCSettings.ClientPath;
-                var textColor = ValidCommandLineClient(clientPath) ? new Color(0.0f, 0.6f, 0.0f) : new Color(0.6f, 0.0f, 0.0f);
-                var textStyle = new GUIStyle(EditorStyles.textField) { normal = { textColor = textColor } };
-                using (GUILayoutHelper.Horizontal())
-                {
-                    GUILayout.Label(new GUIContent("Environment Path", "Specify the path to a command line client. eg MacPorts SVN : /opt/local/bin/\nDefault: <Empty>"));
-                    clientPath = EditorGUILayout.TextField(clientPath, textStyle, GUILayout.ExpandWidth(true), GUILayout.Width(180)).Trim(new[] { ' ' }).Replace('\\', '/');
-                }
-                if (ValidCommandLineClient(clientPath)) VCSettings.ClientPath = clientPath;
                 using (GUILayoutHelper.Horizontal())
                 {
                     GUILayout.Label(new GUIContent("Version Control System", "The selected Version Control will be used if a valid local copy can be found"));
@@ -179,16 +170,69 @@ namespace UVC.UserInterface
                 using (GUILayoutHelper.Horizontal())
                 {
                     GUILayout.Label(new GUIContent("External Merge Tool", "The selected Merge Tool must be installed"));
-                    int index = EditorGUILayout.Popup(MergeHandler.MergeToolIndex(VCSettings.Mergetool), MergeHandler.mergeTools.Select(mt => mt.name).ToArray(), GUILayout.ExpandWidth(true), GUILayout.Width(180));
-                    VCSettings.Mergetool = MergeHandler.mergeTools[index].name;
+                    EditorGUI.BeginChangeCheck();
+                    VCSettings.MergeToolIndex = EditorGUILayout.Popup(VCSettings.MergeToolIndex, MergeToolNames, GUILayout.ExpandWidth(true), GUILayout.Width(180));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        var mergeTool = VCSettings.mergeTools[VCSettings.MergeToolIndex];
+                        VCSettings.MergetoolPath = mergeTool.pathMerge;
+                        VCSettings.MergetoolArgs = mergeTool.argumentsMerge;
+                        VCSettings.DifftoolPath = mergeTool.pathDiff;
+                        VCSettings.DifftoolArgs = mergeTool.argumentsDiff;
+                    }
+                }
+                using (GUILayoutHelper.VerticalIdented(14))
+                {
+                    bool validmergeTool = ValidCommandLine(VCSettings.MergetoolPath);
+                    using (GUILayoutHelper.Horizontal())
+                    {
+                        GUILayout.Label(new GUIContent("Merge Tool Path", validmergeTool ? "Valid path to command line tool" : "Invalid path to command line tool"));
+                    }
+                    using (GUILayoutHelper.VerticalIdented(14))
+                    {
+                        using (GUILayoutHelper.Color(validmergeTool ? validColor : invalidColor))
+                        {
+                            VCSettings.MergetoolPath = EditorGUILayout.TextField(VCSettings.MergetoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/');
+                        }
+                    }
+                    GUILayout.Label(new GUIContent("Merge Tool Arguments", "Include : [base] [theirs] [yours] [merge]"));
+                    using (GUILayoutHelper.VerticalIdented(14))
+                    {
+                        VCSettings.MergetoolArgs = EditorGUILayout.TextField(VCSettings.MergetoolArgs, GUILayout.ExpandWidth(true));
+                    }
+
+                    bool validDiffTool = ValidCommandLine(VCSettings.DifftoolPath);
+                    using (GUILayoutHelper.Horizontal())
+                    {
+                        GUILayout.Label(new GUIContent("Diff Tool Path", validDiffTool ? "Valid path to command line tool" : "Invalid path to command line tool"));
+                    }
+
+                    using (GUILayoutHelper.VerticalIdented(14))
+                    {
+                        using (GUILayoutHelper.Color(validDiffTool ? validColor : invalidColor))
+                        {
+                            VCSettings.DifftoolPath = EditorGUILayout.TextField(VCSettings.DifftoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/');
+                        }
+                    }
+                    GUILayout.Label(new GUIContent("Diff Tool Arguments", "Include : [theirs] [yours]"));
+                    using (GUILayoutHelper.VerticalIdented(14))
+                    {
+                        VCSettings.DifftoolArgs = EditorGUILayout.TextField(VCSettings.DifftoolArgs, GUILayout.ExpandWidth(true));
+                    }
                 }
             }
             EditorGUILayout.EndScrollView();
         }
+        
+        static Color validColor = new Color(0.0f, 0.6f, 0.0f);
+        static Color invalidColor = new Color(0.6f, 0.0f, 0.0f);
+        
+        static string[] mergeToolNames;
+        static string[] MergeToolNames => mergeToolNames ?? (mergeToolNames = VCSettings.mergeTools.Select(mt => mt.name).ToArray());
 
-        static bool ValidCommandLineClient(string path)
+        static bool ValidCommandLine(string path)
         {
-            return string.IsNullOrEmpty(path) || Directory.Exists(path);
+            return !string.IsNullOrEmpty(path) && File.Exists(path);
         }
     }
 }

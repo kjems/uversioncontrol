@@ -255,8 +255,8 @@ namespace UVC
                 name = "Apple File Merge",
                 pathDiff  = "/Applications/Xcode.app/Contents/Applications/FileMerge.app/Contents/MacOS/FileMerge",
                 pathMerge = "/Applications/Xcode.app/Contents/Applications/FileMerge.app/Contents/MacOS/FileMerge",
-                argumentsDiff  = "'[theirs]' '[yours]'",
-                argumentsMerge = "'[base]' '[theirs]' '[yours]' '[merge]'"
+                argumentsDiff  = "-left '[theirs]' -right '[yours]'",
+                argumentsMerge = "-left '[theirs]' -right '[yours]' -ancestor '[base]' -merge '[merge]'"
             },
             new MergeTool
             {

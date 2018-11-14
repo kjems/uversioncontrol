@@ -148,8 +148,8 @@ namespace UVC
                     {
                         if (!Directory.Exists(tempDirectory))
                             Directory.CreateDirectory(tempDirectory);
-                        string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-base";
-                        string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-wc";
+                        string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".base";
+                        string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".wc";
                         var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
                         var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
                         var (toolpath, args) = GetDiffCommandLine(VCSettings.Mergetool, Path.GetFullPath(convertedBaseFile), Path.GetFullPath(convertedWorkingCopyFile));

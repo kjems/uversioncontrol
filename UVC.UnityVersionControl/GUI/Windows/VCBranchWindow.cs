@@ -87,7 +87,11 @@ namespace UVC.UserInterface
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
-                if (!GetChangedAssets().Any())
+                if (!GetChangedAssets().Any() || 
+                    EditorUtility.DisplayDialog("Local Copy Modified", 
+                                                "Before doing a merge your local copy needs to be without any modification. Please revert or commit all changes before doing a merge", 
+                                                "Merge Anyway", 
+                                                "Cancel"))
                 {
                     var selection = branchColumnList.GetSelection().First();
                     if (VCCommands.Instance.MergeBranch(selection))
@@ -97,10 +101,6 @@ namespace UVC.UserInterface
                     }
                     Refresh();
                 }
-                else
-                {
-                    EditorUtility.DisplayDialog("Local Copy Modified", "Before doing a merge your local copy needs to be without any modification. Please revert or commit all changes before doing a merge", "OK");
-                }                
             }
             GUI.enabled = true;
             if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))

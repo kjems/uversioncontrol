@@ -276,7 +276,6 @@ namespace UVC.UserInterface
                 GUILayout.Space(7);
                 GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
                 
-                #if ENABLE_BRANCH
                 if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
                 {
                     var branchWindow = CreateInstance<BranchWindow>();
@@ -284,7 +283,6 @@ namespace UVC.UserInterface
                     branchWindow.titleContent = new GUIContent(Terminology.branch);
                     branchWindow.ShowUtility();
                 }
-                #endif
                 GUILayout.FlexibleSpace();
 
                 bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });

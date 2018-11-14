@@ -215,7 +215,7 @@ namespace UVC.UserInterface
             options.rowStyle.padding = new RectOffset(0, 0, 0, 0);
             
             multiColumnState.AddColumn(columnPath);
-            options.widthTable.Add(columnPath.GetHeader().text, 300);
+            options.widthTable.Add(columnPath.GetHeader().text, 350);
             
             multiColumnState.AddColumn(columnAuthor);
             options.widthTable.Add(columnAuthor.GetHeader().text, 80);
@@ -224,7 +224,7 @@ namespace UVC.UserInterface
             options.widthTable.Add(columnRevision.GetHeader().text, 80);
             
             multiColumnState.AddColumn(columnDate);
-            options.widthTable.Add(columnDate.GetHeader().text, 300);
+            options.widthTable.Add(columnDate.GetHeader().text, 150);
             
         }
 

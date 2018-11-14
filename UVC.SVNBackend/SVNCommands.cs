@@ -612,7 +612,7 @@ namespace UVC.Backend.SVN
                 var commandLineOutput = ExecuteOperation(commandLineOperation);
                 if (!commandLineOutput.Failed)
                 {
-                    return SVNBranchXMLParser.SVNParseBranchXML(commandLineOutput.OutputStr);
+                    return SVNBranchXMLParser.SVNParseBranchXML(path, commandLineOutput.OutputStr);
                 }
             }
             return null;

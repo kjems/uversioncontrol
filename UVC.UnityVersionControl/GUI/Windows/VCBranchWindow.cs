@@ -82,7 +82,7 @@ namespace UVC.UserInterface
             if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var selection = branchColumnList.GetSelection().First();
-                VCCommands.Instance.SwitchBranch(BranchPath + selection.name);
+                VCCommands.Instance.SwitchBranch(selection.name);
                 Refresh();
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
@@ -94,7 +94,7 @@ namespace UVC.UserInterface
                                                 "Cancel"))
                 {
                     var selection = branchColumnList.GetSelection().First();
-                    if (VCCommands.Instance.MergeBranch(BranchPath + selection.name))
+                    if (VCCommands.Instance.MergeBranch(selection.name))
                     {
                         VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
                         VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {selection} to {currentBranch}");
@@ -133,6 +133,14 @@ namespace UVC.UserInterface
 
             VCCommands.Instance.RemoteListTask(BranchPath).ContinueWithOnNextUpdate(relativeBranches =>
             {
+                var trunk = new BranchStatus()
+                {
+                    name = trunkpath,
+                    author = "[unknown]",
+                    date = new DateTime(),
+                    revision = 0
+                };
+                relativeBranches.Insert(0, trunk);
                 branchColumnList.SetBranches(relativeBranches);
                 Repaint();
             });

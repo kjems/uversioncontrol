@@ -13,14 +13,14 @@ namespace UVC.Backend.SVN
 {
     public static class SVNBranchXMLParser
     {
-        public static List<BranchStatus> SVNParseBranchXML(string svnBranchXML)
+        public static List<BranchStatus> SVNParseBranchXML(string path, string svnBranchXML)
         {
             var xmlBranchDocument = new XmlDocument();
             xmlBranchDocument.LoadXml(svnBranchXML);
-            return ParseBranchResult(xmlBranchDocument);
+            return ParseBranchResult(path, xmlBranchDocument);
         }
         
-        private static List<BranchStatus> ParseBranchResult(XmlDocument xmlDoc)
+        private static List<BranchStatus> ParseBranchResult(string path, XmlDocument xmlDoc)
         {
             if (!xmlDoc.HasChildNodes) return null;
             
@@ -33,7 +33,7 @@ namespace UVC.Backend.SVN
                     var commitEntry = entryIt["commit"];
                     BranchStatus branchStatus = new BranchStatus
                     {
-                        name     = entryIt["name"].InnerText,
+                        name     = path + entryIt["name"].InnerText,
                         author   = commitEntry["author"].InnerText,
                         date     = DateTime.Parse(commitEntry["date"].InnerText, null, DateTimeStyles.RoundtripKind),
                         revision = Int32.Parse(commitEntry.Attributes["revision"].InnerText)

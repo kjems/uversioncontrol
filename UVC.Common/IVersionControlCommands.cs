@@ -72,7 +72,7 @@ namespace UVC
         string GetCurrentBranch();
         string GetBranchDefaultPath();
         string GetTrunkPath();
-        List<string> RemoteList(string path);
+        List<BranchStatus> RemoteList(string path);
         bool AllowLocalEdit(IEnumerable<string> assets);
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);

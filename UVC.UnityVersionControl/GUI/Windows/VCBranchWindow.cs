@@ -8,8 +8,8 @@ using UVC.Logging;
 
 namespace UVC.UserInterface
 {
-    using MultiColumnState = MultiColumnState<string, GUIContent>;
-    using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<string>;
+    using MultiColumnState = MultiColumnState<BranchStatus, GUIContent>;
+    using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<BranchStatus>;
     
     internal class BranchWindow : EditorWindow
     {
@@ -78,11 +78,11 @@ namespace UVC.UserInterface
                 Refresh();
             }
             GUILayout.Space(10);
-            GUI.enabled = branchColumnList.GetSelection().Count() == 1;
+            GUI.enabled = branchColumnList.GetSelection()?.Count() == 1;
             if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var selection = branchColumnList.GetSelection().First();
-                VCCommands.Instance.SwitchBranch(selection);
+                VCCommands.Instance.SwitchBranch(BranchPath + selection.name);
                 Refresh();
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
@@ -94,7 +94,7 @@ namespace UVC.UserInterface
                                                 "Cancel"))
                 {
                     var selection = branchColumnList.GetSelection().First();
-                    if (VCCommands.Instance.MergeBranch(selection))
+                    if (VCCommands.Instance.MergeBranch(BranchPath + selection.name))
                     {
                         VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
                         VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {selection} to {currentBranch}");
@@ -133,9 +133,7 @@ namespace UVC.UserInterface
 
             VCCommands.Instance.RemoteListTask(BranchPath).ContinueWithOnNextUpdate(relativeBranches =>
             {
-                var branches = relativeBranches.Select(p => branchpath + p).ToList();
-                branches.Add(trunkpath);
-                branchColumnList.SetBranches(branches);
+                branchColumnList.SetBranches(relativeBranches);
                 Repaint();
             });
 
@@ -157,6 +155,9 @@ namespace UVC.UserInterface
         private MultiColumnState         multiColumnState;
         private MultiColumnViewOption    options;
         private MultiColumnState.Column  columnPath;
+        private MultiColumnState.Column  columnAuthor;
+        private MultiColumnState.Column  columnRevision;
+        private MultiColumnState.Column  columnDate;
 
         public BranchMulticolumnList()
         {
@@ -165,7 +166,10 @@ namespace UVC.UserInterface
 
         private void Initialize()
         {
-            columnPath = new MultiColumnState.Column(new GUIContent("Path"), data => new GUIContent(data));
+            columnPath = new MultiColumnState.Column(new GUIContent("Path"), data => new GUIContent(data.name));
+            columnAuthor = new MultiColumnState.Column(new GUIContent("Author"), data => new GUIContent(data.author));
+            columnRevision = new MultiColumnState.Column(new GUIContent("Revision"), data => new GUIContent(data.revision.ToString()));
+            columnDate = new MultiColumnState.Column(new GUIContent("Date"), data => new GUIContent(data.date.ToString("yyyy-MM-dd HH:mm:ss")));
             multiColumnState = new MultiColumnState();
             
             Func<MultiColumnState.Row, MultiColumnState.Column, bool> cellClickAction = (row, column) =>
@@ -200,7 +204,7 @@ namespace UVC.UserInterface
                 widths = new float[] { 200 },
                 doubleClickAction = path =>
                 {
-                    DebugLog.Log(path);
+                    DebugLog.Log(path.name);
                 }
             };
 
@@ -211,16 +215,25 @@ namespace UVC.UserInterface
             options.rowStyle.padding = new RectOffset(0, 0, 0, 0);
             
             multiColumnState.AddColumn(columnPath);
-            options.widthTable.Add(columnPath.GetHeader().text, 750);
+            options.widthTable.Add(columnPath.GetHeader().text, 300);
+            
+            multiColumnState.AddColumn(columnAuthor);
+            options.widthTable.Add(columnAuthor.GetHeader().text, 80);
+            
+            multiColumnState.AddColumn(columnRevision);
+            options.widthTable.Add(columnRevision.GetHeader().text, 80);
+            
+            multiColumnState.AddColumn(columnDate);
+            options.widthTable.Add(columnDate.GetHeader().text, 300);
             
         }
 
-        public void SetBranches(IEnumerable<string> branches)
+        public void SetBranches(IEnumerable<BranchStatus> branches)
         {
             multiColumnState.Refresh(branches);
         }
         
-        public IEnumerable<string> GetSelection()
+        public IEnumerable<BranchStatus> GetSelection()
         {
             return multiColumnState.GetSelected();
         }

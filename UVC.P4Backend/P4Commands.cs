@@ -876,7 +876,7 @@ namespace UVC.Backend.P4
             return null;
         }
         
-        public List<string> RemoteList(string path)
+        public List<BranchStatus> RemoteList(string path)
         {
             return null;
         }

@@ -117,7 +117,7 @@ namespace UVC.Backend.Noop
         {
             return null;
         }
-        public virtual List<string> RemoteList(string path)
+        public virtual List<BranchStatus> RemoteList(string path)
         {
             return null;
         }

@@ -605,23 +605,17 @@ namespace UVC.Backend.SVN
             return "^/trunk/";
         }
         
-        public List<string> RemoteList(string path)
+        public List<BranchStatus> RemoteList(string path)
         {
-            List<string> remoteList = null;
-            using (var commandLineOperation = CreateSVNCommandLine($"list \"{path}\""))
+            using (var commandLineOperation = CreateSVNCommandLine($"list \"{path}\" --xml"))
             {
                 var commandLineOutput = ExecuteOperation(commandLineOperation);
                 if (!commandLineOutput.Failed)
                 {
-                    remoteList = commandLineOutput.OutputStr
-                        .Split('\n')
-                        .Select(ignore => ignore.Trim('\r', '\n', '\t', ' '))
-                        .Distinct()
-                        .Where(ignore => !string.IsNullOrEmpty(ignore))
-                        .ToList();
+                    return SVNBranchXMLParser.SVNParseBranchXML(commandLineOutput.OutputStr);
                 }
             }
-            return remoteList;
+            return null;
         }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)

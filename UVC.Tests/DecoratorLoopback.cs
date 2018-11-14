@@ -201,7 +201,7 @@ namespace UVC.UnitTests
             return null;
         }
 
-        public List<string> RemoteList(string path)
+        public List<BranchStatus> RemoteList(string path)
         {
             return null;
         }

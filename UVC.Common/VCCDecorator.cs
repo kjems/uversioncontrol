@@ -185,7 +185,7 @@ namespace UVC
             return vcc.GetTrunkPath();
         }
         
-        public List<string> RemoteList(string path)
+        public List<BranchStatus> RemoteList(string path)
         {
             return vcc.RemoteList(path);
         }

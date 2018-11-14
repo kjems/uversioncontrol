@@ -411,7 +411,7 @@ namespace UVC
             return await StartTask(GetTrunkPath);
         }
         
-        public async Task<List<string>> RemoteListTask(string path)
+        public async Task<List<BranchStatus>> RemoteListTask(string path)
         {
             return await StartTask(() => RemoteList(path));
         }
@@ -629,7 +629,7 @@ namespace UVC
         {
             customTrunkPath = path;
         }
-        public List<string> RemoteList(string path)
+        public List<BranchStatus> RemoteList(string path)
         {
             return HandleExceptions(() => vcc.RemoteList(path));
         }

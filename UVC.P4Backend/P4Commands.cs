@@ -392,6 +392,11 @@ namespace UVC.Backend.P4
                 return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.Compose())));
             }
         }
+        
+        public InfoStatus GetInfo(string path)
+        {
+            return null;
+        }
 
         public bool GetStatus(StatusLevel statusLevel, string fstatArgs, string path)
         {

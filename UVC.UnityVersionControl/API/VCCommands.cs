@@ -443,6 +443,10 @@ namespace UVC
         {
             return vcc.GetAssetStatus(assetPath);
         }
+        public InfoStatus GetInfo(string path)
+        {
+            return vcc.GetInfo(path);
+        }
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             using (PushStateUtility.Profiler("GetFilteredAssets"))

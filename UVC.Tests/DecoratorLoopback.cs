@@ -72,6 +72,11 @@ namespace UVC.UnitTests
         {
             return statusDatabase[assetPath];
         }
+        
+        public virtual InfoStatus GetInfo(string path)
+        {
+            return null;
+        }
 
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {

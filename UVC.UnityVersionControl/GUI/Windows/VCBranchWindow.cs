@@ -130,25 +130,32 @@ namespace UVC.UserInterface
         void Refresh()
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
-
-            VCCommands.Instance.RemoteListTask(BranchPath).ContinueWithOnNextUpdate(relativeBranches =>
+            if (VCCommands.Active)
             {
-                var trunk = new BranchStatus()
+                VCCommands.Instance.RemoteListTask(BranchPath).ContinueWith(relativeBranches =>
                 {
-                    name = trunkpath,
-                    author = "[unknown]",
-                    date = new DateTime(),
-                    revision = 0
-                };
-                relativeBranches.Insert(0, trunk);
-                branchColumnList.SetBranches(relativeBranches);
-                Repaint();
-            });
+                    var trunkInfo = VCCommands.Instance.GetInfo(trunkpath);
+                    var trunk = new BranchStatus()
+                    {
+                        name = trunkpath,
+                        author = trunkInfo.author,
+                        date = trunkInfo.lastChangedDate,
+                        revision = trunkInfo.revision
+                    };
+                    relativeBranches.Result.Insert(0, trunk);
+                    return relativeBranches;
+                }).ContinueWithOnNextUpdate(relativeBranches =>
+                {
+                    branchColumnList.SetBranches(relativeBranches.Result);
+                    Repaint();
+                });
 
-            VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(b =>
-            {
-                currentBranch = b; Repaint();
-            });
+                VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(b =>
+                {
+                    currentBranch = b;
+                    Repaint();
+                });
+            }
         }
 
         void BranchListGUI()

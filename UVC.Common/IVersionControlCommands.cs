@@ -50,6 +50,7 @@ namespace UVC
         bool SetUserCredentials(string userName, string password, bool cacheCredentials);
         VersionControlStatus GetAssetStatus(string assetPath);
         VersionControlStatus GetAssetStatus(ComposedString assetPath);
+        InfoStatus GetInfo(string path);
         IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter);
         bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel);
         bool Status(StatusLevel statusLevel, DetailLevel detailLevel);

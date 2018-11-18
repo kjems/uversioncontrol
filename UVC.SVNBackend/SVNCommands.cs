@@ -181,6 +181,19 @@ namespace UVC.Backend.SVN
                 return statusDatabase[assetPath];
             }
         }
+        
+        public InfoStatus GetInfo(string path)
+        {
+            using (var commandLineOperation = CreateSVNCommandLine($"info \"{path}\" --xml"))
+            {
+                var commandLineOutput = ExecuteOperation(commandLineOperation);
+                if (!commandLineOutput.Failed)
+                {
+                    return SVNInfoXMLParser.SVNParseInfoXML(path, commandLineOutput.OutputStr);
+                }
+            }
+            return null;
+        }
 
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {

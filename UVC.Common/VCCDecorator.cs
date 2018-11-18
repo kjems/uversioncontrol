@@ -74,6 +74,11 @@ namespace UVC
         {
             return vcc.GetAssetStatus(assetPath);
         }
+        
+        public virtual InfoStatus GetInfo(string path)
+        {
+            return vcc.GetInfo(path);
+        }
 
         public virtual IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {

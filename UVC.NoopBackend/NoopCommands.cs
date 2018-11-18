@@ -29,6 +29,10 @@ namespace UVC.Backend.Noop
         {
             return defaultStatus;
         }
+        public virtual InfoStatus GetInfo(string path)
+        {
+            return new InfoStatus();
+        }
         public virtual IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
             return new VersionControlStatus[0];

@@ -754,8 +754,8 @@ namespace UVC
             }
             if (VCSettings.RequireLockBeforeCommit && localModified.Any())
             {
-                string title = string.Format("{0} '{1}' files?", Terminology.getlock, Terminology.localModified);
-                string message = string.Format("You are trying to commit files which are '{0}'.\nDo you want to '{1}' these files first?", Terminology.localModified, Terminology.getlock);
+                string title = $"{Terminology.getlock} '{Terminology.localModified}' files?";
+                string message = $"You are trying to commit files which are '{Terminology.localModified}'.\nDo you want to '{Terminology.getlock}' these files first?";
                 if (EditorUtility.DisplayDialog(title, message, Terminology.getlock, "Abort"))
                 {
                     GetLock(localModified);

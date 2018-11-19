@@ -14,7 +14,7 @@ namespace UVC
         {
             VCCommands.Instance.OperationCompleted += (operation, beforeStatus, afterStatus, success) =>
             {
-                GoogleAnalytics.LogUserEvent("Operation", string.Format("{0}_{1}", operation.ToString(), (success ? "success" : "failed")));
+                GoogleAnalytics.LogUserEvent("Operation", $"{operation.ToString()}_{(success ? "success" : "failed")}");
             };
 
             int dayOfYear = DateTime.Now.DayOfYear;

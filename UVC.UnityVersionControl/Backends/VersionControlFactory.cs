@@ -56,7 +56,7 @@ namespace UVC
                 success = true;
             }
 
-            GoogleAnalytics.LogUserEvent("Backend", string.Format("{0}_{1}", backend.ToString(), (success ? "success" : "failed")));
+            GoogleAnalytics.LogUserEvent("Backend", $"{backend.ToString()}_{(success ? "success" : "failed")}");
 
             if (!success)
             {

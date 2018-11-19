@@ -488,7 +488,7 @@ namespace UVC.Backend.SVN
 
         public virtual bool RequestStatus(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            if (assets == null || assets.Count() == 0) return true;
+            if (assets == null || !assets.Any()) return true;
 
             lock (requestQueueLockToken)
             {
@@ -658,10 +658,10 @@ namespace UVC.Backend.SVN
 
         public bool SetIgnore(string path, IEnumerable<string> assets)
         {
-            bool result = CreateOperation(string.Format("propset svn:ignore \"{0}\" {1}", assets.Aggregate((a, b) => a + "\n" + b), path));
+            bool result = CreateOperation($"propset svn:ignore \"{assets.Aggregate((a, b) => a + "\n" + b)}\" {path}");
             if (result)
             {
-                result = CreateAssetOperation(string.Format("commit --depth empty -m \"UVC setting svn:ignore for : {0}\"", assets.Aggregate((a, b) => a + ", " + b)), new[] { path });
+                result = CreateAssetOperation($"commit --depth empty -m \"UVC setting svn:ignore for : {assets.Aggregate((a, b) => a + ", " + b)}\"", new[] { path });
             }
             ClearDatabase();
             Status(StatusLevel.Previous, DetailLevel.Normal);
@@ -671,7 +671,7 @@ namespace UVC.Backend.SVN
         public IEnumerable<string> GetIgnore(string path)
         {
             IEnumerable<string> ignores = null;
-            using (var commandLineOperation = CreateSVNCommandLine(string.Format("propget svn:ignore \"{0}\"", path)))
+            using (var commandLineOperation = CreateSVNCommandLine($"propget svn:ignore \"{path}\""))
             {
                 var commandLineOutput = ExecuteOperation(commandLineOperation);
                 if (!commandLineOutput.Failed)

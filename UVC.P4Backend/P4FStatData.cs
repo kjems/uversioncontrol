@@ -109,7 +109,7 @@ namespace UVC.Backend.P4
                         default:
                             if (!line.EndsWith("- no such file(s)."))
                             {
-                                DebugLog.LogError(String.Format("p4 fstat line unrecognized: {0}", line));
+                                DebugLog.LogError($"p4 fstat line unrecognized: {line}");
                             }
                             break;
                     }

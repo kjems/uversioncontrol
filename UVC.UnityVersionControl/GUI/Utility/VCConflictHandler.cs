@@ -25,7 +25,7 @@ namespace UVC
                     const string explanation = "\nTheirs :\nUse the file from the server and discard local changes to the file\n\nMine :\nUse my version of the file and discard the changes someone else made on the server";
                     const string mergeExplanation = "\nMerge External :\nIgnore the conflict in UVC and handle the conflict in an external program";
                     const string ignoreExplanation = "\nIgnore :\nIgnore the conflict for now although the file will not be readable by Unity";
-                    string message = string.Format("There is a conflict in the file:\n '{0}'\n\nUse 'Theirs' or 'Mine'?\n {1}\n{2}\n", conflictIt.Compose(), explanation, mergable ? mergeExplanation : ignoreExplanation);
+                    string message = $"There is a conflict in the file:\n '{conflictIt.Compose()}'\n\nUse 'Theirs' or 'Mine'?\n {explanation}\n{(mergable ? mergeExplanation : ignoreExplanation)}\n";
                     int result = EditorUtility.DisplayDialogComplex("Conflict", message, "Theirs", "Mine", mergable ? "Merge External" : "Ignore");
                     if (result == 0 || result == 1)
                     {

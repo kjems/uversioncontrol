@@ -94,11 +94,7 @@ namespace UVC.UserInterface
                                                 "Cancel"))
                 {
                     var selection = branchColumnList.GetSelection().First();
-                    if (VCCommands.Instance.MergeBranch(selection.name))
-                    {
-                        VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
-                        VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {selection} to {currentBranch}");
-                    }
+                    Merge(selection.name);
                     Refresh();
                 }
             }
@@ -125,6 +121,27 @@ namespace UVC.UserInterface
                     status.fileStatus == VCFileStatus.Replaced ||
                     status.property == VCProperty.Modified ||
                     status.property == VCProperty.Conflicted);
+        }
+        
+        void Merge(string url)
+        {
+            int progressCounter = 0;
+            void UpdateMergeProgress(string s)
+            {
+                EditorUtility.DisplayProgressBar("Merge", s, ((progressCounter++ % 25) / 25f) );
+            }
+            
+            VCCommands.Instance.ProgressInformation += UpdateMergeProgress;
+            VCCommands.Instance.MergeBranchTask(url).ContinueWithOnNextUpdate(res =>
+            {
+                VCCommands.Instance.ProgressInformation -= UpdateMergeProgress;
+                EditorUtility.ClearProgressBar();
+                if (res)
+                {
+                    VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
+                    VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {url} to {currentBranch}");
+                }
+            });
         }
 
         void Refresh()
@@ -155,6 +172,7 @@ namespace UVC.UserInterface
                     currentBranch = b;
                     Repaint();
                 });
+                VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
             }
         }
 

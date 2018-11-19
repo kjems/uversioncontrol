@@ -674,7 +674,7 @@ namespace UVC
             return HandleExceptions(() => vcc.GetIgnore(path));
         }
 
-        public string GetRevision()
+        public int GetRevision()
         {
             return vcc.GetRevision();
         }

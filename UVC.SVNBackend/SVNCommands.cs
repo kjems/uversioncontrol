@@ -343,7 +343,6 @@ namespace UVC.Backend.SVN
             {
                 DebugLog.Log(commandLine.ToString());
                 currentExecutingOperation = commandLine;
-                //System.Threading.Thread.Sleep(500); // emulate latency to SVN server
                 commandLineOutput = commandLine.Execute();
             }
             catch (Exception e)
@@ -376,10 +375,6 @@ namespace UVC.Backend.SVN
                 commandLineOutput = ExecuteCommandLine(commandLine);
             }
 
-            //if (commandLineOutput.Arguments.Contains("ExceptionTest.txt"))
-            //{
-            //    throw new VCCriticalException("Test Exception cast due to ExceptionTest.txt being a part of arguments", commandLine.ToString());
-            //}
             if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
             {
                 var errStr = commandLineOutput.ErrorStr;
@@ -470,19 +465,16 @@ namespace UVC.Backend.SVN
                         statusDatabase[assetIt] = status;
                     }
                 }
-                //D.Log("Set Pending : " + assets.Aggregate((a, b) => a + ", " + b));
             }
         }
 
         private void AddToRemoteStatusQueue(string asset)
         {
-            //D.Log("Remote Req : " + asset);
             if (!remoteRequestQueue.Contains(asset)) remoteRequestQueue.Add(asset);
         }
 
         private void AddToLocalStatusQueue(string asset)
         {
-            //D.Log("Local Req : " + asset);
             if (!localRequestQueue.Contains(asset)) localRequestQueue.Add(asset);
         }
 
@@ -687,22 +679,9 @@ namespace UVC.Backend.SVN
             return ignores;
         }
 
-        public string GetRevision()
+        public int GetRevision()
         {
-            var svnInfo = CreateSVNCommandLine("info --xml ").Execute();
-            if (!svnInfo.Failed)
-            {
-                var xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(svnInfo.OutputStr);
-                var revisionNode = xmlDoc.GetElementsByTagName("entry").Item(0);
-                if (revisionNode != null)
-                {
-                    var revision = revisionNode.Attributes["revision"];
-                    if(revision != null)
-                        return revision.InnerText;
-                }
-            }
-            return null;
+            return GetInfo(".").revision;
         }
 
         public string GetBasePath(string assetPath)
@@ -780,7 +759,7 @@ namespace UVC.Backend.SVN
 
         public void RemoveFromDatabase(IEnumerable<string> assets)
         {
-            DebugLog.Log("Remove from DB: "+ assets.Aggregate((a,b) => a + ", " + b));
+            //DebugLog.Log("Remove from DB: "+ assets.Aggregate((a,b) => a + ", " + b));
             lock (statusDatabaseLockToken)
             {
                 foreach (var assetIt in assets)

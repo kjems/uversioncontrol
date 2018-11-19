@@ -919,10 +919,10 @@ namespace UVC.Backend.P4
             return null;
         }
 
-        public string GetRevision()
+        public int GetRevision()
         {
             DebugLog.LogWarning("P4Commands.GetRevisionNumber not implemented");
-            return null;
+            return 0;
         }
 
         public string GetBasePath(string assetPath)

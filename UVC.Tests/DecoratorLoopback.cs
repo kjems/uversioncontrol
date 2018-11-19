@@ -238,9 +238,9 @@ namespace UVC.UnitTests
             return null;
         }
 
-        public virtual string GetRevision()
+        public virtual int GetRevision()
         {
-            return "";
+            return 0;
         }
 
         public virtual string GetBasePath(string assetPath)

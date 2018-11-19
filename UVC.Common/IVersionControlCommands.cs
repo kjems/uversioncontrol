@@ -78,7 +78,7 @@ namespace UVC
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);
         IEnumerable<string> GetIgnore(string path);
-        string GetRevision();
+        int GetRevision();
         string GetBasePath(string assetPath);
         bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs);
         bool CleanUp();

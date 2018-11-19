@@ -215,7 +215,7 @@ namespace UVC
             return vcc.GetIgnore(path);
         }
 
-        public virtual string GetRevision()
+        public virtual int GetRevision()
         {
             return vcc.GetRevision();
         }

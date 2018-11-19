@@ -142,9 +142,9 @@ namespace UVC.Backend.Noop
         {
             return null;
         }
-        public virtual string GetRevision()
+        public virtual int GetRevision()
         {
-            return "0";
+            return 0;
         }
         public virtual string GetBasePath(string assetPath)
         {

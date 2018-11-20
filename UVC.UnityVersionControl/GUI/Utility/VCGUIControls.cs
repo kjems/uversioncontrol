@@ -107,7 +107,7 @@ namespace UVC.UserInterface
 
         public struct ValidActions
         {
-            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate, showForceOpen, showDisconnect;
+            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate, showForceOpen, showUseTheirs, showUseMine, showMerge, showDisconnect;
         }
         static readonly ValidActions noAction = new ValidActions();
         public static ValidActions GetValidActions(string assetPath, Object instance = null)
@@ -139,6 +139,7 @@ namespace UVC.UserInterface
             bool allowLocalEdit = assetStatus.LocalEditAllowed();
             bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
             bool mergeinfo = assetStatus.property == VCProperty.Modified;
+            bool conflicted = assetStatus.fileStatus == VCFileStatus.Conflicted;
 
             validActions.showAdd        = !pending && !ignored && unversioned;
             validActions.showOpen       = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
@@ -150,6 +151,9 @@ namespace UVC.UserInterface
             validActions.showUnlock     = !pending && !ignored && !allowLocalEdit && haveLock;
             validActions.showUpdate     = !pending && !ignored && !added && managedByRep && instance != null;
             validActions.showForceOpen  = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
+            validActions.showUseTheirs  = !pending && !ignored && conflicted;
+            validActions.showUseMine    = !pending && !ignored && conflicted;
+            validActions.showMerge      = !pending && !ignored && conflicted && mergableAsset;
             validActions.showDisconnect = isPrefab && !isPrefabParent;
 
             return validActions;
@@ -175,6 +179,9 @@ namespace UVC.UserInterface
                     if (validActions.showDisconnect)menu.AddItem(new GUIContent("Disconnect"),                  false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
                     if (validActions.showDelete)    menu.AddItem(new GUIContent(Terminology.delete),            false, () => VCCommands.Instance.Delete(new[] { assetPath }));
                     if (validActions.showRevert)    menu.AddItem(new GUIContent(Terminology.revert),            false, () => Revert(assetPath, instance));
+                    if (validActions.showUseTheirs) menu.AddItem(new GUIContent("Use Theirs"),                  false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Theirs));
+                    if (validActions.showUseMine)   menu.AddItem(new GUIContent("Use Mine"),                    false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Mine));
+                    if (validActions.showUseMine)   menu.AddItem(new GUIContent("Merge"),                       false, () => MergeHandler.ResolveConflict(assetPath));
                 }
                 else
                 {

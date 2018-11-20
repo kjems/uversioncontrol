@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,6 +79,12 @@ namespace UVC
         public static string GetWorkingDirectory()
         {
             return Application.dataPath.Remove(Application.dataPath.LastIndexOf("/Assets", StringComparison.Ordinal));
+        }
+
+        public static void ResolveConflict(string assetPath)
+        {
+            VCCommands.Instance.GetConflict(assetPath, out var basePath, out var yours, out var theirs);
+            ResolveConflict(assetPath, basePath, theirs, yours);
         }
         
         public static void ResolveConflict(string assetPath, string basepath, string theirs, string yours)

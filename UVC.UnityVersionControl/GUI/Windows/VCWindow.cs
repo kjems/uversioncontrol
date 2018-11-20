@@ -13,6 +13,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
 namespace UVC.UserInterface
@@ -35,6 +36,8 @@ namespace UVC.UserInterface
         private bool refreshInProgress = false;
         private string commandInProgress = "";
         private string currentBranch = "<unknown>";
+        private string searchString;
+        private SearchField searchField;
         private VCMultiColumnAssetList vcMultiColumnAssetList;
         private VCSettingsWindow settingsWindow;
         private Rect rect;
@@ -59,7 +62,8 @@ namespace UVC.UserInterface
             bool modifiedNoLock = !projectSetting && vcStatus.ModifiedOrLocalEditAllowed();
 
             bool rest = !unversioned && !meta && !modifiedNoLock && !projectSetting;
-            return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest;
+            return ((showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest) && 
+                   (string.IsNullOrEmpty(searchString) || vcStatus.assetPath.Compose().Contains(searchString));
         }
 
         // This is a performance critical function
@@ -100,7 +104,8 @@ namespace UVC.UserInterface
             showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
             showModifiedNoLock = EditorPrefs.GetBool("VCWindow/showModifiedNoLock", true);
             statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 400.0f);
-
+            
+            searchField = new SearchField();
 
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
 
@@ -284,6 +289,14 @@ namespace UVC.UserInterface
                     branchWindow.ShowUtility();
                 }
                 GUILayout.FlexibleSpace();
+
+                
+                string newSearchString = searchField.OnToolbarGUI(searchString);
+                if (newSearchString != searchString)
+                {
+                    searchString = newSearchString;
+                    UpdateFilteringOfKeys();
+                }
 
                 bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });
                 if (newShowModifiedProjectSettings != showProjectSetting)

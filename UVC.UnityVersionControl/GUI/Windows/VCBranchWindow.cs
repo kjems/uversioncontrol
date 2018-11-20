@@ -57,16 +57,13 @@ namespace UVC.UserInterface
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             BranchToolbarGUI();
             EditorGUILayout.EndHorizontal();
-            
             BranchListGUI();
         }       
         
         void BranchToolbarGUI()
         {
             GUILayout.Label("Current", EditorStyles.miniLabel, GUILayout.Width(50));
-            GUI.enabled = false;
             GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
-            GUI.enabled = true;
             GUILayout.Label("Branch Path", EditorStyles.miniLabel, GUILayout.Width(70));
             string newBranchPath = GUILayout.TextField(BranchPath, EditorStyles.toolbarTextField, GUILayout.MinWidth(150));
             if (newBranchPath != BranchPath)
@@ -82,8 +79,7 @@ namespace UVC.UserInterface
             if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var selection = branchColumnList.GetSelection().First();
-                VCCommands.Instance.SwitchBranch(selection.name);
-                Refresh();
+                Switch(selection.name);
             }
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
@@ -122,8 +118,14 @@ namespace UVC.UserInterface
                     status.property == VCProperty.Modified ||
                     status.property == VCProperty.Conflicted);
         }
+
+        async void Switch(string url)
+        {
+            await VCCommands.Instance.SwitchBranchTask(url);
+            Refresh();
+        }
         
-        void Merge(string url)
+        async void Merge(string url)
         {
             int progressCounter = 0;
             void UpdateMergeProgress(string s)
@@ -132,47 +134,34 @@ namespace UVC.UserInterface
             }
             
             VCCommands.Instance.ProgressInformation += UpdateMergeProgress;
-            VCCommands.Instance.MergeBranchTask(url).ContinueWithOnNextUpdate(res =>
+            bool result = await VCCommands.Instance.MergeBranchTask(url);
+            VCCommands.Instance.ProgressInformation -= UpdateMergeProgress;
+            EditorUtility.ClearProgressBar();
+            if (result)
             {
-                VCCommands.Instance.ProgressInformation -= UpdateMergeProgress;
-                EditorUtility.ClearProgressBar();
-                if (res)
-                {
-                    VCCommands.Instance.Status(StatusLevel.Local, DetailLevel.Normal);
-                    VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {url} to {currentBranch}");
-                }
-            });
-        }
-
-        void Refresh()
+                await VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Normal);
+                VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {url} to {currentBranch}");
+            }
+        }       
+        async void Refresh()
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
             if (VCCommands.Active)
             {
-                VCCommands.Instance.RemoteListTask(BranchPath).ContinueWith(relativeBranches =>
+                var relativeBranches = await VCCommands.Instance.RemoteListTask(BranchPath);
+                var trunkInfo = VCCommands.Instance.GetInfo(trunkpath);
+                var trunk = new BranchStatus()
                 {
-                    var trunkInfo = VCCommands.Instance.GetInfo(trunkpath);
-                    var trunk = new BranchStatus()
-                    {
-                        name = trunkpath,
-                        author = trunkInfo.author,
-                        date = trunkInfo.lastChangedDate,
-                        revision = trunkInfo.revision
-                    };
-                    relativeBranches.Result.Insert(0, trunk);
-                    return relativeBranches;
-                }).ContinueWithOnNextUpdate(relativeBranches =>
-                {
-                    branchColumnList.SetBranches(relativeBranches.Result);
-                    Repaint();
-                });
-
-                VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(b =>
-                {
-                    currentBranch = b;
-                    Repaint();
-                });
-                VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
+                    name = trunkpath,
+                    author = trunkInfo.author,
+                    date = trunkInfo.lastChangedDate,
+                    revision = trunkInfo.revision
+                };
+                relativeBranches.Insert(0, trunk);
+                branchColumnList.SetBranches(relativeBranches);
+                currentBranch = await VCCommands.Instance.GetCurrentBranchTask();
+                await VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
+                Repaint();
             }
         }
 

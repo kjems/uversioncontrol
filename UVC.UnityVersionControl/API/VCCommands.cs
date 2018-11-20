@@ -54,6 +54,7 @@ namespace UVC
         private bool stopping = false;
         private bool updating = false;
         private bool pendingAssetDatabaseRefresh = false;
+        private bool pauseAssetDatabaseRefresh = false;
         static VCCommands instance;
         public static void Initialize() { if (instance == null) { instance = new VCCommands(); } }
         public static VCCommands Instance { get { Initialize(); return instance; } }
@@ -151,6 +152,19 @@ namespace UVC
         {
             vcc.DeactivateRefreshLoop();
         }
+        
+        public void PauseAssetDatabaseRefresh()
+        {
+            pauseAssetDatabaseRefresh = true;
+            DisableAutoRefresh();
+        }
+
+        public void ResumeAssetDatabaseRefresh()
+        {
+            EnableAutoRefresh();
+            pauseAssetDatabaseRefresh = false;
+            RefreshAssetDatabase();
+        }
 
         public void SetImportAssetDatabaseSynchronousCallback(Action refreshSynchronous)
         {
@@ -241,7 +255,7 @@ namespace UVC
 
         private void RefreshAssetDatabase()
         {
-            if (pendingAssetDatabaseRefresh)
+            if (pendingAssetDatabaseRefresh && !pauseAssetDatabaseRefresh)
             {
                 pendingAssetDatabaseRefresh = false;
                 OnNextUpdate.Do(() =>
@@ -254,7 +268,7 @@ namespace UVC
 
         private void FlushFiles()
         {
-            if (ThreadUtility.IsMainThread())
+            if (ThreadUtility.IsMainThread() && !pauseAssetDatabaseRefresh)
             {
                 FlusingFiles = true;
                 //D.Log("Flusing files");
@@ -615,7 +629,12 @@ namespace UVC
         }
         public bool SwitchBranch(string url, string path = "")
         {
-            return HandleExceptions(() => PerformOperation(OperationType.SwitchBranch, () => vcc.SwitchBranch(url, path)));
+            return HandleExceptions(() =>
+            {
+                var result = PerformOperation(OperationType.SwitchBranch, () => vcc.SwitchBranch(url, path));
+                RefreshAssetDatabase();
+                return result;
+            });
         }
         public string GetCurrentBranch()
         {

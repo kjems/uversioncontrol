@@ -88,6 +88,7 @@ namespace UVC.UserInterface
 
         private void OnEnable()
         {
+            VCCommands.Instance.PauseAssetDatabaseRefresh();
             minSize  = new Vector2(1000, 400);
             position = new Rect {
                 xMin    = Screen.width * 0.5f - this.minSize.x,
@@ -105,6 +106,7 @@ namespace UVC.UserInterface
         {
             EditorPrefs.SetFloat("VCCommitWindow/commitMessageHeight", commitMessageHeight);
             vcMultiColumnAssetList.Dispose();
+            VCCommands.Instance.ResumeAssetDatabaseRefresh();
         }
 
         private void OnGUI()

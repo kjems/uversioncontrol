@@ -80,6 +80,15 @@ namespace UVC
         {
             return RemoveMetaPostFix(base.GetFilteredAssets(filter));
         }
+        public override bool ChangeListAdd(IEnumerable<string> assets, string changelist)
+        {
+            return base.ChangeListAdd(AddMeta(assets), changelist);
+        }
+
+        public override bool ChangeListRemove(IEnumerable<string> assets)
+        {
+            return base.ChangeListRemove(AddMeta(assets));
+        }
 
         public override void RemoveFromDatabase(IEnumerable<string> assets)
         {

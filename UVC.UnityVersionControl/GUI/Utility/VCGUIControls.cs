@@ -12,6 +12,7 @@ using Object = UnityEngine.Object;
 namespace UVC.UserInterface
 {
     using Extensions;
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     public static class VCGUIControls
     {
         private static GUIStyle GetPrefabToolbarStyle(GUIStyle style, bool vcRelated)
@@ -103,11 +104,14 @@ namespace UVC.UserInterface
             menu.AddItem(new GUIContent(Terminology.commit), false, () => VCCommands.Instance.CommitDialog(assetPaths));
             menu.AddItem(new GUIContent(Terminology.revert), false, () => VCCommands.Instance.Revert(assetPaths));
             menu.AddItem(new GUIContent(Terminology.delete), false, () => VCCommands.Instance.Delete(assetPaths));
+            menu.AddItem(new GUIContent("Add to " +Terminology.changelist), false, () => ChangeListWindow.Open(assetPaths));
+            menu.AddItem(new GUIContent("Remove from " + Terminology.changelist), false, () => VCCommands.Instance.ChangeListRemove(assetPaths));
         }
 
         public struct ValidActions
         {
-            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate, showForceOpen, showUseTheirs, showUseMine, showMerge, showDisconnect;
+            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, 
+                        showUpdate, showForceOpen, showUseTheirs, showUseMine, showMerge, showRemoveChangeList, showDisconnect;
         }
         static readonly ValidActions noAction = new ValidActions();
         public static ValidActions GetValidActions(string assetPath, Object instance = null)
@@ -140,6 +144,7 @@ namespace UVC.UserInterface
             bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
             bool mergeinfo = assetStatus.property == VCProperty.Modified;
             bool conflicted = assetStatus.fileStatus == VCFileStatus.Conflicted;
+            bool hasChangeSet = !ComposedString.IsNullOrEmpty(assetStatus.changelist);
 
             validActions.showAdd        = !pending && !ignored && unversioned;
             validActions.showOpen       = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
@@ -154,6 +159,7 @@ namespace UVC.UserInterface
             validActions.showUseTheirs  = !pending && !ignored && conflicted;
             validActions.showUseMine    = !pending && !ignored && conflicted;
             validActions.showMerge      = !pending && !ignored && conflicted && mergableAsset;
+            validActions.showRemoveChangeList = !pending && !ignored && hasChangeSet;
             validActions.showDisconnect = isPrefab && !isPrefabParent;
 
             return validActions;
@@ -169,19 +175,21 @@ namespace UVC.UserInterface
                     if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = SceneManagerUtilities.GetCurrentScenePath();
                     var validActions = GetValidActions(assetPath, instance);                    
 
-                    if (validActions.showDiff)      menu.AddItem(new GUIContent(Terminology.diff),              false, () => MergeHandler.DiffWithBase(assetPath));
-                    if (validActions.showAdd)       menu.AddItem(new GUIContent(Terminology.add),               false, () => VCCommands.Instance.Add(new[] { assetPath }));
-                    if (validActions.showOpen)      menu.AddItem(new GUIContent(Terminology.getlock),           false, () => GetLock(assetPath, instance));
-                    if (validActions.showOpenLocal) menu.AddItem(new GUIContent(Terminology.allowLocalEdit),    false, () => AllowLocalEdit(assetPath, instance));
-                    if (validActions.showForceOpen) menu.AddItem(new GUIContent("Force " + Terminology.getlock),false, () => GetLock(assetPath, instance, OperationMode.Force));
-                    if (validActions.showCommit)    menu.AddItem(new GUIContent(Terminology.commit),            false, () => Commit(assetPath, instance));
-                    if (validActions.showUnlock)    menu.AddItem(new GUIContent(Terminology.unlock),            false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
-                    if (validActions.showDisconnect)menu.AddItem(new GUIContent("Disconnect"),                  false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
-                    if (validActions.showDelete)    menu.AddItem(new GUIContent(Terminology.delete),            false, () => VCCommands.Instance.Delete(new[] { assetPath }));
-                    if (validActions.showRevert)    menu.AddItem(new GUIContent(Terminology.revert),            false, () => Revert(assetPath, instance));
-                    if (validActions.showUseTheirs) menu.AddItem(new GUIContent("Use Theirs"),                  false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Theirs));
-                    if (validActions.showUseMine)   menu.AddItem(new GUIContent("Use Mine"),                    false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Mine));
-                    if (validActions.showUseMine)   menu.AddItem(new GUIContent("Merge"),                       false, () => MergeHandler.ResolveConflict(assetPath));
+                    if (validActions.showDiff)       menu.AddItem(new GUIContent(Terminology.diff),              false, () => MergeHandler.DiffWithBase(assetPath));
+                    if (validActions.showAdd)        menu.AddItem(new GUIContent(Terminology.add),               false, () => VCCommands.Instance.Add(new[] { assetPath }));
+                    if (validActions.showOpen)       menu.AddItem(new GUIContent(Terminology.getlock),           false, () => GetLock(assetPath, instance));
+                    if (validActions.showOpenLocal)  menu.AddItem(new GUIContent(Terminology.allowLocalEdit),    false, () => AllowLocalEdit(assetPath, instance));
+                    if (validActions.showForceOpen)  menu.AddItem(new GUIContent("Force " + Terminology.getlock),false, () => GetLock(assetPath, instance, OperationMode.Force));
+                    if (validActions.showCommit)     menu.AddItem(new GUIContent(Terminology.commit),            false, () => Commit(assetPath, instance));
+                    if (validActions.showUnlock)     menu.AddItem(new GUIContent(Terminology.unlock),            false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
+                    if (validActions.showDisconnect) menu.AddItem(new GUIContent("Disconnect"),                  false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
+                    if (validActions.showDelete)     menu.AddItem(new GUIContent(Terminology.delete),            false, () => VCCommands.Instance.Delete(new[] { assetPath }));
+                    if (validActions.showRevert)     menu.AddItem(new GUIContent(Terminology.revert),            false, () => Revert(assetPath, instance));
+                    if (validActions.showUseTheirs)  menu.AddItem(new GUIContent("Use Theirs"),                  false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Theirs));
+                    if (validActions.showUseMine)    menu.AddItem(new GUIContent("Use Mine"),                    false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Mine));
+                    if (validActions.showMerge)      menu.AddItem(new GUIContent("Merge"),                       false, () => MergeHandler.ResolveConflict(assetPath));
+                    if (validActions.showRemoveChangeList) menu.AddItem(new GUIContent("Remove From Changelist"),false, () => VCCommands.Instance.ChangeListRemove(new []{assetPath}));
+                    
                 }
                 else
                 {

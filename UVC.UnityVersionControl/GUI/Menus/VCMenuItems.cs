@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using UVC.UserInterface;
 
 namespace UVC
 {
@@ -110,6 +111,12 @@ namespace UVC
         public static void VCUpdateSelection()
         {
             VCCommands.Instance.Update(GetAssetPathsOfSelected().ToArray());
+        }
+        
+        [MenuItem("Assets/UVC/" + Terminology.changelist)]
+        public static void VCChangeListAdd()
+        {
+            ChangeListWindow.Open(GetAssetPathsOfSelected());
         }
     }
 }

@@ -279,7 +279,7 @@ namespace UVC.UserInterface
                     }
                 }
                 GUILayout.Space(7);
-                GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
+                GUILayout.TextField(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(80), GUILayout.ExpandWidth(true));
                 
                 if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
                 {

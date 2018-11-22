@@ -754,13 +754,13 @@ namespace UVC
             }
         }
 
-        public bool CommitDialog(IEnumerable<string> assets, bool showUserConfirmation = false, string commitMessage = "")
+        public bool CommitDialog(IEnumerable<string> assets, bool includeDependencies = true, bool showUserConfirmation = false, string commitMessage = "")
         {
             int initialAssetCount = assets.Count();
             if (initialAssetCount == 0) return true;
 
             assets = assets.AddFilesInFolders().AddFolders(vcc).AddMoveMatches(vcc);
-            var dependencies = assets.GetDependencies().AddFilesInFolders().AddFolders(vcc).Concat(assets.AddDeletedInFolders(vcc));
+            var dependencies = includeDependencies ? assets.GetDependencies().AddFilesInFolders().AddFolders(vcc).Concat(assets.AddDeletedInFolders(vcc)) : new string[0];
             var allAssets = assets.Concat(dependencies).Distinct().ToList();
             var localModified = allAssets.LocalModified(vcc);
             if (assets.Contains(SceneManagerUtilities.GetCurrentScenePath()))

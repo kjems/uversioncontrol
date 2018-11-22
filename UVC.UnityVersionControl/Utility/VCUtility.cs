@@ -81,7 +81,7 @@ namespace UVC
             if (ObjectUtilities.ChangesStoredInScene(obj)) SceneManagerUtilities.SaveActiveScene();
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
             if (onHierarchyCommit != null) onHierarchyCommit(obj);
-            VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
+            VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), includeDependencies: true, showUserConfirmation: showCommitDialog, commitMessage: commitMessage);
         }
 
         public static bool GetLock(Object obj, OperationMode operationMode = OperationMode.Normal)

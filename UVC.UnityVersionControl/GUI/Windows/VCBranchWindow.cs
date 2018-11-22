@@ -140,7 +140,7 @@ namespace UVC.UserInterface
             if (result)
             {
                 await VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Normal);
-                VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), true, $"Merged {url} to {currentBranch}");
+                VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()), includeDependencies: false, showUserConfirmation: true, commitMessage: $"Merged {url} to {currentBranch}");
             }
         }       
         async void Refresh()

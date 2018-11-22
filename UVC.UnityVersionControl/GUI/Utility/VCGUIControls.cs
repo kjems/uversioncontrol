@@ -110,8 +110,8 @@ namespace UVC.UserInterface
 
         public struct ValidActions
         {
-            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, 
-                        showUpdate, showForceOpen, showUseTheirs, showUseMine, showMerge, showRemoveChangeList, showDisconnect;
+            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate,  
+                        showForceOpen, showUseTheirs, showUseMine, showMerge, showAddChangeList, showRemoveChangeList, showDisconnect;
         }
         static readonly ValidActions noAction = new ValidActions();
         public static ValidActions GetValidActions(string assetPath, Object instance = null)
@@ -159,6 +159,7 @@ namespace UVC.UserInterface
             validActions.showUseTheirs  = !pending && !ignored && conflicted;
             validActions.showUseMine    = !pending && !ignored && conflicted;
             validActions.showMerge      = !pending && !ignored && conflicted && mergableAsset;
+            validActions.showAddChangeList = !pending && !ignored && !unversioned;
             validActions.showRemoveChangeList = !pending && !ignored && hasChangeSet;
             validActions.showDisconnect = isPrefab && !isPrefabParent;
 
@@ -188,7 +189,8 @@ namespace UVC.UserInterface
                     if (validActions.showUseTheirs)  menu.AddItem(new GUIContent("Use Theirs"),                  false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Theirs));
                     if (validActions.showUseMine)    menu.AddItem(new GUIContent("Use Mine"),                    false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Mine));
                     if (validActions.showMerge)      menu.AddItem(new GUIContent("Merge"),                       false, () => MergeHandler.ResolveConflict(assetPath));
-                    if (validActions.showRemoveChangeList) menu.AddItem(new GUIContent("Remove From Changelist"),false, () => VCCommands.Instance.ChangeListRemove(new []{assetPath}));
+                    if (validActions.showAddChangeList) menu.AddItem(new GUIContent("Add To " + Terminology.changelist),false, () => ChangeListWindow.Open(new []{assetPath}));
+                    if (validActions.showRemoveChangeList) menu.AddItem(new GUIContent("Remove From " + Terminology.changelist),false, () => VCCommands.Instance.ChangeListRemove(new []{assetPath}));
                     
                 }
                 else

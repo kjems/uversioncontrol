@@ -18,6 +18,7 @@ using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
 namespace UVC.UserInterface
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCWindow : EditorWindow
     {
         // Const
@@ -71,7 +72,7 @@ namespace UVC.UserInterface
         {
             if (!vcStatus.Reflected) return false;
 
-            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal) && vcStatus.fileStatus != VCFileStatus.Ignored;
+            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal || !ComposedString.IsNullOrEmpty(vcStatus.changelist)) && vcStatus.fileStatus != VCFileStatus.Ignored;
             if (assetCriteria) return true;
 
             bool property = vcStatus.property == VCProperty.Modified || vcStatus.property == VCProperty.Conflicted;
@@ -81,7 +82,7 @@ namespace UVC.UserInterface
             if (localLock) return true;
 
             var metaStatus = vcStatus.MetaStatus();
-            bool metaCriteria = metaStatus.fileStatus != VCFileStatus.Normal && metaStatus.fileStatus != VCFileStatus.None && metaStatus.fileStatus != VCFileStatus.Ignored;
+            bool metaCriteria = metaStatus.fileStatus != VCFileStatus.Normal && (metaStatus.fileStatus != VCFileStatus.None || !ComposedString.IsNullOrEmpty(metaStatus.changelist)) && metaStatus.fileStatus != VCFileStatus.Ignored;
 
             if (metaCriteria) return true;
 

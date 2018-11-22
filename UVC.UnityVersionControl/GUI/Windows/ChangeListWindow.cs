@@ -19,9 +19,12 @@ namespace UVC.UserInterface
         public static void Open(IEnumerable<string> assetPaths)
         {
             var changeListWindow = CreateInstance<ChangeListWindow>();
-            changeListWindow.minSize = new Vector2(220, 140);
+            changeListWindow.minSize = new Vector2(220, 60);
+            changeListWindow.maxSize = new Vector2(220, 60);
             changeListWindow.titleContent = new GUIContent("Change List");
             changeListWindow.assetPaths = assetPaths;
+            //var rect = new Rect(Event.current.mousePosition, Vector2.one);
+            //changeListWindow.ShowAsDropDown(rect, new Vector2(220, 60));
             changeListWindow.ShowUtility();
         }
         
@@ -62,6 +65,7 @@ namespace UVC.UserInterface
                 if (GUILayout.Button("Add"))
                 {
                     VCCommands.Instance.ChangeListAdd(assetPaths, changeListName);
+                    Close();
                 }
             }
         }

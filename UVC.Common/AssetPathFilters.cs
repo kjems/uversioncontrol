@@ -69,6 +69,18 @@ namespace UVC.AssetPathFilters
                 .Distinct()
                 .ToArray();
         }
+        
+        public static void AddFolders(ref List<string> assets, IVersionControlCommands vcc)
+        {
+            for (int i = assets.Count - 1; i >= 0; i--)
+            {
+                string directory = GetDirectoryNameForwardSlash(assets[i]);
+                if (!assets.Contains(directory) && vcc.GetAssetStatus(directory).fileStatus != VCFileStatus.Normal)
+                {
+                    assets.Add(directory);
+                }
+            }
+        }
         public static IEnumerable<string> AddedOrUnversionedParentFolders(this IEnumerable<string> assets, IVersionControlCommands vcc)
         {
             return assets.Concat(assets.SelectMany(ParentFolders).Where(a => vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Unversioned || vcc.GetAssetStatus(a).fileStatus == VCFileStatus.Added)).Distinct().ToArray();
@@ -126,7 +138,7 @@ namespace UVC.AssetPathFilters
             return assets.ToArray();
         }
 
-        public static IEnumerable<string> AddMoveMatches(this IEnumerable<string> assetPaths, IVersionControlCommands vcc)
+        public static void AddMoveMatches(ref List<string> assetPaths, IVersionControlCommands vcc)
         {
             List<string> moveMatches = new List<string>();
             //moveMatches.AddRange(assetPaths.Select(vcc.GetAssetStatus).Where(status => !ComposedString.IsNullOrEmpty(status.movedFrom)).Select(status => status.movedFrom.Compose()));
@@ -161,7 +173,7 @@ namespace UVC.AssetPathFilters
                     moveMatches.Add(addedPath);
                 }
             }
-            return assetPaths.Concat(moveMatches.Distinct()).ToArray();
+            assetPaths.AddRange(moveMatches.Distinct());
         }
 
         public static string GetDirectoryNameForwardSlash(string path)

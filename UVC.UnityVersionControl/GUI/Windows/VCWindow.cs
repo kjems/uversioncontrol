@@ -276,7 +276,7 @@ namespace UVC.UserInterface
                     }
                     if (GUILayout.Button(Terminology.commit, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.CommitDialog(GetSelectedAssets().ToArray(), true);
+                        VCCommands.Instance.CommitDialog(GetSelectedAssets().ToList(), true);
                     }
                 }
                 GUILayout.Space(7);

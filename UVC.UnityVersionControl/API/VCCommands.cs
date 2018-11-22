@@ -756,21 +756,34 @@ namespace UVC
 
         public bool CommitDialog(IEnumerable<string> assets, bool includeDependencies = true, bool showUserConfirmation = false, string commitMessage = "")
         {
-            int initialAssetCount = assets.Count();
+            return CommitDialog(assets.ToList(), includeDependencies, showUserConfirmation, commitMessage);
+        }
+        public bool CommitDialog(List<string> assets, bool includeDependencies = true, bool showUserConfirmation = false, string commitMessage = "")
+        {
+            int initialAssetCount = assets.Count;
             if (initialAssetCount == 0) return true;
 
-            assets = assets.AddFilesInFolders().AddFolders(vcc).AddMoveMatches(vcc);
-            var dependencies = includeDependencies ? assets.GetDependencies().AddFilesInFolders().AddFolders(vcc).Concat(assets.AddDeletedInFolders(vcc)) : new string[0];
+            UnityAssetpathsFilters.AddFilesInFolders(ref assets);
+            AssetpathsFilters.AddFolders(ref assets, vcc);
+            AssetpathsFilters.AddMoveMatches(ref assets, vcc);
+
+            List<string> dependencies = new List<string>();
+            if (includeDependencies)
+            {
+                dependencies = assets.GetDependencies().ToList();
+                UnityAssetpathsFilters.AddFilesInFolders(ref dependencies);
+                AssetpathsFilters.AddFolders(ref dependencies, vcc);
+                dependencies.AddRange(assets.AddDeletedInFolders(vcc));
+            }
             var allAssets = assets.Concat(dependencies).Distinct().ToList();
             var localModified = allAssets.LocalModified(vcc);
             if (assets.Contains(SceneManagerUtilities.GetCurrentScenePath()))
             {
                 SceneManagerUtilities.SaveCurrentModifiedScenesIfUserWantsTo();                
             }
-            if (PreCommit != null)
-            {
-                PreCommit(allAssets);
-            }
+            
+            PreCommit?.Invoke(allAssets);
+            
             if (VCSettings.RequireLockBeforeCommit && localModified.Any())
             {
                 string title = $"{Terminology.getlock} '{Terminology.localModified}' files?";

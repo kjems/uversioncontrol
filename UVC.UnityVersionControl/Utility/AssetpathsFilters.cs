@@ -25,12 +25,23 @@ namespace UVC.AssetPathFilters
                 {
                     assets = assets
                         .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
-                                    .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.metaStr) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                                    .Select(s => s.Replace("\\", "/")))
+                        .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.metaStr) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
+                        .Select(s => s.Replace("\\", "/")))
                         .ToArray();
                 }
             }
             return assets;
+        }
+        
+        public static void AddFilesInFolders(ref List<string> assets)
+        {
+            assets.AddRange(
+                AssetDatabase
+                    .FindAssets("", assets.Where(AssetDatabase.IsValidFolder).ToArray() )
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .Select(s => s.Replace("\\", "/"))
+                    .Where(a => !a.Contains(VCCAddMetaFiles.metaStr))
+            );
         }
 
         public static IEnumerable<string> GetDependencies(this IEnumerable<string> assetPaths)

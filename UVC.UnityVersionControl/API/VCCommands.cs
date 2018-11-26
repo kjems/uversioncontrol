@@ -338,18 +338,19 @@ namespace UVC
         {
             var task = Active ? new Task<T>(work) : new Task<T>(() => default(T));
             task.Start(); // Sync: task.RunSynchronously();
-            return await task;
+            return await task.ConfigureAwait(continueOnCapturedContext: false);
+            //return await task;
         }
 
         public async Task<bool> StatusTask(StatusLevel statusLevel, DetailLevel detailLevel)
         {
-            return await StartTask(() => Status(statusLevel, detailLevel));
+            return await StartTask(() => Status(statusLevel, detailLevel)).ConfigureAwait(false);
         }
 
         public async Task<bool> StatusTask(IEnumerable<string> assets, StatusLevel statusLevel)
         {
             assets = new List<string>(assets);
-            return await StartTask(() => Status(assets, statusLevel));
+            return await StartTask(() => Status(assets, statusLevel)).ConfigureAwait(false);
         }
 
         public async Task<bool> UpdateTask(IEnumerable<string> assets = null)
@@ -357,16 +358,17 @@ namespace UVC
             if (assets != null) assets = new List<string>(assets);
             OnOperationStarting(OperationType.Update, StoreCurrentStatus(assets));
             DisableAutoRefresh();
-            var updateTask = StartTask(() => Update(assets));
-            await updateTask.ContinueWithOnNextUpdate(t => EnableAutoRefresh());
-            return await updateTask;
+            return await 
+                StartTask(() => Update(assets))
+                .ContinueWithOnNextUpdate(t => EnableAutoRefresh())
+                .ConfigureAwait(false);
         }
 
         public async Task<bool> AddTask(IEnumerable<string> assets)
         {
             assets = new List<string>(assets);
             OnOperationStarting(OperationType.Add, StoreCurrentStatus(assets));
-            return await StartTask(() => Add(assets));
+            return await StartTask(() => Add(assets)).ConfigureAwait(false);
         }
 
         public async Task<bool> CommitTask(IEnumerable<string> assets, string commitMessage = "")
@@ -374,14 +376,14 @@ namespace UVC
             assets = new List<string>(assets);
             FlushFiles();
             OnOperationStarting(OperationType.Commit, StoreCurrentStatus(assets));
-            return await StartTask(() => Commit(assets, commitMessage));
+            return await StartTask(() => Commit(assets, commitMessage)).ConfigureAwait(false);
         }
 
         public async Task<bool> GetLockTask(IEnumerable<string> assets, OperationMode mode = OperationMode.Normal)
         {
             assets = new List<string>(assets);
             OnOperationStarting(OperationType.GetLock, StoreCurrentStatus(assets));
-            return await StartTask(() => GetLock(assets, mode));
+            return await StartTask(() => GetLock(assets, mode)).ConfigureAwait(false);
         }
 
         public async Task<bool> RevertTask(IEnumerable<string> assets)
@@ -389,45 +391,45 @@ namespace UVC
             assets = new List<string>(assets);
             FlushFiles();
             OnOperationStarting(OperationType.Revert, StoreCurrentStatus(assets));
-            return await StartTask(() => Revert(assets));
+            return await StartTask(() => Revert(assets)).ConfigureAwait(false);
         }
 
         public async Task<bool> CreateBranchTask(string from, string to)
         {
             OnOperationStarting(OperationType.CreateBranch, null);
-            return await StartTask(() => CreateBranch(from, to));
+            return await StartTask(() => CreateBranch(from, to)).ConfigureAwait(false);
         }
         
         public async Task<bool> MergeBranchTask(string url, string path = "")
         {
             OnOperationStarting(OperationType.MergeBranch, null);
-            return await StartTask(() => MergeBranch(url, path));
+            return await StartTask(() => MergeBranch(url, path)).ConfigureAwait(false);
         }
         
         public async Task<bool> SwitchBranchTask(string url, string path = "")
         {
             OnOperationStarting(OperationType.SwitchBranch, null);
-            return await StartTask(() => SwitchBranch(url, path));
+            return await StartTask(() => SwitchBranch(url, path)).ConfigureAwait(false);
         }
         
         public async Task<string> GetCurrentBranchTask()
         {
-            return await StartTask(GetCurrentBranch);
+            return await StartTask(GetCurrentBranch).ConfigureAwait(false);
         }
         
         public async Task<string> GetBranchDefaultPathTask()
         {
-            return await StartTask(GetBranchDefaultPath);
+            return await StartTask(GetBranchDefaultPath).ConfigureAwait(false);
         }
         
         public async Task<string> GetTrunkPathTask()
         {
-            return await StartTask(GetTrunkPath);
+            return await StartTask(GetTrunkPath).ConfigureAwait(false);
         }
         
         public async Task<List<BranchStatus>> RemoteListTask(string path)
         {
-            return await StartTask(() => RemoteList(path));
+            return await StartTask(() => RemoteList(path)).ConfigureAwait(false);
         }
         #endregion
 

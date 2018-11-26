@@ -1,7 +1,8 @@
 {
     "name": "UVC.Tests",
     "references": [
-        "UVC"
+        "UVC",
+        "Unity.PerformanceTesting"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
@@ -10,5 +11,9 @@
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
 }

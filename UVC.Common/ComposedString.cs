@@ -18,9 +18,10 @@ namespace UVC
             return regex.Split(composed).Where(s => !string.IsNullOrEmpty(s)).ToArray();
         }
 
+        static readonly StringBuilder sb = new StringBuilder();
         public override string Compose(List<int> indices)
         {
-            StringBuilder sb = new StringBuilder();
+            sb.Clear();
             for (int i = 0, length = indices.Count; i < length; ++i)
             {
                 sb.Append(Parts[indices[i]]);

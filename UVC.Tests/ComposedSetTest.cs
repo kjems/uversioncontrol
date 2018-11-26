@@ -1,5 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System.IO;
+using NUnit.Framework;
 using ComposedString = UVC.ComposedSet<string, UVC.FilesAndFoldersComposedStringDatabase>;
+#if UNITY_2018_3_OR_NEWER
+using Unity.PerformanceTesting;
+#endif
 
 namespace UVC.UnitTests
 {
@@ -171,6 +175,32 @@ namespace UVC.UnitTests
             Assert.IsFalse (CCSet("")       .Contains(CCSet("A")));
             Assert.IsFalse (CCSet("")       .Contains(CCSet("X")));
         }
-        
     }
+    
+    #if UNITY_2018_3_OR_NEWER
+    public class ComposedSetPerformanceTest
+    {
+        private string testText;
+
+        [SetUp]
+        public void LoadTestData()
+        {
+            if(testText == null)
+                testText = File.ReadAllText("./Packages/org.kjems.uvc/UVC.Tests/test.dat");
+        }
+        
+        [PerformanceTest, Version("1")]
+        public void DecomposeTest()
+        {
+            Measure.Method(() => new ComposedString(testText)).Run();
+        }
+        
+        [PerformanceTest, Version("1")]
+        public void ComposeTest()
+        {
+            var cs = new ComposedString(testText);
+            Measure.Method(() => cs.Compose()).Run();
+        }
+    }
+    #endif
 }

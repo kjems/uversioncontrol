@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using UnityEngine;
+using Unity.Profiling;
 
 namespace UVC
 {
@@ -58,6 +58,13 @@ namespace UVC
 
     public class ComposedSet<T, TDB> where TDB : IComposedSetDatabase<T>, new()
     {
+        #region Profiler Markers
+        private static readonly ProfilerMarker composeMarker   = new ProfilerMarker("Compose");
+        private static readonly ProfilerMarker decomposeMarker = new ProfilerMarker("Decompose");
+        private static readonly ProfilerMarker equalsMarker    = new ProfilerMarker("Equals");
+        private static readonly ProfilerMarker hashcodeMarker  = new ProfilerMarker("HashCode");
+        #endregion
+        
         // Const or Static
         protected static TDB database = new TDB();
         public static readonly ComposedSet<T, TDB> empty = new ComposedSet<T, TDB>(new List<int>());
@@ -80,7 +87,10 @@ namespace UVC
         }
         public ComposedSet(T composed)
         {
-            indices = database.Decompose(composed);
+            using (decomposeMarker.Auto())
+            {
+                indices = database.Decompose(composed);
+            }
             hashCode = CalculateHashCode(indices);
         }
 
@@ -117,14 +127,20 @@ namespace UVC
         }
         private static int CalculateHashCode(List<int> indices)
         {
-            int hash = 13;
-            for (int i = 0, length = indices.Count; i < length; ++i)
-                hash = (hash * 7) + indices[i];
-            return hash;
+            using (hashcodeMarker.Auto())
+            {
+                int hash = 13;
+                for (int i = 0, length = indices.Count; i < length; ++i)
+                    hash = (hash * 7) + indices[i];
+                return hash;
+            }
         }
         public T Compose()
         {
-            return database.Compose(indices);
+            using (composeMarker.Auto())
+            {
+                return database.Compose(indices);
+            }
         }
         public List<int> GetIndicesCopy()
         {
@@ -132,15 +148,19 @@ namespace UVC
         }
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
-            var other = obj as ComposedSet<T, TDB>;
-            if ((object)other == null) return false;
-            if (other.hashCode != hashCode) return false;
-            
-            for (int i = 0, length = indices.Count; i < length; ++i)
-                if (other.indices[i] != indices[i]) return false;
-            
-            return true;
+            using (equalsMarker.Auto())
+            {
+                if (obj == null) return false;
+                var other = obj as ComposedSet<T, TDB>;
+                if ((object) other == null) return false;
+                if (other.hashCode != hashCode) return false;
+
+                for (int i = 0, length = indices.Count; i < length; ++i)
+                    if (other.indices[i] != indices[i])
+                        return false;
+
+                return true;
+            }
         }
 
         public override string ToString()

@@ -607,7 +607,7 @@ namespace UVC.Backend.SVN
         
         public string GetTrunkPath()
         {
-            return "^/trunk/";
+            return "^/trunk";
         }
         
         public List<BranchStatus> RemoteList(string path)

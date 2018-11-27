@@ -246,7 +246,7 @@ namespace UVC
             }
         }
 
-        private bool RequestAssetDatabaseRefresh()
+        public bool RequestAssetDatabaseRefresh()
         {
             // The AssetDatabase will be refreshed on next status update
             pendingAssetDatabaseRefresh = true;
@@ -631,12 +631,7 @@ namespace UVC
         }
         public bool SwitchBranch(string url, string path = "")
         {
-            return HandleExceptions(() =>
-            {
-                var result = PerformOperation(OperationType.SwitchBranch, () => vcc.SwitchBranch(url, path));
-                RefreshAssetDatabase();
-                return result;
-            });
+            return HandleExceptions(() => PerformOperation(OperationType.SwitchBranch, () => vcc.SwitchBranch(url, path)));
         }
         public string GetCurrentBranch()
         {

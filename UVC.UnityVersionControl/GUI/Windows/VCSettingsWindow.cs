@@ -193,7 +193,7 @@ namespace UVC.UserInterface
                     {
                         using (GUILayoutHelper.Color(validmergeTool ? validColor : invalidColor))
                         {
-                            VCSettings.MergetoolPath = EditorGUILayout.TextField(VCSettings.MergetoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/');
+                            VCSettings.MergetoolPath = EditorGUILayout.TextField(VCSettings.MergetoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/').Replace("~",GetUserHomePath());
                         }
                     }
                     GUILayout.Label(new GUIContent("Merge Tool Arguments", "Include : [base] [theirs] [yours] [merge]"));
@@ -212,7 +212,7 @@ namespace UVC.UserInterface
                     {
                         using (GUILayoutHelper.Color(validDiffTool ? validColor : invalidColor))
                         {
-                            VCSettings.DifftoolPath = EditorGUILayout.TextField(VCSettings.DifftoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/');
+                            VCSettings.DifftoolPath = EditorGUILayout.TextField(VCSettings.DifftoolPath, GUILayout.ExpandWidth(true)).Replace('\\', '/').Replace("~",GetUserHomePath());
                         }
                     }
                     GUILayout.Label(new GUIContent("Diff Tool Arguments", "Include : [theirs] [yours]"));
@@ -237,7 +237,7 @@ namespace UVC.UserInterface
                     ? Environment.GetEnvironmentVariable("HOME")
                     : Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
         }
-        
+
         static bool ValidCommandLine(string path)
         {
             return !string.IsNullOrEmpty(path) && File.Exists(path);

@@ -312,9 +312,9 @@ namespace UVC
             new MergeTool
             {
                 name = "Semantic Merge (P4 diff)",
-                pathDiff  = "~/AppData/Local/semanticmerge/mergetool.exe",
-                pathMerge = "~/AppData/Local/semanticmerge/mergetool.exe",
-                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                pathDiff  = "~/AppData/Local/semanticmerge/semanticmergetool.exe",
+                pathMerge = "~/AppData/Local/semanticmerge/semanticmergetool.exe",
+                argumentsDiff  = "-s=\"[theirs]\" -d=\"[yours]\"",
                 argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
                                  "--nolangwarn -emt=\"C:/Program Files/Perforce/p4merge.exe \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
             }

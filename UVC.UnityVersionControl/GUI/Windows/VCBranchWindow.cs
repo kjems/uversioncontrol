@@ -89,12 +89,7 @@ namespace UVC.UserInterface
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var fromBranch = branchColumnList.GetSelection().First().name;
-                ConfirmMerge(GetChangedAssets().Any(), fromBranch, currentBranch,
-                    mergeAction: () =>
-                    {
-                        Merge(fromBranch);
-                        Refresh();
-                    });
+                MergeWithConfirm(fromBranch);
             }
             GUI.enabled = true;
             if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))
@@ -129,7 +124,7 @@ namespace UVC.UserInterface
             branchColumnList.SetBranches(string.IsNullOrEmpty(searchString) ? branches : branches.Where(s => s.name.Contains(searchString) || s.author.Contains(searchString)));
         }
 
-        private void ConfirmMerge(bool modifiedLocalCopy, string from, string to, Action mergeAction)
+        private static void ConfirmMerge(bool modifiedLocalCopy, string from, string to, Action mergeAction)
         {
             var mergeConfirmation = CreateInstance<MergeConfirmationWindow>();
             mergeConfirmation.minSize = new Vector2(440, 100);
@@ -141,7 +136,7 @@ namespace UVC.UserInterface
             mergeConfirmation.ShowUtility();
         }
 
-        static IEnumerable<VersionControlStatus> GetChangedAssets()
+        private static IEnumerable<VersionControlStatus> GetChangedAssets()
         {
             return VCCommands.Instance.GetFilteredAssets(status =>
                     status.fileStatus == VCFileStatus.Modified ||
@@ -154,14 +149,24 @@ namespace UVC.UserInterface
                     status.property == VCProperty.Conflicted);
         }
 
-        static async void Switch(string url)
+        private static async void Switch(string url)
         {
             await VCCommands.Instance.SwitchBranchTask(url);
             VCCommands.Instance.RequestAssetDatabaseRefresh();
             Refresh();
         }
 
-        static async void Merge(string url)
+        private static void MergeWithConfirm(string url)
+        {
+            ConfirmMerge(GetChangedAssets().Any(), url, currentBranch,
+                mergeAction: () =>
+                {
+                    Merge(url);
+                    Refresh();
+                });
+        }
+
+        private static async void Merge(string url)
         {
             int progressCounter = 0;
             void UpdateMergeProgress(string s)
@@ -180,7 +185,8 @@ namespace UVC.UserInterface
                 VCCommands.Instance.RequestAssetDatabaseRefresh();
             }
         }
-        static async void Refresh()
+        
+        private static async void Refresh()
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
             if (VCCommands.Active)

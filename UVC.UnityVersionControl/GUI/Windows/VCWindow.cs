@@ -64,7 +64,7 @@ namespace UVC.UserInterface
 
             bool rest = !unversioned && !meta && !modifiedNoLock && !projectSetting;
             return ((showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest) && 
-                   (string.IsNullOrEmpty(searchString) || vcStatus.assetPath.Compose().Contains(searchString));
+                   (string.IsNullOrEmpty(searchString) || vcStatus.assetPath.Compose().Contains(searchString) || vcStatus.changelist.Compose().Contains(searchString));
         }
 
         // This is a performance critical function

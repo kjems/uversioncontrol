@@ -62,14 +62,6 @@ namespace UVC.UserInterface
         
         void BranchToolbarGUI()
         {
-            GUILayout.Label("Current", EditorStyles.miniLabel, GUILayout.Width(50));
-            GUILayout.Label(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(120), GUILayout.ExpandWidth(true));
-            GUILayout.Label("Branch Path", EditorStyles.miniLabel, GUILayout.Width(70));
-            string newBranchPath = GUILayout.TextField(BranchPath, EditorStyles.toolbarTextField, GUILayout.MinWidth(150));
-            if (newBranchPath != BranchPath)
-            {
-                BranchPath = newBranchPath;
-            }
             if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 Refresh();
@@ -84,28 +76,44 @@ namespace UVC.UserInterface
             if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var fromBranch = branchColumnList.GetSelection().First().name;
-                if (ConfirmMerge(GetChangedAssets().Any(), fromBranch, currentBranch))
-                {
-                    Merge(fromBranch);
-                    Refresh();
-                }
+                ConfirmMerge(GetChangedAssets().Any(), fromBranch, currentBranch, 
+                    mergeAction: () => 
+                    {
+                        Merge(fromBranch);
+                        Refresh();
+                    });
             }
             GUI.enabled = true;
             if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var newBranchWindow = CreateInstance<NewBranchWindow>();
                 newBranchWindow.minSize = new Vector2(440, 50);
+                newBranchWindow.maxSize = new Vector2(440, 50);
                 newBranchWindow.titleContent = new GUIContent("Create Branch");
                 newBranchWindow.fromPath = currentBranch;
                 newBranchWindow.toPath = BranchPath + DateTime.Now.ToString("yyyy-MM-dd_");
                 newBranchWindow.ShowUtility();
             }
+            
+            GUILayout.FlexibleSpace();
+            
+            GUILayout.Label("Branch Path:", EditorStyles.miniLabel, GUILayout.Width(70));
+            string newBranchPath = GUILayout.TextField(BranchPath, EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200));
+            if (newBranchPath != BranchPath)
+            {
+                BranchPath = newBranchPath;
+            }
         }
-        private bool ConfirmMerge(bool modifiedLocalCopy, string from, string to)
+        private void ConfirmMerge(bool modifiedLocalCopy, string from, string to, Action mergeAction)
         {
-            string message = $"Are you sure you want to merge\n[ {from} ]\ninto\n[ {to} ]?";
-            if (modifiedLocalCopy) message += $"\n\n⚠️ WARNING ⚠️ Your local-copy has modifications!";
-            return EditorUtility.DisplayDialog("Merge Confirmation", message, "Merge", "Abort");
+            var mergeConfirmation = CreateInstance<MergeConfirmationWindow>();
+            mergeConfirmation.minSize = new Vector2(440, 100);
+            mergeConfirmation.maxSize = new Vector2(440, 100);
+            mergeConfirmation.fromPath = from;
+            mergeConfirmation.toPath = to;
+            mergeConfirmation.localModified = modifiedLocalCopy;
+            mergeConfirmation.mergeAction = mergeAction;
+            mergeConfirmation.ShowUtility();
         }
 
         static IEnumerable<VersionControlStatus> GetChangedAssets()

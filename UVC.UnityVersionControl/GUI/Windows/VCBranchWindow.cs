@@ -46,6 +46,7 @@ namespace UVC.UserInterface
 
         private void OnEnable()
         {
+            instance = this;
             searchField = new SearchField();
             if (string.IsNullOrEmpty(branchpath)) branchpath = VCCommands.Instance.GetBranchDefaultPath();
             if (string.IsNullOrEmpty(trunkpath)) trunkpath = VCCommands.Instance.GetTrunkPath();
@@ -254,7 +255,7 @@ namespace UVC.UserInterface
                 {
                     GenericMenu menu = new GenericMenu();
                     menu.AddItem(new GUIContent("Switch"), false, () => Switch(row.data.name));
-                    menu.AddItem(new GUIContent("Merge"), false, () => Merge(row.data.name));
+                    menu.AddItem(new GUIContent("Merge"), false, () => MergeWithConfirm(row.data.name));
                     return menu;
                 };
 

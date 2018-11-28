@@ -25,12 +25,12 @@ namespace UVC.UserInterface
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label("From", GUILayout.Width(40));
-                fromPath = GUILayout.TextField(fromPath);
+                GUILayout.Label(fromPath, EditorStyles.textField);
             }
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label("Into", GUILayout.Width(40));
-                toPath = GUILayout.TextField(toPath);
+                GUILayout.Label(toPath, EditorStyles.textField);
             }
 
             if (localModified)

@@ -87,8 +87,8 @@ namespace UVC.UserInterface
             if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 var newBranchWindow = CreateInstance<NewBranchWindow>();
-                newBranchWindow.minSize = new Vector2(440, 50);
-                newBranchWindow.maxSize = new Vector2(440, 50);
+                newBranchWindow.minSize = new Vector2(440, 70);
+                newBranchWindow.maxSize = new Vector2(440, 70);
                 newBranchWindow.titleContent = new GUIContent("Create Branch");
                 newBranchWindow.fromPath = currentBranch;
                 newBranchWindow.toPath = BranchPath + DateTime.Now.ToString("yyyy-MM-dd_");
@@ -191,7 +191,10 @@ namespace UVC.UserInterface
             private MultiColumnState.Column  columnAuthor;
             private MultiColumnState.Column  columnRevision;
             private MultiColumnState.Column  columnDate;
-    
+
+            private GUIContent activeBranch = new GUIContent("  ▶", "Active Branch");
+            private GUIContent emptyGUIContent = new GUIContent();
+            
             public BranchMulticolumnList()
             {
                 Initialize();
@@ -199,7 +202,8 @@ namespace UVC.UserInterface
     
             private void Initialize()
             {
-                columnActive = new MultiColumnState.Column(new GUIContent("Active"), data => new GUIContent(currentBranch == data.name ? "    =>" : ""));
+                
+                columnActive = new MultiColumnState.Column(new GUIContent("", "Active Branch"), data => currentBranch == data.name ?  activeBranch : emptyGUIContent);
                 columnPath = new MultiColumnState.Column(new GUIContent("Path"), data => new GUIContent(data.name));
                 columnAuthor = new MultiColumnState.Column(new GUIContent("Author"), data => new GUIContent(data.author));
                 columnRevision = new MultiColumnState.Column(new GUIContent("Revision"), data => new GUIContent(data.revision.ToString()));
@@ -249,13 +253,13 @@ namespace UVC.UserInterface
                 options.rowStyle.padding = new RectOffset(0, 0, 0, 0);
                 
                 multiColumnState.AddColumn(columnActive);
-                options.widthTable.Add(columnActive.GetHeader().text, 45);
+                options.widthTable.Add(columnActive.GetHeader().text, 25);
                 
                 multiColumnState.AddColumn(columnPath);
                 options.widthTable.Add(columnPath.GetHeader().text, 350);
                 
                 multiColumnState.AddColumn(columnAuthor);
-                options.widthTable.Add(columnAuthor.GetHeader().text, 80);
+                options.widthTable.Add(columnAuthor.GetHeader().text, 90);
                 
                 multiColumnState.AddColumn(columnRevision);
                 options.widthTable.Add(columnRevision.GetHeader().text, 80);

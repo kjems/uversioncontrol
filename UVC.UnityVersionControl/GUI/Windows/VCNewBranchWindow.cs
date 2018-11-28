@@ -33,6 +33,7 @@ namespace UVC.UserInterface
                 toPath = GUILayout.TextField(toPath);
             }
 
+            GUILayout.FlexibleSpace();
             using (new GUILayout.HorizontalScope())
             {
                 switchToNewBranch = GUILayout.Toggle(switchToNewBranch, "Switch To New Branch");

@@ -287,9 +287,17 @@ namespace UVC
             #if UNITY_EDITOR_WIN
             new MergeTool
             {
+                name = "Tortoise Merge",
+                pathDiff  = "C:/Program Files/TortoiseSVN/bin/TortoiseMerge.exe",
+                pathMerge = "C:/Program Files/TortoiseSVN/bin/TortoiseMerge.exe",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "/base:\"[base]\" /theirs:\"[theirs]\" /mine:\"[yours]\" /merge:\"[merge]\""
+            },
+            new MergeTool
+            {
                 name = "P4Merge",
-                pathDiff  = "D:/Perforce/p4merge.exe",
-                pathMerge = "D:/Perforce/p4merge.exe",
+                pathDiff  = "C:/Program Files/Perforce/p4merge.exe",
+                pathMerge = "C:/Program Files/Perforce/p4merge.exe",
                 argumentsDiff  = "\"[theirs]\" \"[yours]\"",
                 argumentsMerge = "\"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\""
             },
@@ -304,11 +312,11 @@ namespace UVC
             new MergeTool
             {
                 name = "Semantic Merge (P4 diff)",
-                pathDiff  = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
-                pathMerge = "C:/Users/Kristian Kjems/AppData/Local/semanticmerge/mergetool.exe",
+                pathDiff  = "~/AppData/Local/semanticmerge/mergetool.exe",
+                pathMerge = "~/AppData/Local/semanticmerge/mergetool.exe",
                 argumentsDiff  = "\"[theirs]\" \"[yours]\"",
                 argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
-                                 "--nolangwarn -emt=\"/Applications/p4merge.app/Contents/MacOS/p4merge \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
+                                 "--nolangwarn -emt=\"C:/Program Files/Perforce/p4merge.exe \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
             }
             #endif
         };       

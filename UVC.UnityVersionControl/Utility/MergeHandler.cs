@@ -62,13 +62,7 @@ namespace UVC
                     }
                     else
                     {
-                        if (!Directory.Exists(tempDirectory))
-                            Directory.CreateDirectory(tempDirectory);
-                        string copiedBaseAssetPath = Path.GetFullPath(tempDirectory + "base_" + Path.GetFileName(assetPath));
-                        if(File.Exists(copiedBaseAssetPath))
-                            File.Delete(copiedBaseAssetPath);
-                        File.Copy(baseAssetPath, copiedBaseAssetPath);
-                        var (toolpath, args) = GetDiffCommandLine(copiedBaseAssetPath, Path.GetFullPath(assetPath));
+                        var (toolpath, args) = GetDiffCommandLine(baseAssetPath, Path.GetFullPath(assetPath));
                         var baseConvertCommand = new CommandLineExecution.CommandLine(toolpath, args, workingDirectory);
                         Task.Run(() => baseConvertCommand.Execute());
                     }

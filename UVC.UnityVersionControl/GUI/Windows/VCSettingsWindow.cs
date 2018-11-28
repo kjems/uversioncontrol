@@ -176,9 +176,9 @@ namespace UVC.UserInterface
                     if (EditorGUI.EndChangeCheck())
                     {
                         var mergeTool = VCSettings.mergeTools[VCSettings.MergeToolIndex];
-                        VCSettings.MergetoolPath = Path.GetFullPath(mergeTool.pathMerge.Replace("~",System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + "/.."));
+                        VCSettings.MergetoolPath = mergeTool.pathMerge.Replace("~",GetUserHomePath());
                         VCSettings.MergetoolArgs = mergeTool.argumentsMerge;
-                        VCSettings.DifftoolPath = mergeTool.pathDiff.Replace("~",System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal)+ "/..");
+                        VCSettings.DifftoolPath = mergeTool.pathDiff.Replace("~",GetUserHomePath());
                         VCSettings.DifftoolArgs = mergeTool.argumentsDiff;
                     }
                 }
@@ -231,6 +231,13 @@ namespace UVC.UserInterface
         static string[] mergeToolNames;
         static string[] MergeToolNames => mergeToolNames ?? (mergeToolNames = VCSettings.mergeTools.Select(mt => mt.name).ToArray());
 
+        static string GetUserHomePath()
+        {
+            return (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+                    ? Environment.GetEnvironmentVariable("HOME")
+                    : Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
+        }
+        
         static bool ValidCommandLine(string path)
         {
             return !string.IsNullOrEmpty(path) && File.Exists(path);

@@ -13,12 +13,13 @@ namespace UVC.UserInterface
     
     internal class BranchWindow : EditorWindow
     {
-        BranchMulticolumnList branchColumnList;
+        public static BranchWindow instance;
+        static BranchMulticolumnList branchColumnList;
 
         private static string currentBranch = "";
         private static string trunkpath = null;
         private static string branchpath = null;
-        public string BranchPath
+        public static string BranchPath
         {
             get { return branchpath ?? (branchpath = EditorPrefs.GetString("BranchWindow/BranchPath")); }
             set
@@ -28,9 +29,15 @@ namespace UVC.UserInterface
             }
         }
         
-        public static void Init()
+        public static void Create()
         {
-            GetWindow<BranchWindow>("Branches");
+            if (instance == null)
+            {
+                instance = CreateInstance<BranchWindow>();
+                instance.minSize = new Vector2(220, 140);
+                instance.titleContent = new GUIContent(Terminology.branch);
+                instance.ShowUtility();
+            }
         }
 
         private void OnEnable()
@@ -45,6 +52,7 @@ namespace UVC.UserInterface
         private void OnDisable()
         {
             VCCommands.Instance.OperationCompleted -= InstanceOnOperationCompleted;
+            instance = null;
         }
         
         private void InstanceOnOperationCompleted(OperationType operation, VersionControlStatus[] beforeStatus, VersionControlStatus[] afterStatus, bool success)
@@ -129,14 +137,14 @@ namespace UVC.UserInterface
                     status.property == VCProperty.Conflicted);
         }
 
-        async void Switch(string url)
+        static async void Switch(string url)
         {
             await VCCommands.Instance.SwitchBranchTask(url);
             VCCommands.Instance.RequestAssetDatabaseRefresh();
             Refresh();
         }
         
-        async void Merge(string url)
+        static async void Merge(string url)
         {
             int progressCounter = 0;
             void UpdateMergeProgress(string s)
@@ -155,7 +163,7 @@ namespace UVC.UserInterface
                 VCCommands.Instance.RequestAssetDatabaseRefresh();
             }
         }       
-        async void Refresh()
+        static async void Refresh()
         {
             if (!branchpath.EndsWith("/")) branchpath += "/";
             if (VCCommands.Active)
@@ -173,7 +181,7 @@ namespace UVC.UserInterface
                 branchColumnList.SetBranches(relativeBranches);
                 currentBranch = await VCCommands.Instance.GetCurrentBranchTask();
                 await VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
-                Repaint();
+                //Repaint();
             }
         }
 
@@ -219,9 +227,11 @@ namespace UVC.UserInterface
                 
                 var guiSkin = EditorGUIUtility.GetBuiltinSkin( EditorGUIUtility.isProSkin ? EditorSkin.Scene : EditorSkin.Inspector);
     
-                Func<GenericMenu> rowRightClickMenu = () =>
+                Func<MultiColumnState.Row, MultiColumnState.Column, GenericMenu> rowRightClickMenu = (row, column) =>
                 {
                     GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Switch"), false, () => Switch(row.data.name));
+                    menu.AddItem(new GUIContent("Merge"), false, () => Merge(row.data.name));
                     return menu;
                 };
                 
@@ -242,7 +252,7 @@ namespace UVC.UserInterface
                     widths = new float[] { 200 },
                     doubleClickAction = path =>
                     {
-                        DebugLog.Log(path.name);
+                        //DebugLog.Log(path.name);
                     }
                 };
     

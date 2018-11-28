@@ -284,10 +284,7 @@ namespace UVC.UserInterface
                 
                 if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
                 {
-                    var branchWindow = CreateInstance<BranchWindow>();
-                    branchWindow.minSize = new Vector2(220, 140);
-                    branchWindow.titleContent = new GUIContent(Terminology.branch);
-                    branchWindow.ShowUtility();
+                    BranchWindow.Create();
                 }
                 GUILayout.FlexibleSpace();
 

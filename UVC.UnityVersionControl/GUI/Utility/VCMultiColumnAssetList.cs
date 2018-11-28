@@ -94,7 +94,7 @@ namespace UVC.UserInterface
                 return String.CompareOrdinal(r1Text, r2Text);
             };
 
-            Func<GenericMenu> rowRightClickMenu = () =>
+            Func<MultiColumnState.Row, MultiColumnState.Column, GenericMenu> rowRightClickMenu = (row, column) =>
             {
                 var selected = multiColumnState.GetSelected().Select(status => status.assetPath.Compose());
                 if (!selected.Any()) return new GenericMenu();

@@ -17,7 +17,7 @@ internal static class MultiColumnView
         public GUIStyle headerStyle;
         public GUIStyle rowStyle;
         public Func<MultiColumnState<TD,TC>.Column, GenericMenu> headerRightClickMenu;
-        public Func<GenericMenu> rowRightClickMenu;
+        public Func<MultiColumnState<TD, TC>.Row, MultiColumnState<TD, TC>.Column, GenericMenu> rowRightClickMenu;
         public Func<MultiColumnState<TD, TC>.Row, MultiColumnState<TD, TC>.Column, bool> cellClickAction;
         public float[] widths;
         public Vector2 scrollbarPos;
@@ -162,7 +162,7 @@ internal static class MultiColumnView
             var column = columns[i];
 
             var r = new Rect(x, rect.y, width, rect.height);
-            ListViewCell<TD>(r, action, _ => { }, selectedFunc, bHover, column.GetContent(row.data), mvcOption.rowStyle, mvcOption.rowRightClickMenu, () => mvcOption.cellClickAction(row, column));
+            ListViewCell<TD>(r, action, _ => { }, selectedFunc, bHover, column.GetContent(row.data), mvcOption.rowStyle, () => mvcOption.rowRightClickMenu(row, column), () => mvcOption.cellClickAction(row, column));
             x += width;
         }
     }

@@ -176,9 +176,9 @@ namespace UVC.UserInterface
                     if (EditorGUI.EndChangeCheck())
                     {
                         var mergeTool = VCSettings.mergeTools[VCSettings.MergeToolIndex];
-                        VCSettings.MergetoolPath = mergeTool.pathMerge;
+                        VCSettings.MergetoolPath = Path.GetFullPath(mergeTool.pathMerge.Replace("~",System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal) + "/.."));
                         VCSettings.MergetoolArgs = mergeTool.argumentsMerge;
-                        VCSettings.DifftoolPath = mergeTool.pathDiff;
+                        VCSettings.DifftoolPath = mergeTool.pathDiff.Replace("~",System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal)+ "/..");
                         VCSettings.DifftoolArgs = mergeTool.argumentsDiff;
                     }
                 }
@@ -224,10 +224,10 @@ namespace UVC.UserInterface
             }
             EditorGUILayout.EndScrollView();
         }
-        
+
         static Color validColor = new Color(0.0f, 0.6f, 0.0f);
         static Color invalidColor = new Color(0.6f, 0.0f, 0.0f);
-        
+
         static string[] mergeToolNames;
         static string[] MergeToolNames => mergeToolNames ?? (mergeToolNames = VCSettings.mergeTools.Select(mt => mt.name).ToArray());
 

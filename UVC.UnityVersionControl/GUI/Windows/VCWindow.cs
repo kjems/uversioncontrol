@@ -7,16 +7,18 @@
 // SVNIntegration is used to get state and execute commands on the repository.
 //
 // Although functional the general quality of this file is poor and need a refactor
-
+#pragma warning disable CS4014
 
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.IMGUI.Controls;
 using MultiColumnState = MultiColumnState<string, UnityEngine.GUIContent>;
 
 namespace UVC.UserInterface
 {
+    using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
     internal class VCWindow : EditorWindow
     {
         // Const
@@ -34,6 +36,9 @@ namespace UVC.UserInterface
         private bool updateInProgress = false;
         private bool refreshInProgress = false;
         private string commandInProgress = "";
+        private string currentBranch = "<unknown>";
+        private string searchString;
+        private SearchField searchField;
         private VCMultiColumnAssetList vcMultiColumnAssetList;
         private VCSettingsWindow settingsWindow;
         private Rect rect;
@@ -58,7 +63,8 @@ namespace UVC.UserInterface
             bool modifiedNoLock = !projectSetting && vcStatus.ModifiedOrLocalEditAllowed();
 
             bool rest = !unversioned && !meta && !modifiedNoLock && !projectSetting;
-            return (showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest;
+            return ((showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest) && 
+                   (string.IsNullOrEmpty(searchString) || vcStatus.assetPath.Compose().Contains(searchString) || vcStatus.changelist.Compose().Contains(searchString));
         }
 
         // This is a performance critical function
@@ -66,14 +72,17 @@ namespace UVC.UserInterface
         {
             if (!vcStatus.Reflected) return false;
 
-            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal) && vcStatus.fileStatus != VCFileStatus.Ignored;
+            bool assetCriteria = vcStatus.fileStatus != VCFileStatus.None && (vcStatus.ModifiedOrLocalEditAllowed() || vcStatus.fileStatus != VCFileStatus.Normal || !ComposedString.IsNullOrEmpty(vcStatus.changelist)) && vcStatus.fileStatus != VCFileStatus.Ignored;
             if (assetCriteria) return true;
+
+            bool property = vcStatus.property == VCProperty.Modified || vcStatus.property == VCProperty.Conflicted;
+            if (property) return true;
 
             bool localLock = vcStatus.lockStatus == VCLockStatus.LockedHere;
             if (localLock) return true;
 
             var metaStatus = vcStatus.MetaStatus();
-            bool metaCriteria = metaStatus.fileStatus != VCFileStatus.Normal && metaStatus.fileStatus != VCFileStatus.None && metaStatus.fileStatus != VCFileStatus.Ignored;
+            bool metaCriteria = metaStatus.fileStatus != VCFileStatus.Normal && (metaStatus.fileStatus != VCFileStatus.None || !ComposedString.IsNullOrEmpty(metaStatus.changelist)) && metaStatus.fileStatus != VCFileStatus.Ignored;
 
             if (metaCriteria) return true;
 
@@ -96,7 +105,8 @@ namespace UVC.UserInterface
             showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
             showModifiedNoLock = EditorPrefs.GetBool("VCWindow/showModifiedNoLock", true);
             statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 400.0f);
-
+            
+            searchField = new SearchField();
 
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
 
@@ -109,6 +119,8 @@ namespace UVC.UserInterface
             VCSettings.SettingChanged += Repaint;            
 
             rect = new Rect(0, statusHeight, position.width, 40.0f);
+
+            RefreshCurrentBranch();
         }
 
         virtual protected void OnDisable()
@@ -154,8 +166,18 @@ namespace UVC.UserInterface
             }
         }
 
+        private void RefreshCurrentBranch()
+        {
+            VCCommands.Instance.GetCurrentBranchTask().ContinueWithOnNextUpdate(cb =>
+            {
+                currentBranch = cb;
+                Repaint();
+            });
+        }
+
         private void RefreshGUI()
         {
+            RefreshCurrentBranch();
             Repaint();
         }
 
@@ -254,24 +276,25 @@ namespace UVC.UserInterface
                     }
                     if (GUILayout.Button(Terminology.commit, EditorStyles.toolbarButton, buttonLayout))
                     {
-                        VCCommands.Instance.CommitDialog(GetSelectedAssets().ToArray(), true);
+                        VCCommands.Instance.CommitDialog(GetSelectedAssets().ToList(), true);
                     }
-                    if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
-                    {
-                        
-                    }
-                    if (GUILayout.Button(Terminology.switchbranch, EditorStyles.toolbarButton, buttonLayout))
-                    {
-                        
-                    }
-                    if (GUILayout.Button(Terminology.merge, EditorStyles.toolbarButton, buttonLayout))
-                    {
-                        
-                    }
-                    
                 }
+                GUILayout.Space(7);
+                GUILayout.Label(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(80), GUILayout.ExpandWidth(true));
                 
+                if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
+                {
+                    BranchWindow.Create();
+                }
                 GUILayout.FlexibleSpace();
+
+                
+                string newSearchString = searchField.OnToolbarGUI(searchString);
+                if (newSearchString != searchString)
+                {
+                    searchString = newSearchString;
+                    UpdateFilteringOfKeys();
+                }
 
                 bool newShowModifiedProjectSettings = GUILayout.Toggle(showProjectSetting, "Project Settings", EditorStyles.toolbarButton, new[] { GUILayout.MaxWidth(95) });
                 if (newShowModifiedProjectSettings != showProjectSetting)

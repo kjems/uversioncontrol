@@ -16,21 +16,31 @@ namespace UVC.AssetPathFilters
                 .Where(d => vcc.GetAssetStatus(d).ModifiedOrLocalEditAllowed())
                 .ToArray();
         }
-
-        public static IEnumerable<string> AddFilesInFolders(this IEnumerable<string> assets)
+        
+        public static void AddFilesInFolders(ref List<string> assets)
         {
-            foreach (var assetIt in new List<string>(assets))
+            /*for (int i = assets.Count - 1; i >= 0; --i)
             {
-                if (Directory.Exists(assetIt))
+                if (AssetDatabase.IsValidFolder(assets[i]))
                 {
-                    assets = assets
-                        .Concat(Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories)
-                                    .Where(a => File.Exists(a) && !a.Contains(VCCAddMetaFiles.metaStr) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
-                                    .Select(s => s.Replace("\\", "/")))
-                        .ToArray();
+                    var filesInFolder = Directory.GetFiles(assets[i], "*", SearchOption.AllDirectories)
+                    .Where(a => File.Exists(a) && !a.EndsWith(VCCAddMetaFiles.metaStr) && !a.Contains("/.") && !a.Contains("\\.") && (File.GetAttributes(a) & FileAttributes.Hidden) == 0)
+                    .Select(s => s.Replace("\\", "/"));
+                    
+                    assets.AddRange(filesInFolder);
                 }
+            }*/
+            var folders = assets.Where(AssetDatabase.IsValidFolder).ToArray();
+            if (folders.Length > 0)
+            {
+                assets.AddRange(
+                    AssetDatabase
+                        .FindAssets("", folders)
+                        .Select(AssetDatabase.GUIDToAssetPath)
+                        .Select(s => s.Replace("\\", "/"))
+                        .Where(a => !a.EndsWith(VCCAddMetaFiles.metaStr))
+                );
             }
-            return assets;
         }
 
         public static IEnumerable<string> GetDependencies(this IEnumerable<string> assetPaths)

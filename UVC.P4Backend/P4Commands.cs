@@ -392,6 +392,11 @@ namespace UVC.Backend.P4
                 return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.Compose())));
             }
         }
+        
+        public InfoStatus GetInfo(string path)
+        {
+            return null;
+        }
 
         public bool GetStatus(StatusLevel statusLevel, string fstatArgs, string path)
         {
@@ -774,6 +779,10 @@ namespace UVC.Backend.P4
             }
             return success;
         }
+        public virtual bool Commit(string commitMessage = "")
+        {
+            return true;
+        }
 
         private void UpdateAfterOperation(IEnumerable<string> assets)
         {
@@ -842,7 +851,7 @@ namespace UVC.Backend.P4
             return true;
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
             return true;
         }
@@ -850,6 +859,31 @@ namespace UVC.Backend.P4
         public bool MergeBranch(string url, string path = "")
         {
             return true;
+        }
+        
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public string GetCurrentBranch()
+        {
+            return null;
+        }
+        
+        public virtual string GetBranchDefaultPath()
+        {
+            return null;
+        }
+        
+        public virtual string GetTrunkPath()
+        {
+            return null;
+        }
+        
+        public List<BranchStatus> RemoteList(string path)
+        {
+            return null;
         }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
@@ -885,10 +919,10 @@ namespace UVC.Backend.P4
             return null;
         }
 
-        public string GetRevision()
+        public int GetRevision()
         {
             DebugLog.LogWarning("P4Commands.GetRevisionNumber not implemented");
-            return null;
+            return 0;
         }
 
         public string GetBasePath(string assetPath)
@@ -903,11 +937,11 @@ namespace UVC.Backend.P4
             return "";
         }
 
-        public bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
             DebugLog.LogWarning("P4Commands.GetConflict not implemented");
             basePath = null;
-            mine = null;
+            yours = null;
             theirs = null;
             return false;
         }

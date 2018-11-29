@@ -104,13 +104,13 @@ namespace UVC
             var userHash = PlayerPrefs.GetString(userHashPrefKey);
             if (userHash.Length == 0)
             {
-                userHash = string.Format("{0}.{1}.{2}.{3}.{4}.", domainHash, randomInt, timestamp, timestamp, timestamp);
+                userHash = $"{domainHash}.{randomInt}.{timestamp}.{timestamp}.{timestamp}.";
                 PlayerPrefs.SetString(userHashPrefKey, userHash);
             }
 
             var _utma = userHash + visitCount.ToString();
-            var _utmz = string.Format("{0}.{1}.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)", domainHash, timestamp);
-            var _utmcc = WWW.EscapeURL(string.Format("__utma={0};+__utmz={1};", _utma, _utmz)).Replace("|", "%7C");
+            var _utmz = $"{domainHash}.{timestamp}.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)";
+            var _utmcc = WWW.EscapeURL($"__utma={_utma};+__utmz={_utmz};").Replace("|", "%7C");
 
             var parameters = new Dictionary<string, string>()
             {
@@ -118,7 +118,7 @@ namespace UVC
                 { "utmn", randomInt.ToString() }, // Random number
                 { "utmhn", WWW.EscapeURL( domain ) }, // Host name
                 { "utmcs", "UTF-8" }, // Charset
-                { "utmsr", string.Format( "{0}x{1}", Screen.currentResolution.width, Screen.currentResolution.height ) }, // Screen resolution
+                { "utmsr", $"{Screen.currentResolution.width}x{Screen.currentResolution.height}"}, // Screen resolution
                 { "utmsc", "24-bit" }, // Color depth
                 { "utmul", "en-us" }, // Language
                 { "utmje", "0" }, // Java enabled or not
@@ -135,12 +135,7 @@ namespace UVC
             if (Valid(category) && Valid(action))
             {
                 var eventString =
-                    string.Format("5({0}*{1}{2}){3}",
-                        category,
-                        action,
-                        Valid(label) ? string.Format("*{0}", label) : "",
-                        value.HasValue ? string.Format("({0})", value.ToString()) : ""
-                    );
+                    $"5({category}*{action}{(Valid(label) ? $"*{label}" : "")}){(value.HasValue ? $"({value.ToString()})" : "")}";
 
                 parameters.Add("utme", WWW.EscapeURL(eventString));
                 parameters.Add("utmt", "event");

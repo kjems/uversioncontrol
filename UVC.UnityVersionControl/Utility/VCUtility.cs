@@ -4,12 +4,17 @@
 
 // This script includes common SVN related operations
 
+using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using UVC.Logging;
+using System.Threading.Tasks;
+using Object = UnityEngine.Object;
 
 namespace UVC
 {
@@ -76,7 +81,7 @@ namespace UVC
             if (ObjectUtilities.ChangesStoredInScene(obj)) SceneManagerUtilities.SaveActiveScene();
             if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
             if (onHierarchyCommit != null) onHierarchyCommit(obj);
-            VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), showCommitDialog, commitMessage);
+            VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), includeDependencies: true, showUserConfirmation: showCommitDialog, commitMessage: commitMessage);
         }
 
         public static bool GetLock(Object obj, OperationMode operationMode = OperationMode.Normal)
@@ -190,52 +195,7 @@ namespace UVC
             return objectType;
         }
 
-        static string binary2TextPath = null;
-        static string GetBinaryConverterPath()
-        {
-            if (binary2TextPath == null)
-                binary2TextPath = EditorApplication.applicationPath.Replace("Unity.exe", "") + (Application.platform == RuntimePlatform.WindowsEditor ? "Data/Tools/binary2text.exe" : "/Contents/Tools/binary2text");
-            return binary2TextPath;
-        }
-
-        const string tempDirectory = "Temp/UVC/";
-        public static void DiffWithBase(string assetPath)
-        {
-            if (!string.IsNullOrEmpty(assetPath))
-            {
-                string baseAssetPath = VCCommands.Instance.GetBasePath(assetPath);
-                if (!string.IsNullOrEmpty(baseAssetPath))
-                {
-                    if (EditorSettings.serializationMode == SerializationMode.ForceBinary && requiresTextConversionPostfix.Any(new ComposedString(assetPath).EndsWith))
-                    {
-                        if (!Directory.Exists(tempDirectory))
-                            Directory.CreateDirectory(tempDirectory);
-                        string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-base";
-                        string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".svn-wc";
-                        var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
-                        var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
-                        EditorUtility.InvokeDiffTool("Working Base : " + convertedWorkingCopyFile, convertedBaseFile, "Working Copy : " + convertedWorkingCopyFile, convertedWorkingCopyFile, convertedWorkingCopyFile, convertedBaseFile);
-                    }
-                    else
-                    {
-                        EditorUtility.InvokeDiffTool("Working Base : " + assetPath, baseAssetPath, "Working Copy : " + assetPath, assetPath, assetPath, baseAssetPath);
-                    }
-                }
-            }
-        }
-
-        static readonly ComposedString[] requiresTextConversionPostfix  = new ComposedString[] { ".unity", ".prefab", ".mat", ".asset" };
-        static readonly ComposedString[] mergablePostfix                = new ComposedString[] { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml", ".json", ".asmdef", ".manifest", ".compute" };
         
-        public static bool IsDiffableAsset(ComposedString assetPath)
-        {
-            return mergablePostfix.Any(assetPath.EndsWith) || requiresTextConversionPostfix.Any(assetPath.EndsWith);
-        }
-
-        public static bool IsMergableAsset(ComposedString assetPath)
-        {
-            return mergablePostfix.Any(assetPath.EndsWith);
-        }
 
         public static bool HaveVCLock(VersionControlStatus assetStatus)
         {

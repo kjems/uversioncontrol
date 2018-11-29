@@ -80,6 +80,11 @@ namespace UVC
         {
             return RemoveMetaPostFix(base.GetFilteredAssets(filter));
         }
+        
+        public override bool ChangeListRemove(IEnumerable<string> assets)
+        {
+            return base.ChangeListRemove(AddMeta(assets));
+        }
 
         public override void RemoveFromDatabase(IEnumerable<string> assets)
         {
@@ -99,7 +104,7 @@ namespace UVC
                 .Select(ap => ap + metaStr)
                 .Concat(assets)
                 .Distinct()
-                .OrderBy(s => s.Length)
+                .OrderByDescending(s => s.Length)
                 .ToArray();
         }
 

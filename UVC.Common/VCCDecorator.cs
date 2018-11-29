@@ -74,6 +74,11 @@ namespace UVC
         {
             return vcc.GetAssetStatus(assetPath);
         }
+        
+        public virtual InfoStatus GetInfo(string path)
+        {
+            return vcc.GetInfo(path);
+        }
 
         public virtual IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
@@ -103,6 +108,11 @@ namespace UVC
         public virtual bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
             return vcc.Commit(assets, commitMessage);
+        }
+        
+        public bool Commit(string commitMessage = "")
+        {
+            return vcc.Commit(commitMessage);
         }
 
         public virtual bool Add(IEnumerable<string> assets)
@@ -150,14 +160,39 @@ namespace UVC
             return vcc.Checkout(url, path);
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public virtual bool CreateBranch(string from, string to)
         {
-            return vcc.CreateBranch(url, path);
+            return vcc.CreateBranch(from, to);
         }
         
-        public bool MergeBranch(string url, string path = "")
+        public virtual bool MergeBranch(string url, string path = "")
         {
             return vcc.MergeBranch(url, path);
+        }
+        
+        public virtual bool SwitchBranch(string url, string path = "")
+        {
+            return vcc.SwitchBranch(url, path);
+        }
+        
+        public virtual string GetCurrentBranch()
+        {
+            return vcc.GetCurrentBranch();
+        }
+        
+        public virtual string GetBranchDefaultPath()
+        {
+            return vcc.GetBranchDefaultPath();
+        }
+        
+        public virtual string GetTrunkPath()
+        {
+            return vcc.GetTrunkPath();
+        }
+        
+        public List<BranchStatus> RemoteList(string path)
+        {
+            return vcc.RemoteList(path);
         }
 
         public virtual bool AllowLocalEdit(IEnumerable<string> assets)
@@ -180,7 +215,7 @@ namespace UVC
             return vcc.GetIgnore(path);
         }
 
-        public virtual string GetRevision()
+        public virtual int GetRevision()
         {
             return vcc.GetRevision();
         }
@@ -190,9 +225,9 @@ namespace UVC
             return vcc.GetBasePath(assetPath);
         }
 
-        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public virtual bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
-            return vcc.GetConflict(assetPath, out basePath, out mine, out theirs);
+            return vcc.GetConflict(assetPath, out basePath, out yours, out theirs);
         }
 
         public virtual bool CleanUp()

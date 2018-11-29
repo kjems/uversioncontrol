@@ -22,5 +22,7 @@ namespace UVC
         public const string branch         = "Branch";
         public const string merge          = "Merge";
         public const string switchbranch   = "Switch";
+        public const string createbranch   = "Branch";
+        public const string changelist     = "ChangeList";
     }
 }

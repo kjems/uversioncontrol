@@ -72,6 +72,11 @@ namespace UVC.UnitTests
         {
             return statusDatabase[assetPath];
         }
+        
+        public virtual InfoStatus GetInfo(string path)
+        {
+            return null;
+        }
 
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
@@ -116,6 +121,11 @@ namespace UVC.UnitTests
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
             dataCarrier.assets = assets.ToList();
+            return true;
+        }
+
+        public bool Commit(string commitMessage = "")
+        {
             return true;
         }
 
@@ -166,7 +176,7 @@ namespace UVC.UnitTests
             return true;
         }
         
-        public bool CreateBranch(string url, string path = "")
+        public bool CreateBranch(string from, string to)
         {
             return true;
         }
@@ -174,6 +184,31 @@ namespace UVC.UnitTests
         public bool MergeBranch(string url, string path = "")
         {
             return true;
+        }
+
+        public bool SwitchBranch(string url, string path = "")
+        {
+            return true;
+        }
+        
+        public string GetCurrentBranch()
+        {
+            return null;
+        }
+        
+        public string GetBranchDefaultPath()
+        {
+            return null;
+        }
+        
+        public string GetTrunkPath()
+        {
+            return null;
+        }
+
+        public List<BranchStatus> RemoteList(string path)
+        {
+            return null;
         }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
@@ -203,9 +238,9 @@ namespace UVC.UnitTests
             return null;
         }
 
-        public virtual string GetRevision()
+        public virtual int GetRevision()
         {
-            return "";
+            return 0;
         }
 
         public virtual string GetBasePath(string assetPath)
@@ -213,10 +248,10 @@ namespace UVC.UnitTests
             return "";
         }
 
-        public virtual bool GetConflict(string assetPath, out string basePath, out string mine, out string theirs)
+        public virtual bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
             basePath = null;
-            mine = null;
+            yours = null;
             theirs = null;
             return false;
         }

@@ -8,15 +8,16 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using UVC.UserInterface;
 
 namespace UVC
 {
     using Extensions;
     internal class VCMenuItems : ScriptableObject
     {
-        private static IEnumerable<string> GetAssetPathsOfSelected()
+        private static List<string> GetAssetPathsOfSelected()
         {
-            return Selection.objects.Select<Object, string>(ObjectExtension.GetAssetPath);
+            return Selection.objects.Select(ObjectExtension.GetAssetPath).ToList();
         }
 
         [MenuItem("Assets/UVC/" + Terminology.add, true)]
@@ -63,33 +64,33 @@ namespace UVC
         [MenuItem("Assets/UVC/" + Terminology.getlock)]
         private static void VCGetLockProjectContext()
         {
-            VCCommands.Instance.GetLock(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.GetLock(GetAssetPathsOfSelected());
         }
         
         [MenuItem("Assets/UVC/" + Terminology.unlock)]
         private static void VCGetUnLockProjectContext()
         {
-            VCCommands.Instance.ReleaseLock(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.ReleaseLock(GetAssetPathsOfSelected());
         }
 
         // Commit
         [MenuItem("Assets/UVC/" + Terminology.commit)]
         private static void VCCommitProjectContext()
         {
-            VCCommands.Instance.CommitDialog(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.CommitDialog(GetAssetPathsOfSelected());
         }
 
         [MenuItem("Assets/UVC/" + Terminology.revert)]
         private static void VCRevertProjectContext()
         {
             //D.Log(GetAssetPathsOfSelected().Aggregate((a, b) => a + "\n" + b));
-            VCCommands.Instance.Revert(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.Revert(GetAssetPathsOfSelected());
         }
 
         [MenuItem("Assets/UVC/" + Terminology.allowLocalEdit)]
         public static void VCAllowLocalEditProjectContext()
         {
-            VCCommands.Instance.AllowLocalEdit(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.AllowLocalEdit(GetAssetPathsOfSelected());
         }
 
         // Delete
@@ -103,13 +104,19 @@ namespace UVC
         [MenuItem("Assets/UVC/" + Terminology.add)]
         public static void VCAddProjectContext()
         {
-            VCCommands.Instance.Add(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.Add(GetAssetPathsOfSelected());
         }
         
         [MenuItem("Assets/UVC/" + Terminology.update)]
         public static void VCUpdateSelection()
         {
-            VCCommands.Instance.Update(GetAssetPathsOfSelected().ToArray());
+            VCCommands.Instance.Update(GetAssetPathsOfSelected());
+        }
+        
+        [MenuItem("Assets/UVC/" + Terminology.changelist)]
+        public static void VCChangeListAdd()
+        {
+            ChangeListWindow.Open(GetAssetPathsOfSelected());
         }
     }
 }

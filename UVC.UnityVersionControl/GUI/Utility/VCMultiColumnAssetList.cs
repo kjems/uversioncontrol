@@ -94,7 +94,7 @@ namespace UVC.UserInterface
                 return String.CompareOrdinal(r1Text, r2Text);
             };
 
-            Func<GenericMenu> rowRightClickMenu = () =>
+            Func<MultiColumnState.Row, MultiColumnState.Column, GenericMenu> rowRightClickMenu = (row, column) =>
             {
                 var selected = multiColumnState.GetSelected().Select(status => status.assetPath.Compose());
                 if (!selected.Any()) return new GenericMenu();
@@ -164,8 +164,14 @@ namespace UVC.UserInterface
                 widths = new float[] { 200 },
                 doubleClickAction = status =>
                 {
-                    if (VCUtility.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
-                        VCUtility.DiffWithBase(status.assetPath.Compose());
+                    if (MergeHandler.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Conflicted)
+                    {
+                        var assetPath = status.assetPath.Compose();
+                        VCCommands.Instance.GetConflict(assetPath, out var basePath, out var yours, out var theirs);
+                        MergeHandler.ResolveConflict(assetPath, basePath, theirs, yours);
+                    }
+                    else if (MergeHandler.IsDiffableAsset(status.assetPath) && VCUtility.ManagedByRepository(status) && status.fileStatus == VCFileStatus.Modified)
+                        MergeHandler.DiffWithBase(status.assetPath.Compose());
                     else
                         AssetDatabase.OpenAsset(AssetDatabase.LoadMainAssetAtPath(status.assetPath.Compose()));
                 }

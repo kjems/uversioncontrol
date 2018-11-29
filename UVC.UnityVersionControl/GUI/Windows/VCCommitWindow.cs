@@ -64,7 +64,8 @@ namespace UVC.UserInterface
                 var metaStatus = vcStatus.MetaStatus();
                 bool interesting = (vcStatus.fileStatus != VCFileStatus.None &&
                                     (vcStatus.fileStatus != VCFileStatus.Normal || (metaStatus != null && metaStatus.fileStatus != VCFileStatus.Normal))) ||
-                                    vcStatus.lockStatus == VCLockStatus.LockedHere;
+                                    vcStatus.lockStatus == VCLockStatus.LockedHere ||
+                                    vcStatus.property == VCProperty.Modified;
 
                 if (!interesting) return false;
                 ComposedString key = vcStatus.assetPath.TrimEnd(VCCAddMetaFiles.meta);
@@ -87,6 +88,7 @@ namespace UVC.UserInterface
 
         private void OnEnable()
         {
+            VCCommands.Instance.PauseAssetDatabaseRefresh();
             minSize  = new Vector2(1000, 400);
             position = new Rect {
                 xMin    = Screen.width * 0.5f - this.minSize.x,
@@ -104,6 +106,7 @@ namespace UVC.UserInterface
         {
             EditorPrefs.SetFloat("VCCommitWindow/commitMessageHeight", commitMessageHeight);
             vcMultiColumnAssetList.Dispose();
+            VCCommands.Instance.ResumeAssetDatabaseRefresh();
         }
 
         private void OnGUI()

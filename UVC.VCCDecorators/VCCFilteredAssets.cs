@@ -83,7 +83,7 @@ namespace UVC
 
         public override bool Revert(IEnumerable<string> assets)
         {
-            assets = ConsistentSlash(assets.ShortestFirst());
+            assets = ConsistentSlash(assets.AddFilesInFolders(vcc, true).LongestFirst());
             return assets.Any() ? base.Revert(assets) : true;
         }
 
@@ -127,6 +127,12 @@ namespace UVC
         {
             assets = ConsistentSlash(assets.NonEmpty().Versioned(vcc).OnChangeList(vcc));
             return assets.Any() ? base.ChangeListRemove(assets.FilesExist().OnChangeList(vcc).Versioned(vcc)) && Status(assets, StatusLevel.Local) : false;
+        }
+
+        public override bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            assets = ConsistentSlash(assets.NonEmpty().Versioned(vcc));
+            return assets.Any() ? (base.AllowLocalEdit(assets) && Status(assets, StatusLevel.Local)) : false;
         }
 
         public override bool Move(string from, string to)

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using NUnit.Framework;
 using ComposedString = UVC.ComposedSet<string, UVC.FilesAndFoldersComposedStringDatabase>;
-#if UNITY_2018_3_OR_NEWER
+#if UNITY_2018_3_OR_NEWER && PERFORMANCE_PACKAGE
 using Unity.PerformanceTesting;
 #endif
 
@@ -13,7 +13,7 @@ namespace UVC.UnitTests
         {
             return new ComposedString(str);
         }
-        
+
         [Test]
         public void GetHashCodeTest()
         {
@@ -25,7 +25,7 @@ namespace UVC.UnitTests
             Assert.AreNotEqual (CCSet("A.B.C.D").GetHashCode()  , CCSet("a.B.C.D")  .GetHashCode());
             Assert.AreNotEqual (CCSet(" ").GetHashCode()        , CCSet("").GetHashCode());
         }
-        
+
         [Test]
         public void TrimEndTest()
         {
@@ -40,7 +40,7 @@ namespace UVC.UnitTests
             Assert.AreNotEqual (abcd .TrimEnd(ab)    ,ab);
             Assert.AreNotEqual (abcd .TrimEnd(ab)    ,cd);
         }
-        
+
         [Test]
         public void OperatorAddTest()
         {
@@ -58,14 +58,14 @@ namespace UVC.UnitTests
             Assert.AreEqual    (abcd.GetHashCode(), (a + dot + b + dot + c + dot + d).GetHashCode());
             Assert.AreNotEqual (abcd, ab + dot + dot + cd);
         }
-        
+
         [Test]
         public void EndsWithTest()
         {
             Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D")));
             Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D")));
-            Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D"))); 
-            Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D"))); 
+            Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D")));
+            Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D")));
             Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("A.B.C.D")));
             Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
             Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
@@ -73,12 +73,12 @@ namespace UVC.UnitTests
             Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
             Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
             Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
-            Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D"))); 
+            Assert.IsFalse(CCSet("A/B/C/D").EndsWith(CCSet("A.B.C.D")));
             Assert.IsTrue(CCSet("A.B.C.D") .EndsWith(CCSet("C.D")));
             Assert.IsFalse(CCSet(" ")      .EndsWith(CCSet("A.B.C.D")));
             Assert.IsFalse(CCSet(" ")      .EndsWith(CCSet("A.B.C.D")));
         }
-        
+
         [Test]
         public void EqualsTest()
         {
@@ -97,7 +97,7 @@ namespace UVC.UnitTests
             Assert.That(CCSet(" ")       .Equals(CCSet("A.B.C.D" )), Is.False);
             Assert.That(CCSet("" )       .Equals(CCSet("A.B.C.D" )), Is.False);
         }
-        
+
         [Test]
         public void ComposeTest()
         {
@@ -111,7 +111,7 @@ namespace UVC.UnitTests
             Assert.That(CCSet("a.B.C.D") .Compose(), Is.Not.EqualTo("A.B.C.D"));
             Assert.That(CCSet("B.B.C.D") .Compose(), Is.Not.EqualTo("A.B.C.D"));
         }
-        
+
         [Test]
         public void GetSubsetTest()
         {
@@ -122,7 +122,7 @@ namespace UVC.UnitTests
             Assert.That(CCSet("A/B/C/D") .GetSubset(1,2), Is.EqualTo(CCSet("/B")));
             Assert.That(CCSet("A.B.C.D") .GetSubset(2,0), Is.EqualTo(CCSet("")));
         }
-        
+
         [Test]
         public void FindIndexTest()
         {
@@ -140,7 +140,7 @@ namespace UVC.UnitTests
             Assert.AreEqual(CCSet("")        .FindFirstIndex(CCSet("C")), -1);
             Assert.AreEqual(CCSet("")        .FindFirstIndex(CCSet("")),  -1);
             Assert.AreEqual(CCSet("A")       .FindFirstIndex(CCSet("")),  -1);
-            
+
             // FindLastIndex
             Assert.AreEqual(CCSet("A.B.C.D") .FindLastIndex(CCSet("A")),  0);
             Assert.AreEqual(CCSet("A.B.C.D") .FindLastIndex(CCSet("B.C")),2);
@@ -151,7 +151,7 @@ namespace UVC.UnitTests
             Assert.AreEqual(CCSet("....")    .FindLastIndex(CCSet("..")), 2);
             Assert.AreEqual(CCSet("A...B")   .FindLastIndex(CCSet("..")), 2);
         }
-        
+
         [Test]
         public void ContainsTest()
         {
@@ -165,7 +165,7 @@ namespace UVC.UnitTests
             Assert.IsTrue (CCSet("....")    .Contains(CCSet("..")));
             Assert.IsTrue (CCSet("A...B")   .Contains(CCSet("..")));
             Assert.IsTrue (CCSet("AB.C.C")  .Contains(CCSet("C")));
-            
+
             // False
             Assert.IsFalse (CCSet("B.B.C.D").Contains(CCSet("A")));
             Assert.IsFalse (CCSet("AB.C.C") .Contains(CCSet("")));
@@ -176,8 +176,8 @@ namespace UVC.UnitTests
             Assert.IsFalse (CCSet("")       .Contains(CCSet("X")));
         }
     }
-    
-    #if UNITY_2018_3_OR_NEWER
+
+    #if UNITY_2018_3_OR_NEWER && PERFORMANCE_PACKAGE
     public class ComposedSetPerformanceTest
     {
         private string testText;
@@ -188,13 +188,13 @@ namespace UVC.UnitTests
             if(testText == null)
                 testText = File.ReadAllText("./Packages/org.kjems.uvc/UVC.Tests/test.dat");
         }
-        
+
         [PerformanceTest, Version("1")]
         public void DecomposeTest()
         {
             Measure.Method(() => new ComposedString(testText)).Run();
         }
-        
+
         [PerformanceTest, Version("1")]
         public void ComposeTest()
         {

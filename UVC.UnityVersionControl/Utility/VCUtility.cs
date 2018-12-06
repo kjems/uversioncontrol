@@ -22,11 +22,11 @@ namespace UVC
     using Extensions;
     public static class VCUtility
     {
-        public static System.Action<Object> onHierarchyReverted;
-        public static System.Action<Object> onHierarchyCommit;
-        public static System.Action<Object> onHierarchyGetLock;
-        public static System.Func<Object, bool> onHierarchyAllowGetLock;
-        public static System.Action<Object> onHierarchyAllowLocalEdit;
+        public static Action<Object> onHierarchyReverted;
+        public static Action<Object> onHierarchyCommit;
+        public static Action<Object> onHierarchyGetLock;
+        public static Func<Object, bool> onHierarchyAllowGetLock;
+        public static Action<Object> onHierarchyAllowLocalEdit;
 
         public static string GetCurrentVersion()
         {
@@ -36,7 +36,7 @@ namespace UVC
         public static Object Revert(Object obj)
         {
             var gameObject = obj as GameObject;
-            if (gameObject && PrefabHelper.IsPrefab(gameObject, true, false, true) && !PrefabHelper.IsPrefabParent(gameObject))
+            if (gameObject && PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(gameObject))
             {
                 return RevertPrefab(gameObject);
             }
@@ -53,8 +53,7 @@ namespace UVC
 
         private static GameObject RevertPrefab(GameObject gameObject)
         {
-            PrefabHelper.ReconnectToLastPrefab(gameObject);
-            PrefabUtility.RevertPrefabInstance(gameObject);
+            PrefabUtility.RevertPrefabInstance(gameObject, InteractionMode.AutomatedAction);
 
             if (ShouldVCRevert(gameObject))
             {
@@ -72,7 +71,7 @@ namespace UVC
             return
                 material && ManagedByRepository(assetStatus) ||
                 ((assetStatus.lockStatus == VCLockStatus.LockedHere || assetStatus.ModifiedOrLocalEditAllowed()) && VCCommands.Instance.Ready) &&
-                PrefabHelper.IsPrefab(obj, true, false, true);
+                PrefabHelper.IsPrefab(obj, true, false);
         }
 
         public static void ApplyAndCommit(Object obj, string commitMessage = "", bool showCommitDialog = false)
@@ -159,7 +158,7 @@ namespace UVC
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;
                 }
-                /*P4_DISABLED 
+                /*P4_DISABLED
                 int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "P4 Beta", "None");
                 if (response == 0) // SVN
                 {
@@ -181,11 +180,11 @@ namespace UVC
         public static string GetObjectTypeName(Object obj)
         {
             string objectType = "Unknown Type";
-            if (PrefabHelper.IsPrefab(obj, false, true, true)) objectType = PrefabHelper.IsPrefabParent(obj) ? "Model" : "Model in Scene";
-            if (PrefabHelper.IsPrefab(obj, true, false, true)) objectType = "Prefab";
-            if (!PrefabHelper.IsPrefab(obj, true, true, true)) objectType = "Scene";
+            if (PrefabHelper.IsPrefab(obj, false, true)) objectType = PrefabHelper.IsPrefabParent(obj) ? "Model" : "Model in Scene";
+            if (PrefabHelper.IsPrefab(obj, true, false)) objectType = "Prefab";
+            if (!PrefabHelper.IsPrefab(obj, true, true)) objectType = "Scene";
 
-            if (PrefabHelper.IsPrefab(obj, true, false, true))
+            if (PrefabHelper.IsPrefab(obj, true, false))
             {
                 if (PrefabHelper.IsPrefabParent(obj)) objectType += " Asset";
                 else if (PrefabHelper.IsPrefabRoot(obj)) objectType += " Root";
@@ -195,7 +194,7 @@ namespace UVC
             return objectType;
         }
 
-        
+
 
         public static bool HaveVCLock(VersionControlStatus assetStatus)
         {
@@ -216,6 +215,7 @@ namespace UVC
                     assetStatus.fileStatus == VCFileStatus.Added ||
                     assetStatus.fileStatus == VCFileStatus.Unversioned ||
                     assetStatus.fileStatus == VCFileStatus.Ignored ||
+                    assetStatus.fileStatus == VCFileStatus.Modified ||
                     ComposedString.IsNullOrEmpty(assetStatus.assetPath) ||
                     assetStatus.LocalEditAllowed());
         }

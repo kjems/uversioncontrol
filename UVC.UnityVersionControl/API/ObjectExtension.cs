@@ -30,13 +30,13 @@ namespace UVC
         public static bool ChangesStoredInPrefab(Object obj)
         {
             obj = GetObjectIndirection(obj);
-            return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false, true);
+            return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false);
         }
 
         public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
         {
             obj = GetObjectIndirection(obj);
-            if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabHelper.GetPrefabParent(obj));
+            //if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabUtility.GetCorrespondingObjectFromSource(obj));
             return AssetDatabase.GetAssetOrScenePath(obj);
         }
     }
@@ -72,7 +72,7 @@ namespace UVC
                     GameObjectToAssetPathCache.Add(obj, assetPath);
                 }
                 return assetPath;
-                
+
             }
         }
     }

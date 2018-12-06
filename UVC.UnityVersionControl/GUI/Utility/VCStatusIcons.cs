@@ -19,7 +19,7 @@ namespace UVC.UserInterface
             VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCSettings.SettingChanged += RefreshGUI;
 
-            // Request repaint of project and hierarchy windows 
+            // Request repaint of project and hierarchy windows
             EditorApplication.RepaintProjectWindow();
             EditorApplication.RepaintHierarchyWindow();
 
@@ -45,19 +45,6 @@ namespace UVC.UserInterface
                 {
                     VCUtility.RequestStatus(sceneAssetPath, VCSettings.HierarchyReflectionMode);
                     DrawIcon(selectionRect, IconUtils.rubyIcon, sceneAssetPath, null, -20f);
-                }
-            }
-            else
-            {
-                var objectIndirection = ObjectUtilities.GetObjectIndirection(obj);
-                string sceneAssetPath = ObjectUtilities.ObjectToAssetPath(obj, false);
-                //DrawIcon(selectionRect, IconUtils.childIcon, sceneAssetPath, null, -20f);
-
-                if (ObjectUtilities.ChangesStoredInPrefab(obj) && VCSettings.PrefabGUI)
-                {
-                    string prefabPath = obj.GetAssetPath();
-                    VCUtility.RequestStatus(prefabPath, VCSettings.HierarchyReflectionMode);
-                    DrawIcon(selectionRect, IconUtils.squareIcon, prefabPath, objectIndirection);
                 }
             }
         }

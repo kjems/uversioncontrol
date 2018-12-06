@@ -49,7 +49,7 @@ namespace UVC
                 });
             }
         }
-        
+
         private static void HandleConnectionTimeOut(VCConnectionTimeoutException e)
         {
             DebugLog.LogWarning(e.ErrorMessage);
@@ -74,18 +74,20 @@ namespace UVC
 
         private static void HandleNewerVersion(VCNewerVersionException e)
         {
-            DebugLog.Log(e.ErrorMessage);
-            var dialog = CustomDialogs.CreateExceptionDialog("Newer Version", "There is a newer version of the file and need to update first and then try again", e);
-            dialog.AddButton("Update", () => { VCCommands.Instance.UpdateTask(); dialog.Close(); });
-            dialog.ShowUtility();
+            var answer = EditorUtility.DisplayDialog("Newer Version", "There is a newer version of the file on the server so you need to 'Update' first and then try again", "Update", "Cancel");
+            if (answer)
+            {
+                VCCommands.Instance.UpdateTask();
+            }
         }
-        
+
         private static void HandleMixedRevision(VCMixedRevisionException e)
         {
-            DebugLog.Log(e.ErrorMessage);
-            var dialog = CustomDialogs.CreateExceptionDialog("Mixed Revision", "Cannot merge into mixed-revision working copy, try updating first", e);
-            dialog.AddButton("Update", () => { VCCommands.Instance.UpdateTask(); dialog.Close(); });
-            dialog.ShowUtility();
+            var answer = EditorUtility.DisplayDialog("Mixed Revision", "Cannot merge into mixed-revision working copy, try updating first", "Update", "Cancel");
+            if (answer)
+            {
+                VCCommands.Instance.UpdateTask();
+            }
         }
 
         private static void HandleOutOfDate(VCOutOfDate e)
@@ -102,7 +104,7 @@ namespace UVC
 
             if (!string.IsNullOrEmpty(e.ErrorMessage))
                 GoogleAnalytics.LogUserEvent("CriticalException", e.ErrorMessage);
-            
+
             var dialog = CustomDialogs.CreateExceptionDialog("UVC Critical Exception", e);
             dialog.AddButton("Turn UVC Off", () => { VCSettings.VCEnabled = false; dialog.Close(); });
             dialog.ShowUtility();
@@ -116,12 +118,12 @@ namespace UVC
         }
 
         private static void HandleBase(VCException e)
-        {            
+        {
             Debug.LogException(e.InnerException != null ? e.InnerException : e);
 
             if(!string.IsNullOrEmpty(e.ErrorMessage))
-                GoogleAnalytics.LogUserEvent("Exception", e.ErrorMessage);            
-            
+                GoogleAnalytics.LogUserEvent("Exception", e.ErrorMessage);
+
             var dialog = CustomDialogs.CreateExceptionDialog("UVC Exception", e);
             if (VCSettings.BugReport)
             {
@@ -131,7 +133,7 @@ namespace UVC
 
             EditorUtility.ClearProgressBar();
         }
-        
+
         private static void ReportError(VCException e)
         {
             if (VCSettings.BugReport)

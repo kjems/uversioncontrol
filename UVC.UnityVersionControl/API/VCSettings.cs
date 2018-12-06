@@ -17,7 +17,6 @@ namespace UVC
         static VCSettings()
         {
             vcEnabled = EditorPrefs.GetBool("VCSSettings/vcEnabled", false);
-            lockPrefabs = EditorPrefs.GetBool("VCSSettings/lockPrefabs", false);
             lockScenes = EditorPrefs.GetBool("VCSSettings/lockScenes", true);
             lockAssets = EditorPrefs.GetBool("VCSSettings/lockAssets", true);
             sceneviewGUI = EditorPrefs.GetBool("VCSSettings/sceneviewGUI", true);
@@ -51,7 +50,6 @@ namespace UVC
             AppDomain.CurrentDomain.DomainUnload += (o, d) =>
             {
                 EditorPrefs.SetBool("VCSSettings/vcEnabled", vcEnabled);
-                EditorPrefs.SetBool("VCSSettings/lockPrefabs", lockPrefabs);
                 EditorPrefs.SetBool("VCSSettings/lockScenes", lockScenes);
                 EditorPrefs.SetBool("VCSSettings/lockAssets", lockAssets);
                 EditorPrefs.SetBool("VCSSettings/sceneviewGUI", sceneviewGUI);
@@ -149,11 +147,6 @@ namespace UVC
                 }
             }
         }
-
-
-        private static bool lockPrefabs;
-        public static bool LockPrefabs { get { return lockPrefabs; } set { if (lockPrefabs != value) { lockPrefabs = value; OnSettingsChanged(); } } }
-
 
         private static bool lockScenes;
         public static bool LockScenes { get { return lockScenes; } set { if (lockScenes != value) { lockScenes = value; OnSettingsChanged(); } } }

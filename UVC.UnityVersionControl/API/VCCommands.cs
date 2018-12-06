@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using Unity.Profiling;
 
 namespace UVC
 {
@@ -19,9 +20,9 @@ namespace UVC
     [InitializeOnLoad]
     public class VCCommandsOnLoad
     {
-        static VCCommandsOnLoad() 
+        static VCCommandsOnLoad()
         {
-            OnNextUpdate.Do(VCCommands.Initialize); 
+            OnNextUpdate.Do(VCCommands.Initialize);
         }
     }
 
@@ -61,7 +62,7 @@ namespace UVC
         private static System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
         static readonly VersionControlStatus[] emptyVersionControlStatusArray = new VersionControlStatus[0];
 
-        private IVersionControlCommands vcc;        
+        private IVersionControlCommands vcc;
         private Action refreshAssetDatabaseSynchronous = () => AssetDatabase.Refresh();
         private string customTrunkPath = null;
 
@@ -109,7 +110,7 @@ namespace UVC
         public bool Ready => Active && vcc.IsReady() && !EditorApplication.isCompiling;
 
         public void Dispose()
-        {            
+        {
             vcc.Dispose();
         }
 
@@ -152,7 +153,7 @@ namespace UVC
         {
             vcc.DeactivateRefreshLoop();
         }
-        
+
         public void PauseAssetDatabaseRefresh()
         {
             pauseAssetDatabaseRefresh = true;
@@ -172,36 +173,40 @@ namespace UVC
         }
 
         #region Private methods
-
+        private static ProfilerMarker operationMarker = new ProfilerMarker("UVC.Operation");
         private static T HandleExceptions<T>(Func<T> func)
         {
-            if (Active)
+            string callerMethod = new System.Diagnostics.StackTrace(1, true).GetFrames()[0].GetMethod().Name;
+            using (operationMarker.Auto())
             {
-                stopWatch.Reset();
-                stopWatch.Start();
-                try
+                if (Active)
                 {
-                    return func();
+                    stopWatch.Reset();
+                    stopWatch.Start();
+                    try
+                    {
+                        return func();
+                    }
+                    catch (VCException vcException)
+                    {
+                        VCExceptionHandler.HandleException(vcException);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugLog.LogError("Unhandled exception: " + e.Message + "\n" + DebugLog.GetCallstack());
+                        throw;
+                    }
+                    finally
+                    {
+                        DebugLog.Log(callerMethod + " took " + stopWatch.ElapsedMilliseconds + "ms");
+                    }
                 }
-                catch (VCException vcException)
+                else
                 {
-                    VCExceptionHandler.HandleException(vcException);
+                    DebugLog.Log("VC Action ignored due to not being active");
                 }
-                catch (Exception e)
-                {
-                    DebugLog.LogError("Unhandled exception: " + e.Message + "\n" + DebugLog.GetCallstack());
-                    throw;
-                }
-                finally
-                {
-                    DebugLog.Log(new System.Diagnostics.StackTrace(1, true).GetFrames()[0].GetMethod().Name + " took " + stopWatch.ElapsedMilliseconds + "ms");
-                }
+                return default(T);
             }
-            else
-            {
-                DebugLog.Log("VC Action ignored due to not being active");
-            }
-            return default(T);
         }
 
         private VersionControlStatus[] StoreCurrentStatus(IEnumerable<string> assets)
@@ -358,7 +363,7 @@ namespace UVC
             if (assets != null) assets = new List<string>(assets);
             OnOperationStarting(OperationType.Update, StoreCurrentStatus(assets));
             DisableAutoRefresh();
-            return await 
+            return await
                 StartTask(() => Update(assets))
                 .ContinueWithOnNextUpdate(t => EnableAutoRefresh())
                 .ConfigureAwait(false);
@@ -399,34 +404,34 @@ namespace UVC
             OnOperationStarting(OperationType.CreateBranch, null);
             return await StartTask(() => CreateBranch(from, to)).ConfigureAwait(false);
         }
-        
+
         public async Task<bool> MergeBranchTask(string url, string path = "")
         {
             OnOperationStarting(OperationType.MergeBranch, null);
             return await StartTask(() => MergeBranch(url, path)).ConfigureAwait(false);
         }
-        
+
         public async Task<bool> SwitchBranchTask(string url, string path = "")
         {
             OnOperationStarting(OperationType.SwitchBranch, null);
             return await StartTask(() => SwitchBranch(url, path)).ConfigureAwait(false);
         }
-        
+
         public async Task<string> GetCurrentBranchTask()
         {
             return await StartTask(GetCurrentBranch).ConfigureAwait(false);
         }
-        
+
         public async Task<string> GetBranchDefaultPathTask()
         {
             return await StartTask(GetBranchDefaultPath).ConfigureAwait(false);
         }
-        
+
         public async Task<string> GetTrunkPathTask()
         {
             return await StartTask(GetTrunkPath).ConfigureAwait(false);
         }
-        
+
         public async Task<List<BranchStatus>> RemoteListTask(string path)
         {
             return await StartTask(() => RemoteList(path)).ConfigureAwait(false);
@@ -544,7 +549,7 @@ namespace UVC
                 RequestAssetDatabaseRefresh();
                 if (revertSuccess)
                 {
-                    RefreshAssetDatabase();                    
+                    RefreshAssetDatabase();
                 }
                 var afterStatus = StoreCurrentStatus(assets);
                 OnOperationCompleted(OperationType.Revert, beforeStatus, afterStatus, revertSuccess);
@@ -586,7 +591,7 @@ namespace UVC
                             foreach (var subDirFile in Directory.GetFiles(assetIt, "*", SearchOption.AllDirectories))
                             {
                                 File.SetAttributes(subDirFile, FileAttributes.Normal);
-                                File.Delete(subDirFile);                                
+                                File.Delete(subDirFile);
                             }
                             Directory.Delete(assetIt, true);
                             filesOSDeleted = true;
@@ -620,11 +625,11 @@ namespace UVC
         public bool Checkout(string url, string path = "")
         {
             return HandleExceptions(() => PerformOperation(OperationType.Checkout, () => vcc.Checkout(url, path)));
-        }        
+        }
         public bool CreateBranch(string from, string to)
         {
             return HandleExceptions(() => PerformOperation(OperationType.CreateBranch, () => vcc.CreateBranch(from, to)));
-        }        
+        }
         public bool MergeBranch(string url, string path = "")
         {
             return HandleExceptions(() => PerformOperation(OperationType.MergeBranch, () => vcc.MergeBranch(url, path)));
@@ -723,10 +728,10 @@ namespace UVC
             vcc.RemoveFromDatabase(assets);
             OnStatusCompleted();
         }
-                
+
         private void OnStatusCompleted()
         {
-            //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));            
+            //OnNextUpdate.Do(() => D.Log("Status Updatees : " + (StatusCompleted != null ? StatusCompleted.GetInvocationList().Length : 0) + "\n" + StatusCompleted.GetInvocationList().Select(i => (i.Target ?? "") + ":" + i.Method.ToString()).Aggregate((a, b) => a + "\n" + b)));
             if (StatusCompleted != null) OnNextUpdate.Do(StatusCompleted);
             RefreshAssetDatabase();
         }
@@ -743,7 +748,7 @@ namespace UVC
         {
             if (OperationCompleted != null)
             {
-                ThreadUtility.ExecuteOnMainThread(() => 
+                ThreadUtility.ExecuteOnMainThread(() =>
                 {
                     //D.Log(operation + " : " + (success ? "success":"failed"));
                     OperationCompleted(operation, statusBefore, statusAfter, success);
@@ -776,11 +781,11 @@ namespace UVC
             var localModified = allAssets.LocalModified(vcc);
             if (assets.Contains(SceneManagerUtilities.GetCurrentScenePath()))
             {
-                SceneManagerUtilities.SaveCurrentModifiedScenesIfUserWantsTo();                
+                SceneManagerUtilities.SaveCurrentModifiedScenesIfUserWantsTo();
             }
-            
+
             PreCommit?.Invoke(allAssets);
-            
+
             if (VCSettings.RequireLockBeforeCommit && localModified.Any())
             {
                 string title = $"{Terminology.getlock} '{Terminology.localModified}' files?";

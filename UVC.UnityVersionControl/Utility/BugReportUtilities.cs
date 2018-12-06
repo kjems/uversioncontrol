@@ -4,6 +4,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 using UVC;
 using UVC.Logging;
 
@@ -24,12 +25,14 @@ internal static class FogbugzUtilities
     public static void SubmitBug(string url, string username, string project, string area, string description, string extra, string email, bool forceNewBug = false, int retryCount = 0)
     {
         string bugUrl =
-            $"{url}?Description={WWW.EscapeURL(description)}&Extra={WWW.EscapeURL(extra)}&Email={WWW.EscapeURL(email)}&ScoutUserName={WWW.EscapeURL(username)}&ScoutProject={WWW.EscapeURL(project)}&ScoutArea={WWW.EscapeURL(area)}&ForceNewBug={(forceNewBug ? "1" : "0")}";
-        
-        var www = new WWW(bugUrl);
-        ContinuationManager.Add(() => www.isDone, () =>
+            $"{url}?Description={UnityWebRequest.EscapeURL(description)}&Extra={UnityWebRequest.EscapeURL(extra)}&Email={UnityWebRequest.EscapeURL(email)}&ScoutUserName={UnityWebRequest.EscapeURL(username)}&ScoutProject={UnityWebRequest.EscapeURL(project)}&ScoutArea={UnityWebRequest.EscapeURL(area)}&ForceNewBug={(forceNewBug ? "1" : "0")}";
+
+        var form = new WWWForm();
+        var request = UnityWebRequest.Post(url, form);
+        var asyncOperation = request.SendWebRequest();
+        ContinuationManager.Add(() => asyncOperation.isDone, () =>
         {
-            bool success = string.IsNullOrEmpty(www.error) && www.text.Contains("<Success>");
+            bool success = string.IsNullOrEmpty(request.error);
             if (success)
             {
                 DebugLog.Log("Bug successfully reported to the 'Unity Version Control' FogBugz database.");
@@ -42,7 +45,7 @@ internal static class FogbugzUtilities
                 }
                 else
                 {
-                    DebugLog.LogError("Bug report failed:\n" + www.error);
+                    DebugLog.LogError("Bug report failed:\n" + request.error);
                 }
             }
         });

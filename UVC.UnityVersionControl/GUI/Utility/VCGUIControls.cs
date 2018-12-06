@@ -6,6 +6,7 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using Unity.Profiling;
 using Object = UnityEngine.Object;
 #pragma warning disable CS4014
 
@@ -110,60 +111,65 @@ namespace UVC.UserInterface
 
         public struct ValidActions
         {
-            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate,  
+            public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate,
                         showForceOpen, showUseTheirs, showUseMine, showMerge, showAddChangeList, showRemoveChangeList, showDisconnect;
         }
+        private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.GetValidActions");
         static readonly ValidActions noAction = new ValidActions();
         public static ValidActions GetValidActions(string assetPath, Object instance = null)
         {
-            if (!VCCommands.Active || string.IsNullOrEmpty(assetPath))
-                return noAction;
-            
-            var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+            using (sceneviewUpdateMarker.Auto())
+            {
+                if (!VCCommands.Active || string.IsNullOrEmpty(assetPath))
+                    return noAction;
 
-            ValidActions validActions;
-            bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
-            bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
-            bool isFolder = AssetDatabase.IsValidFolder(assetPath);
-            bool diffableAsset = MergeHandler.IsDiffableAsset(assetPath);
-            bool mergableAsset = MergeHandler.IsMergableAsset(assetPath);
-            bool modifiedDiffableAsset = diffableAsset && assetStatus.fileStatus != VCFileStatus.Normal;
-            bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
-            bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
-            bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
-            bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
-            bool added = assetStatus.fileStatus == VCFileStatus.Added;
-            bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
-            bool ignored = assetStatus.fileStatus == VCFileStatus.Ignored;
-            bool replaced = assetStatus.fileStatus == VCFileStatus.Replaced;
-            bool lockedByOther = assetStatus.lockStatus == VCLockStatus.LockedOther;
-            bool managedByRep = VCUtility.ManagedByRepository(assetStatus);
-            bool haveControl = VCUtility.HaveAssetControl(assetStatus);
-            bool haveLock = VCUtility.HaveVCLock(assetStatus);
-            bool allowLocalEdit = assetStatus.LocalEditAllowed();
-            bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
-            bool mergeinfo = assetStatus.property == VCProperty.Modified;
-            bool conflicted = assetStatus.fileStatus == VCFileStatus.Conflicted;
-            bool hasChangeSet = !ComposedString.IsNullOrEmpty(assetStatus.changelist);
+                var assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
 
-            validActions.showAdd        = !pending && !ignored && unversioned;
-            validActions.showOpen       = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
-            validActions.showDiff       = !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
-            validActions.showCommit     = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
-            validActions.showRevert     = !pending && !ignored && !unversioned && (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta || mergeinfo);
-            validActions.showDelete     = !pending && !ignored && !deleted && !lockedByOther;
-            validActions.showOpenLocal  = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset;
-            validActions.showUnlock     = !pending && !ignored && !allowLocalEdit && haveLock;
-            validActions.showUpdate     = !pending && !ignored && !added && managedByRep && instance != null;
-            validActions.showForceOpen  = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
-            validActions.showUseTheirs  = !pending && !ignored && conflicted;
-            validActions.showUseMine    = !pending && !ignored && conflicted;
-            validActions.showMerge      = !pending && !ignored && conflicted && mergableAsset;
-            validActions.showAddChangeList = !pending && !ignored && !unversioned;
-            validActions.showRemoveChangeList = !pending && !ignored && hasChangeSet;
-            validActions.showDisconnect = isPrefab && !isPrefabParent;
+                ValidActions validActions;
+                bool isPrefab = instance != null && PrefabHelper.IsPrefab(instance);
+                bool isPrefabParent = isPrefab && PrefabHelper.IsPrefabParent(instance);
+                bool isFolder = AssetDatabase.IsValidFolder(assetPath);
+                bool diffableAsset = MergeHandler.IsDiffableAsset(assetPath);
+                bool mergableAsset = MergeHandler.IsMergableAsset(assetPath);
+                bool modifiedDiffableAsset = diffableAsset && assetStatus.fileStatus != VCFileStatus.Normal;
+                bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
+                bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
+                bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
+                bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
+                bool added = assetStatus.fileStatus == VCFileStatus.Added;
+                bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
+                bool ignored = assetStatus.fileStatus == VCFileStatus.Ignored;
+                bool replaced = assetStatus.fileStatus == VCFileStatus.Replaced;
+                bool lockedByOther = assetStatus.lockStatus == VCLockStatus.LockedOther;
+                bool managedByRep = VCUtility.ManagedByRepository(assetStatus);
+                bool haveControl = VCUtility.HaveAssetControl(assetStatus);
+                bool haveLock = VCUtility.HaveVCLock(assetStatus);
+                bool allowLocalEdit = assetStatus.LocalEditAllowed();
+                bool pending = assetStatus.reflectionLevel == VCReflectionLevel.Pending;
+                bool mergeinfo = assetStatus.property == VCProperty.Modified;
+                bool conflicted = assetStatus.fileStatus == VCFileStatus.Conflicted;
+                bool hasChangeSet = !ComposedString.IsNullOrEmpty(assetStatus.changelist);
 
-            return validActions;
+                validActions.showAdd = !pending && !ignored && unversioned;
+                validActions.showOpen = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
+                validActions.showDiff = !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
+                validActions.showCommit = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
+                validActions.showRevert = !pending && !ignored && !unversioned &&
+                                          (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta || mergeinfo);
+                validActions.showDelete = !pending && !ignored && !deleted && !lockedByOther;
+                validActions.showOpenLocal = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset;
+                validActions.showUnlock = !pending && !ignored && !allowLocalEdit && haveLock;
+                validActions.showUpdate = !pending && !ignored && !added && managedByRep && instance != null;
+                validActions.showForceOpen = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
+                validActions.showUseTheirs = !pending && !ignored && conflicted;
+                validActions.showUseMine = !pending && !ignored && conflicted;
+                validActions.showMerge = !pending && !ignored && conflicted && mergableAsset;
+                validActions.showAddChangeList = !pending && !ignored && !unversioned;
+                validActions.showRemoveChangeList = !pending && !ignored && hasChangeSet;
+                validActions.showDisconnect = isPrefab && !isPrefabParent;
+
+                return validActions;
+            }
         }
 
         public static void CreateVCContextMenu(ref GenericMenu menu, string assetPath, Object instance = null)
@@ -174,7 +180,7 @@ namespace UVC.UserInterface
                 if (ready)
                 {
                     if (instance && ObjectUtilities.ChangesStoredInScene(instance)) assetPath = SceneManagerUtilities.GetCurrentScenePath();
-                    var validActions = GetValidActions(assetPath, instance);                    
+                    var validActions = GetValidActions(assetPath, instance);
 
                     if (validActions.showDiff)       menu.AddItem(new GUIContent(Terminology.diff),              false, () => MergeHandler.DiffWithBase(assetPath));
                     if (validActions.showAdd)        menu.AddItem(new GUIContent(Terminology.add),               false, () => VCCommands.Instance.Add(new[] { assetPath }));
@@ -191,7 +197,7 @@ namespace UVC.UserInterface
                     if (validActions.showMerge)      menu.AddItem(new GUIContent("Merge"),                       false, () => MergeHandler.ResolveConflict(assetPath));
                     if (validActions.showAddChangeList) menu.AddItem(new GUIContent("Add To " + Terminology.changelist),false, () => ChangeListWindow.Open(new []{assetPath}));
                     if (validActions.showRemoveChangeList) menu.AddItem(new GUIContent("Remove From " + Terminology.changelist),false, () => VCCommands.Instance.ChangeListRemove(new []{assetPath}));
-                    
+
                 }
                 else
                 {

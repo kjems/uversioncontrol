@@ -68,14 +68,6 @@ namespace UVC.UserInterface
                 }
                 using (GUILayoutHelper.Horizontal())
                 {
-                    VCSettings.PrefabGUI = GUILayout.Toggle(VCSettings.PrefabGUI, new GUIContent("Prefab GUI", "Show Version Control GUI for prefabs in hierarchy view\nDefault: On"));
-                    using (GUILayoutHelper.Enabled(VCSettings.PrefabGUI, true))
-                    {
-                        VCSettings.LockPrefabs = GUILayout.Toggle(VCSettings.LockPrefabs && VCSettings.PrefabGUI, new GUIContent("GUI Lock", "Version Control allowed to lock Inspector GUI for prefabs which are not " + Terminology.getlock + "\nDefault: Off"), GUILayout.ExpandWidth(true), GUILayout.Width(180));
-                    }
-                }
-                using (GUILayoutHelper.Horizontal())
-                {
                     VCSettings.MaterialGUI = GUILayout.Toggle(VCSettings.MaterialGUI, new GUIContent("Material GUI", "Show Version Control GUI for material interaction on the Renderer inspector\nDefault: On"));
                 }
 
@@ -99,11 +91,6 @@ namespace UVC.UserInterface
                         {
                             GUILayout.Label(new GUIContent("Scenes", "The Inspector GUI locks will only be active on assetpaths that contains the following filter.\neg. assets/scenes/"));
                             VCSettings.LockScenesFilter = EditorGUILayout.TextField(VCSettings.LockScenesFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
-                        }
-                        using (GUILayoutHelper.Horizontal())
-                        {
-                            GUILayout.Label(new GUIContent("Prefabs", "The Inspector GUI locks will only be active on assetpaths that contains the following filter.\neg. assets/prefabs/"));
-                            VCSettings.LockPrefabsFilter = EditorGUILayout.TextField(VCSettings.LockPrefabsFilter, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                         }
                     }
                 }

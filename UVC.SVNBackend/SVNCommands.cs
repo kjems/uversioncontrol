@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml;
 using CommandLineExecution;
+using Unity.Profiling;
 
 namespace UVC.Backend.SVN
 {
@@ -125,28 +126,34 @@ namespace UVC.Backend.SVN
         }
 
 
+        private static ProfilerMarker refreshStatusDatabaseMarker = new ProfilerMarker("UVC.RefreshStatusDatabase");
         private void RefreshStatusDatabase()
         {
-            List<string> localCopy = null;
-            List<string> remoteCopy = null;
-
-            lock (requestQueueLockToken)
+            using (refreshStatusDatabaseMarker.Auto())
             {
-                if (localRequestQueue.Count > 0)
+                List<string> localCopy = null;
+                List<string> remoteCopy = null;
+
+                lock (requestQueueLockToken)
                 {
-                    localCopy = new List<string>(localRequestQueue.Except(remoteRequestQueue).Distinct());
-                    localRequestQueue.Clear();
+                    if (localRequestQueue.Count > 0)
+                    {
+                        localCopy = new List<string>(localRequestQueue.Except(remoteRequestQueue).Distinct());
+                        localRequestQueue.Clear();
+                    }
+
+                    if (remoteRequestQueue.Count > 0)
+                    {
+                        remoteCopy = new List<string>(remoteRequestQueue.Distinct());
+                        remoteRequestQueue.Clear();
+                    }
                 }
-                if (remoteRequestQueue.Count > 0)
-                {
-                    remoteCopy = new List<string>(remoteRequestQueue.Distinct());
-                    remoteRequestQueue.Clear();
-                }
+
+                //if (localCopy != null && localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
+                //if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
+                if (localCopy != null && localCopy.Count > 0) Status(localCopy, StatusLevel.Local);
+                if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
             }
-            //if (localCopy != null && localCopy.Count > 0) D.Log("Local Status : " + localCopy.Aggregate((a, b) => a + ", " + b));
-            //if (remoteCopy != null && remoteCopy.Count > 0) D.Log("Remote Status : " + remoteCopy.Aggregate((a, b) => a + ", " + b));
-            if (localCopy != null && localCopy.Count > 0) Status(localCopy, StatusLevel.Local);
-            if (remoteCopy != null && remoteCopy.Count > 0) Status(remoteCopy, StatusLevel.Remote);
         }
 
         public bool IsReady()
@@ -181,7 +188,7 @@ namespace UVC.Backend.SVN
                 return statusDatabase[assetPath];
             }
         }
-        
+
         public InfoStatus GetInfo(string path)
         {
             using (var commandLineOperation = CreateSVNCommandLine($"info \"{path}\" --xml"))
@@ -360,49 +367,55 @@ namespace UVC.Backend.SVN
             return commandLineOutput;
         }
 
+        private static ProfilerMarker executeOperationMarker = new ProfilerMarker("UVC.ExecuteOperation");
         private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
         {
-            CommandLineOutput commandLineOutput;
-            if (useOperationLock)
+            using (executeOperationMarker.Auto())
             {
-                lock (operationActiveLockToken)
+                CommandLineOutput commandLineOutput;
+                if (useOperationLock)
+                {
+                    lock (operationActiveLockToken)
+                    {
+                        commandLineOutput = ExecuteCommandLine(commandLine);
+                    }
+                }
+                else
                 {
                     commandLineOutput = ExecuteCommandLine(commandLine);
                 }
-            }
-            else
-            {
-                commandLineOutput = ExecuteCommandLine(commandLine);
-            }
 
-            if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
-            {
-                var errStr = commandLineOutput.ErrorStr;
-                if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
-                    throw new VCMissingCredentialsException(errStr, commandLine.ToString());
-                else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
-                    throw new VCNewerVersionException(errStr, commandLine.ToString());
-                else if (errStr.Contains("E195020") || errStr.Contains("mixed-revision"))
-                    throw new VCMixedRevisionException(errStr, commandLine.ToString());
-                else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
-                    throw new VCCriticalException(errStr, commandLine.ToString());
-                else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
-                    throw new VCCriticalException(errStr, commandLine.ToString());
-                else if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
-                    throw new VCOutOfDate(errStr, commandLine.ToString());
-                else if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
-                    throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                else if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
-                    throw new VCLockedByOther(errStr, commandLine.ToString());
-                else if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") || errStr.Contains("Can't connect to"))
-                    throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
-                else if (errStr.Contains("W200017"))  // Ignore warning relating to use of propget on non-existing property in SVN 1.9+
-                    commandLineOutput = new CommandLineOutput(commandLineOutput.Command, commandLineOutput.Arguments, commandLineOutput.OutputStr, "", 0);
-                else
-                    throw new VCException(errStr, commandLine.ToString());
+                if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
+                {
+                    var errStr = commandLineOutput.ErrorStr;
+                    if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
+                        throw new VCMissingCredentialsException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
+                        throw new VCNewerVersionException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("E195020") || errStr.Contains("mixed-revision"))
+                        throw new VCMixedRevisionException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
+                        throw new VCCriticalException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
+                        throw new VCCriticalException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
+                        throw new VCOutOfDate(errStr, commandLine.ToString());
+                    else if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
+                        throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
+                        throw new VCLockedByOther(errStr, commandLine.ToString());
+                    else if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") ||
+                             errStr.Contains("Can't connect to"))
+                        throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
+                    else if (errStr.Contains("W200017")) // Ignore warning relating to use of propget on non-existing property in SVN 1.9+
+                        commandLineOutput = new CommandLineOutput(commandLineOutput.Command, commandLineOutput.Arguments, commandLineOutput.OutputStr, "", 0);
+                    else
+                        throw new VCException(errStr, commandLine.ToString());
+                }
+
+                return commandLineOutput;
             }
-            return commandLineOutput;
-        }                    
+        }
 
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
@@ -519,7 +532,7 @@ namespace UVC.Backend.SVN
         {
             return CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
         }
-        
+
         public bool Commit(string commitMessage = "")
         {
             // --depth empty
@@ -533,7 +546,19 @@ namespace UVC.Backend.SVN
 
         public bool Revert(IEnumerable<string> assets)
         {
-            bool revertSuccess = CreateAssetOperation("revert", assets);
+            const string workingDirectoryRoot = ".";
+            bool revertSuccess = true;
+            if (assets.Contains(workingDirectoryRoot))
+            {
+                assets = assets.Where(a => a != workingDirectoryRoot);
+                revertSuccess &= CreateAssetOperation("revert --depth empty", new[]{ workingDirectoryRoot });
+            }
+
+            if (assets.Any())
+            {
+                revertSuccess &= CreateAssetOperation("revert --depth infinity", assets);
+            }
+
             Status(assets, StatusLevel.Previous);
             bool changeListRemoveSuccess = vcc.ChangeListRemove(assets);
             bool releaseSuccess = true;
@@ -572,22 +597,22 @@ namespace UVC.Backend.SVN
         {
             return CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
-        
+
         public bool CreateBranch(string from, string to)
         {
             return CreateOperation("copy \"" + from + "\" \"" + to + "\" -m \"Creating new Branch from UVC\" ");
         }
-        
+
         public bool MergeBranch(string url, string path = "")
         {
             return CreateOperation("merge \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
-        
+
         public bool SwitchBranch(string url, string path = "")
         {
             return CreateOperation("switch \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
         }
-        
+
         public string GetCurrentBranch()
         {
             var svnInfo = CreateSVNCommandLine("info --xml ").Execute();
@@ -599,17 +624,17 @@ namespace UVC.Backend.SVN
             }
             return null;
         }
-        
+
         public string GetBranchDefaultPath()
         {
             return "^/branches/";
         }
-        
+
         public string GetTrunkPath()
         {
             return "^/trunk";
         }
-        
+
         public List<BranchStatus> RemoteList(string path)
         {
             using (var commandLineOperation = CreateSVNCommandLine($"list \"{path}\" --xml"))
@@ -634,7 +659,7 @@ namespace UVC.Backend.SVN
             {ConflictResolution.Theirs,   "--accept theirs-full"},
             {ConflictResolution.Working,  "--accept working"},
         };
-        
+
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
             if (conflictResolution == ConflictResolution.Ignore) return true;
@@ -720,11 +745,12 @@ namespace UVC.Backend.SVN
 
         public bool GetConflict(string assetPath, out string basepath, out string yours, out string theirs)
         {
-            var path = Path.GetDirectoryName(assetPath);
-            var file = Path.GetFileName(assetPath);
-            basepath = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-left.r*").First());
-            theirs   = Path.GetFullPath(Directory.GetFiles(path, $"{file}.merge-right.r*").First());
-            yours    = Path.GetFullPath($"{assetPath}.working");
+            var path  = Path.GetDirectoryName(assetPath);
+            var file  = Path.GetFileName(assetPath);
+            var files = Directory.GetFiles(path, $"{file}.*");
+            yours    = files[2];
+            basepath = files[3];
+            theirs   = files[4];
             return true;
         }
 

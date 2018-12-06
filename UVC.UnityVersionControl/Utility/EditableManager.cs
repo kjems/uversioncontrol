@@ -46,11 +46,6 @@ namespace UVC
             return string.IsNullOrEmpty(assetPath) || assetPath.EndsWith("unity_builtin_extra");
         }
 
-        public static bool LockPrefab(string assetPath)
-        {
-            return VCSettings.LockPrefabs && assetPath.ToLowerInvariant().Contains(VCSettings.LockPrefabsFilter.ToLowerInvariant());
-        }
-
         public static bool LockScene(string assetPath)
         {
             return VCSettings.LockScenes && assetPath.ToLowerInvariant().Contains(VCSettings.LockScenesFilter.ToLowerInvariant());
@@ -61,16 +56,10 @@ namespace UVC
             if (!EditorUtility.IsPersistent(gameObject))
             {
                 bool editable = ShouleBeEditable(gameObject);
-                bool parentEditable = gameObject.transform.parent ? ShouleBeEditable(gameObject.transform.parent.gameObject) : VCUtility.HaveAssetControl(SceneManagerUtilities.GetCurrentScenePath());
-                bool prefabHeadEditable = PrefabHelper.IsPrefabRoot(gameObject) && parentEditable;
-
-                if (prefabHeadEditable) SetEditable(gameObject, true);
-                else SetEditable(gameObject, editable);
-
+                SetEditable(gameObject, editable);
                 foreach (var componentIt in gameObject.GetComponents<Component>())
                 {
-                    if (prefabHeadEditable && componentIt == gameObject.transform) SetEditable(gameObject.transform, true);
-                    else RefreshEditableComponent(gameObject, componentIt);
+                    RefreshEditableComponent(gameObject, componentIt);
                 }
             }
         }
@@ -81,20 +70,14 @@ namespace UVC
             if (assetPath == "") return true;
             var assetStatus = gameObject.GetAssetStatus();
             if (!VCUtility.ManagedByRepository(assetStatus)) return true;
-            bool isPrefab = ObjectUtilities.ChangesStoredInPrefab(gameObject);
-            if (isPrefab && LockPrefab(assetPath))
-            {
-                return VCUtility.HaveAssetControl(assetStatus);
-            }
-            else // Treat as scene object
-            {
-                string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
-                if (scenePath == "") return true;
-                var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
-                bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
-                bool lockScene = LockScene(scenePath);
-                return haveSceneControl || !lockScene;
-            }
+
+            string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
+            if (scenePath == "") return true;
+            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
+            bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
+            bool lockScene = LockScene(scenePath);
+            return haveSceneControl || !lockScene;
+
         }
 
         private static void RefreshEditableComponent(GameObject gameObject, Component component)

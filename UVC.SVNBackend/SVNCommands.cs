@@ -653,17 +653,19 @@ namespace UVC.Backend.SVN
             return ChangeListAdd(assets, localEditChangeList);
         }
 
-        private static readonly Dictionary<ConflictResolution, string> conflictParameterLookup = new Dictionary<ConflictResolution, string>
-        {
-            {ConflictResolution.Mine,     "--accept mine-full"},
-            {ConflictResolution.Theirs,   "--accept theirs-full"},
-            {ConflictResolution.Working,  "--accept working"},
-        };
-
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
-            if (conflictResolution == ConflictResolution.Ignore) return true;
-            return CreateAssetOperation("resolve " + conflictParameterLookup[conflictResolution], assets);
+            switch (conflictResolution)
+            {
+                case ConflictResolution.Mine:
+                    return CreateAssetOperation("resolve --accept mine-full", assets) &&
+                           ChangeListRemove(assets);
+                case ConflictResolution.Theirs:
+                    return CreateAssetOperation("resolve --accept theirs-full" , assets);
+                case ConflictResolution.Working:
+                    return CreateAssetOperation("resolve --accept working", assets);
+            }
+            return true;
         }
 
         public bool Move(string from, string to)

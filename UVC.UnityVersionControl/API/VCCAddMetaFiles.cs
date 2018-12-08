@@ -58,7 +58,7 @@ namespace UVC
 
         public override bool GetLock(IEnumerable<string> assets, OperationMode mode)
         {
-            return base.GetLock(AddMeta(assets), mode);
+            return base.GetLock(assets, mode) && base.GetLock(GetMeta(assets), mode);
         }
 
         public override bool ReleaseLock(IEnumerable<string> assets)
@@ -80,7 +80,7 @@ namespace UVC
         {
             return RemoveMetaPostFix(base.GetFilteredAssets(filter));
         }
-        
+
         public override bool ChangeListRemove(IEnumerable<string> assets)
         {
             return base.ChangeListRemove(AddMeta(assets));
@@ -94,6 +94,17 @@ namespace UVC
         public override bool AllowLocalEdit(IEnumerable<string> assets)
         {
             return base.AllowLocalEdit(AddMeta(assets));
+        }
+
+        private static IEnumerable<string> GetMeta(IEnumerable<string> assets)
+        {
+            if (assets == null || !assets.Any()) return new string[]{};
+            return assets
+                .Where(ap => !ap.EndsWith(metaStr) && (ap.StartsWith(assetsFolder) || (ap.StartsWith(packageFolder) && !ap.EndsWith(manifest))))
+                .Select(ap => ap + metaStr)
+                .Distinct()
+                .OrderByDescending(s => s.Length)
+                .ToArray();
         }
 
         private static IEnumerable<string> AddMeta(IEnumerable<string> assets)

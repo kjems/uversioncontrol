@@ -151,13 +151,13 @@ namespace UVC.UserInterface
                 bool hasChangeSet = !ComposedString.IsNullOrEmpty(assetStatus.changelist);
 
                 validActions.showAdd = !pending && !ignored && unversioned;
-                validActions.showOpen = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && (!lockedByOther || allowLocalEdit);
+                validActions.showOpen = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && ((!lockedByOther && !modified) || allowLocalEdit);
                 validActions.showDiff = !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
                 validActions.showCommit = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
                 validActions.showRevert = !pending && !ignored && !unversioned &&
                                           (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta || mergeinfo);
                 validActions.showDelete = !pending && !ignored && !deleted && !lockedByOther;
-                validActions.showOpenLocal = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset;
+                validActions.showOpenLocal = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset && !modified;
                 validActions.showUnlock = !pending && !ignored && !allowLocalEdit && haveLock;
                 validActions.showUpdate = !pending && !ignored && !added && managedByRep && instance != null;
                 validActions.showForceOpen = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;

@@ -16,10 +16,14 @@ namespace UVC.UserInterface
     {
         public static System.Func<string> currentContext = SceneManagerUtilities.GetCurrentScenePath;
 
+        const float buttonHeight = 15f;
+        const float buttonWidth = 80f;
+
         private static GUIStyle buttonStyle;
         private static GUIStyle backgroundGuiStyle;
         private static bool shouldDraw = true;
         private static string selectionPath = "";
+        private static bool initialized = false;
 
         static VCSceneViewGUI()
         {
@@ -27,6 +31,20 @@ namespace UVC.UserInterface
             VCSettings.SettingChanged += SceneView.RepaintAll;
             VCCommands.Instance.StatusCompleted += SceneView.RepaintAll;
             EditorApplication.update += EditorUpdate;
+        }
+
+        static void InitializeIfNeeded()
+        {
+            if (!initialized)
+            {
+                initialized = true;
+                buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = buttonWidth};
+                backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
+                backgroundGuiStyle.padding = new RectOffset(4, 8, 1, 1);
+                backgroundGuiStyle.margin = new RectOffset(1, 1, 1, 1);
+                backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
+                backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
+            }
         }
 
         static string GetSelectionsPersistentAssetPath()
@@ -44,134 +62,135 @@ namespace UVC.UserInterface
         {
             selectionPath = GetSelectionsPersistentAssetPath();
             shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(selectionPath );
+            string assetPath = selectionPath;
+            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
+            vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+            validActions = VCGUIControls.GetValidActions(assetPath);
         }
 
         private static VCGUIControls.ValidActions validActions;
         private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
         private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.SceneViewUpdate");
+
+
+        private static readonly GUIContent addContent            = new GUIContent(Terminology.add);
+        private static readonly GUIContent getLockContent        = new GUIContent(Terminology.getlock);
+        private static readonly GUIContent commitContent         = new GUIContent(Terminology.commit);
+        private static readonly GUIContent revertContent         = new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation");
+        private static readonly GUIContent allowLocalEditContent = new GUIContent(Terminology.allowLocalEdit);
+        private static readonly GUIContent unlockContent         = new GUIContent(Terminology.unlock);
+        private static readonly GUIContent forceOpenContent      = new GUIContent("Force Open");
+
         static void SceneViewUpdate(SceneView sceneView)
         {
             using (sceneviewUpdateMarker.Auto())
             {
-                EditorUpdate();
+                InitializeIfNeeded();
                 if (!shouldDraw) return;
-
-                if (Event.current.type == EventType.Layout)
-                {
-                    string assetPath = selectionPath;
-                    VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-                    vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-                    validActions = VCGUIControls.GetValidActions(assetPath);
-                }
 
                 // This optimization is causing problems for following sceneview GUI, so removed for now.
                 //if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag)
                 //    return;
 
-                buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = 80};
 
-                backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
-                backgroundGuiStyle.padding = new RectOffset(4, 8, 1, 1);
-                backgroundGuiStyle.margin = new RectOffset(1, 1, 1, 1);
-                backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
-                backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
+                var stateRect     = new Rect(  2f,  2f, buttonWidth, buttonHeight);
+                var selectionRect = new Rect(  2f + buttonWidth,  2f, 700f, buttonHeight);
+                var buttonRect    = new Rect(  2f,  2f, buttonWidth, buttonHeight);
 
-                var rect = new Rect(5, 5, 800, 100);
                 Handles.BeginGUI();
-                GUILayout.BeginArea(new Rect(0, 0, rect.width, rect.height));
-                GUILayout.BeginHorizontal();
-                GUILayout.TextField(AssetStatusUtils.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
-                GUILayout.Label(selectionPath.Substring(selectionPath.LastIndexOf('/') + 1));
-                GUILayout.EndHorizontal();
 
+                GUI.TextField(stateRect, AssetStatusUtils.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
+                GUI.Label(selectionRect, selectionPath.Substring(selectionPath.LastIndexOf('/') + 1), EditorStyles.miniLabel);
 
                 int numberOfButtons = 0;
                 const int maxButtons = 4;
 
-                using (GUILayoutHelper.Vertical())
+                using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
                 {
-                    using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
+                    if (validActions.showAdd)
                     {
-                        if (validActions.showAdd)
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect, addContent , buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.add, buttonStyle))
-                            {
-                                SceneManagerUtilities.SaveActiveScene();
-                                OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {selectionPath}));
-                            }
+                            SceneManagerUtilities.SaveActiveScene();
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {selectionPath}));
                         }
+                    }
 
-                        if (validActions.showOpen)
+                    if (validActions.showOpen)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect,getLockContent , buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.getlock, buttonStyle))
-                            {
-                                VCCommands.Instance.GetLockTask(new[] {selectionPath});
-                            }
+                            VCCommands.Instance.GetLockTask(new[] {selectionPath});
                         }
+                    }
 
-                        if (validActions.showCommit)
+                    if (validActions.showCommit)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect,commitContent , buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.commit, buttonStyle))
-                            {
-                                OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {selectionPath}));
-                            }
+                            OnNextUpdate.Do(() => VCCommands.Instance.CommitDialog(new[] {selectionPath}));
                         }
+                    }
 
-                        if (validActions.showRevert)
+                    if (validActions.showRevert)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect,revertContent , buttonStyle))
                         {
-                            numberOfButtons++;
-                            if (GUILayout.Button(new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation"), buttonStyle))
+                            var sceneAssetPath = new[] {selectionPath};
+                            if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
                             {
-                                var sceneAssetPath = new[] {selectionPath};
-                                if (Event.current.shift || VCUtility.VCDialog(Terminology.revert, sceneAssetPath))
-                                {
-                                    VCCommands.Instance.Revert(sceneAssetPath);
-                                }
-                            }
-                        }
-
-                        if (validActions.showOpenLocal)
-                        {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.allowLocalEdit, buttonStyle))
-                            {
-                                VCCommands.Instance.AllowLocalEdit(new[] {selectionPath});
-                            }
-                        }
-
-                        if (validActions.showUnlock)
-                        {
-                            numberOfButtons++;
-                            if (GUILayout.Button(Terminology.unlock, buttonStyle))
-                            {
-                                OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] {selectionPath}));
-                            }
-                        }
-
-                        if (validActions.showForceOpen)
-                        {
-                            numberOfButtons++;
-                            if (GUILayout.Button("Force Open", buttonStyle))
-                            {
-                                OnNextUpdate.Do(() => VCUtility.GetLock(selectionPath, OperationMode.Force));
-                            }
-                        }
-
-                        // bug: Workaround for a bug in Unity to avoid Tools getting stuck when number of GUI elements change while right mouse is down.
-                        using (GUILayoutHelper.Enabled(false))
-                        {
-                            for (int i = numberOfButtons; i <= maxButtons; ++i)
-                            {
-                                GUI.Button(new Rect(0, 0, 0, 0), "", EditorStyles.label);
+                                VCCommands.Instance.Revert(sceneAssetPath);
                             }
                         }
                     }
-                }
 
-                GUILayout.EndArea();
+                    if (validActions.showOpenLocal)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect,allowLocalEditContent, buttonStyle))
+                        {
+                            VCCommands.Instance.AllowLocalEdit(new[] {selectionPath});
+                        }
+                    }
+
+                    if (validActions.showUnlock)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect,unlockContent , buttonStyle))
+                        {
+                            OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] {selectionPath}));
+                        }
+                    }
+
+                    if (validActions.showForceOpen)
+                    {
+                        buttonRect.y += buttonHeight;
+                        numberOfButtons++;
+                        if (GUI.Button(buttonRect, forceOpenContent, buttonStyle))
+                        {
+                            OnNextUpdate.Do(() => VCUtility.GetLock(selectionPath, OperationMode.Force));
+                        }
+                    }
+
+                    // bug: Workaround for a bug in Unity to avoid Tools getting stuck when number of GUI elements change while right mouse is down.
+                    using (GUILayoutHelper.Enabled(false))
+                    {
+                        for (int i = numberOfButtons; i <= maxButtons; ++i)
+                        {
+                            GUI.Button(new Rect(0, 0, 0, 0), "", EditorStyles.label);
+                        }
+                    }
+                }
                 Handles.EndGUI();
             }
         }

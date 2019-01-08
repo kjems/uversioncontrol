@@ -26,38 +26,38 @@ namespace UVC.Backend.P4
             }
         }
 
-        // Custom comparer for the QueueItem class 
+        // Custom comparer for the QueueItem class
         class P4QueueItemComparer : IEqualityComparer<P4QueueItem>
         {
-            // P4QueueItems are equal if their status levels and paths are equal. 
+            // P4QueueItems are equal if their status levels and paths are equal.
             public bool Equals(P4QueueItem x, P4QueueItem y)
             {
-                //Check whether the compared objects reference the same data. 
+                //Check whether the compared objects reference the same data.
                 if (Object.ReferenceEquals(x, y)) return true;
 
-                //Check whether any of the compared objects is null. 
+                //Check whether any of the compared objects is null.
                 if (Object.ReferenceEquals(x, null) || Object.ReferenceEquals(y, null))
                     return false;
 
-                //Check whether the P4QueueItem's properties are equal. 
+                //Check whether the P4QueueItem's properties are equal.
                 return x.level == y.level && x.path == y.path;
             }
 
-            // If Equals() returns true for a pair of objects  
-            // then GetHashCode() must return the same value for these objects. 
+            // If Equals() returns true for a pair of objects
+            // then GetHashCode() must return the same value for these objects.
 
             public int GetHashCode(P4QueueItem item)
             {
-                //Check whether the object is null 
+                //Check whether the object is null
                 if (Object.ReferenceEquals(item, null)) return 0;
 
-                //Get hash code for the path field if it is not null. 
+                //Get hash code for the path field if it is not null.
                 int hashItemPath = item.path == null ? 0 : item.path.GetHashCode();
 
-                //Get hash code for the level field. 
+                //Get hash code for the level field.
                 int hashItemLevel = item.level.GetHashCode();
 
-                //Calculate the hash code for the product. 
+                //Calculate the hash code for the product.
                 return hashItemPath ^ hashItemLevel;
             }
 
@@ -392,7 +392,7 @@ namespace UVC.Backend.P4
                 return new List<VersionControlStatus>(statusDatabase.Values.Where(filter).Where(s => !Directory.Exists(s.assetPath.Compose())));
             }
         }
-        
+
         public InfoStatus GetInfo(string path)
         {
             return null;
@@ -564,7 +564,7 @@ namespace UVC.Backend.P4
                         // let all scenes through so that the scene view GUI is updated as quickly as possible
                         if (!a.ToLower().EndsWith(".unity"))
                         {
-                            // single file - make sure it's not already covered by a directory in the queue (or if it's a sibling of 
+                            // single file - make sure it's not already covered by a directory in the queue (or if it's a sibling of
                             // something already in there, remove that item and check the whole directory instead)
                             string qItemPath = "//" + P4Util.Instance.Vars.clientSpec + diffRootToWorking + "/" + a.Replace("//", "/");
                             int lastIndexOfSlash = qItemPath.LastIndexOf("/");
@@ -588,7 +588,7 @@ namespace UVC.Backend.P4
                                             // this is a sibling of the desired item, flag it for removal
                                             itemToRemove = item;
 
-                                            // add the entire directory instead and continue (don't worry about duplicate adds, the 
+                                            // add the entire directory instead and continue (don't worry about duplicate adds, the
                                             // Distinct() call below will filter them out
                                             a = a.Substring(0, a.LastIndexOf("/") + 1) + "*";
                                             break;
@@ -850,37 +850,37 @@ namespace UVC.Backend.P4
             // CreateOperation("checkout \"" + url + "\" \"" + (path == "" ? workingDirectory : path) + "\"");
             return true;
         }
-        
+
         public bool CreateBranch(string from, string to)
         {
             return true;
         }
-        
+
         public bool MergeBranch(string url, string path = "")
         {
             return true;
         }
-        
+
         public bool SwitchBranch(string url, string path = "")
         {
             return true;
         }
-        
+
         public string GetCurrentBranch()
         {
             return null;
         }
-        
+
         public virtual string GetBranchDefaultPath()
         {
             return null;
         }
-        
+
         public virtual string GetTrunkPath()
         {
             return null;
         }
-        
+
         public List<BranchStatus> RemoteList(string path)
         {
             return null;
@@ -889,6 +889,11 @@ namespace UVC.Backend.P4
         public bool AllowLocalEdit(IEnumerable<string> assets)
         {
             return CreateAssetOperation("edit", assets);
+        }
+
+        public bool SetLocalOnly(IEnumerable<string> assets)
+        {
+            return true;
         }
 
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)

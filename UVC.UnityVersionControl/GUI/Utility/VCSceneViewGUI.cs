@@ -5,7 +5,6 @@
 using Unity.Profiling;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 #pragma warning disable CS4014
 
@@ -24,6 +23,19 @@ namespace UVC.UserInterface
         private static bool shouldDraw = true;
         private static string selectionPath = "";
         private static bool initialized = false;
+
+        private static VCGUIControls.ValidActions validActions;
+        private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
+        private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.SceneViewUpdate");
+
+
+        private static readonly GUIContent addContent            = new GUIContent(Terminology.add);
+        private static readonly GUIContent getLockContent        = new GUIContent(Terminology.getlock);
+        private static readonly GUIContent commitContent         = new GUIContent(Terminology.commit);
+        private static readonly GUIContent revertContent         = new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation");
+        private static readonly GUIContent allowLocalEditContent = new GUIContent(Terminology.allowLocalEdit);
+        private static readonly GUIContent unlockContent         = new GUIContent(Terminology.unlock);
+        private static readonly GUIContent forceOpenContent      = new GUIContent("Force Open");
 
         static VCSceneViewGUI()
         {
@@ -61,25 +73,18 @@ namespace UVC.UserInterface
         static void EditorUpdate()
         {
             selectionPath = GetSelectionsPersistentAssetPath();
-            shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(selectionPath );
-            string assetPath = selectionPath;
-            VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
-            vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
-            validActions = VCGUIControls.GetValidActions(assetPath);
+            shouldDraw = VCSettings.SceneviewGUI && VCCommands.Active && VCUtility.ValidAssetPath(selectionPath);
+            if (shouldDraw)
+            {
+                string assetPath = selectionPath;
+                VCUtility.RequestStatus(assetPath, VCSettings.HierarchyReflectionMode);
+                vcSceneStatus = VCCommands.Instance.GetAssetStatus(assetPath);
+                validActions = VCGUIControls.GetValidActions(assetPath);
+                if(backgroundGuiStyle != null)
+                    backgroundGuiStyle.normal.background = IconUtils.boxIcon.GetTexture(AssetStatusUtils.GetStatusColor(vcSceneStatus, true));
+            }
         }
 
-        private static VCGUIControls.ValidActions validActions;
-        private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
-        private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.SceneViewUpdate");
-
-
-        private static readonly GUIContent addContent            = new GUIContent(Terminology.add);
-        private static readonly GUIContent getLockContent        = new GUIContent(Terminology.getlock);
-        private static readonly GUIContent commitContent         = new GUIContent(Terminology.commit);
-        private static readonly GUIContent revertContent         = new GUIContent(Terminology.revert, "Shift-click to " + Terminology.revert + " without confirmation");
-        private static readonly GUIContent allowLocalEditContent = new GUIContent(Terminology.allowLocalEdit);
-        private static readonly GUIContent unlockContent         = new GUIContent(Terminology.unlock);
-        private static readonly GUIContent forceOpenContent      = new GUIContent("Force Open");
 
         static void SceneViewUpdate(SceneView sceneView)
         {
@@ -92,14 +97,13 @@ namespace UVC.UserInterface
                 //if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag)
                 //    return;
 
-
                 var stateRect     = new Rect(  2f,  2f, buttonWidth, buttonHeight);
-                var selectionRect = new Rect(  2f + buttonWidth,  2f, 700f, buttonHeight);
+                var selectionRect = new Rect(  2f + buttonWidth,  1f, 700f, buttonHeight);
                 var buttonRect    = new Rect(  2f,  2f, buttonWidth, buttonHeight);
 
                 Handles.BeginGUI();
 
-                GUI.TextField(stateRect, AssetStatusUtils.GetLockStatusMessage(vcSceneStatus), backgroundGuiStyle);
+                GUI.TextField(stateRect, AssetStatusUtils.GetStatusText(vcSceneStatus), backgroundGuiStyle);
                 GUI.Label(selectionRect, selectionPath.Substring(selectionPath.LastIndexOf('/') + 1), EditorStyles.miniLabel);
 
                 int numberOfButtons = 0;
@@ -169,16 +173,6 @@ namespace UVC.UserInterface
                         if (GUI.Button(buttonRect,unlockContent , buttonStyle))
                         {
                             OnNextUpdate.Do(() => VCCommands.Instance.ReleaseLock(new[] {selectionPath}));
-                        }
-                    }
-
-                    if (validActions.showForceOpen)
-                    {
-                        buttonRect.y += buttonHeight;
-                        numberOfButtons++;
-                        if (GUI.Button(buttonRect, forceOpenContent, buttonStyle))
-                        {
-                            OnNextUpdate.Do(() => VCUtility.GetLock(selectionPath, OperationMode.Force));
                         }
                     }
 

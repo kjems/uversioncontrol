@@ -125,7 +125,11 @@ namespace UVC.Backend.Noop
         {
             return null;
         }
-        public virtual bool AllowLocalEdit(IEnumerable<string> assets) 
+        public virtual bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            return true;
+        }
+        public virtual bool SetLocalOnly(IEnumerable<string> assets)
         {
             return true;
         }

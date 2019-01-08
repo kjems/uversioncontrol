@@ -25,32 +25,32 @@ namespace UVC
         Obstructed,
         None,
     }
-    
+
     public enum VCDirectoryStatus
     {
         NoModification,
         Conflicted,
         Modified
     }
-    
+
     public enum VCRepositoryStatus
     {
         NotLocked,
         Locked
     }
-    
+
     public enum VCRemoteFileStatus
     {
         Modified,
         None
     }
-    
+
     public enum VCScheduleStatus
     {
         None,
         Commit
     }
-    
+
     public enum VCLockStatus
     {
         NoLock,
@@ -82,7 +82,7 @@ namespace UVC
         Repository,
     }
     #endregion
-    
+
     [Serializable]
     public sealed class VersionControlStatus
     {
@@ -110,6 +110,7 @@ namespace UVC
         public int revision;
         public int lastModifiedRevision;
         public bool allowLocalEdit = false;
+        public bool localOnly = false;
         public bool Reflected { get { return reflectionLevel == VCReflectionLevel.Local || reflectionLevel == VCReflectionLevel.Repository; } }
     }
 }

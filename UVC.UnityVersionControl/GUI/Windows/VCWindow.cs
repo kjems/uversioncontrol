@@ -2,7 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
-// This script is a window to display local changes and to perform commands on 
+// This script is a window to display local changes and to perform commands on
 // the repository like updating and committing files.
 // SVNIntegration is used to get state and execute commands on the repository.
 //
@@ -51,7 +51,7 @@ namespace UVC.UserInterface
         [MenuItem("Window/UVC/Overview Window", false, 1)]
         public static void Init()
         {
-            GetWindow<VCWindow>(false, "VersionControl");
+            GetWindow<VCWindow>(false, "UVC.Overview Window");
         }
 
         private bool GUIFilter(VersionControlStatus vcStatus)
@@ -63,7 +63,7 @@ namespace UVC.UserInterface
             bool modifiedNoLock = !projectSetting && vcStatus.ModifiedOrLocalEditAllowed();
 
             bool rest = !unversioned && !meta && !modifiedNoLock && !projectSetting;
-            return ((showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest) && 
+            return ((showUnversioned && unversioned) || (showMeta && meta) || (showModifiedNoLock && modifiedNoLock) || (showProjectSetting && projectSetting) || rest) &&
                    (string.IsNullOrEmpty(searchString) || vcStatus.assetPath.Compose().Contains(searchString) || vcStatus.changelist.Compose().Contains(searchString));
         }
 
@@ -105,7 +105,7 @@ namespace UVC.UserInterface
             showMeta = EditorPrefs.GetBool("VCWindow/showMeta", true);
             showModifiedNoLock = EditorPrefs.GetBool("VCWindow/showModifiedNoLock", true);
             statusHeight = EditorPrefs.GetFloat("VCWindow/statusHeight", 400.0f);
-            
+
             searchField = new SearchField();
 
             vcMultiColumnAssetList = new VCMultiColumnAssetList();
@@ -116,7 +116,7 @@ namespace UVC.UserInterface
             VCCommands.Instance.StatusCompleted += RefreshGUI;
             VCCommands.Instance.OperationCompleted += OperationComplete;
             VCCommands.Instance.ProgressInformation += ProgressInformation;
-            VCSettings.SettingChanged += Repaint;            
+            VCSettings.SettingChanged += Repaint;
 
             rect = new Rect(0, statusHeight, position.width, 40.0f);
 
@@ -127,7 +127,7 @@ namespace UVC.UserInterface
         {
             EditorPrefs.SetBool("VCWindow/showUnversioned", showUnversioned);
             EditorPrefs.SetBool("VCWindow/showMeta", showMeta);
-            EditorPrefs.SetBool("VCWindow/showModifiedNoLock", showModifiedNoLock);            
+            EditorPrefs.SetBool("VCWindow/showModifiedNoLock", showModifiedNoLock);
             EditorPrefs.SetFloat("VCWindow/statusHeight", statusHeight);
 
             VCCommands.Instance.StatusCompleted -= RefreshGUI;
@@ -233,7 +233,7 @@ namespace UVC.UserInterface
             VCCommands.Instance.StatusTask(statusLevel, detailLevel).ContinueWithOnNextUpdate(t =>
             {
                 VCCommands.Instance.ActivateRefreshLoop();
-                refreshInProgress = false;                
+                refreshInProgress = false;
                 RefreshGUI();
             });
 
@@ -243,7 +243,7 @@ namespace UVC.UserInterface
         {
             GUILayoutOption[] buttonLayout = { GUILayout.MaxWidth(50) };
             {
-                // Buttons at top        
+                // Buttons at top
                 EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
                 using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready && !refreshInProgress, v => GUI.enabled = v))
@@ -256,7 +256,7 @@ namespace UVC.UserInterface
                     {
                         updateInProgress = true;
                         EditorUtility.DisplayProgressBar(VCSettings.VersionControlBackend + " Updating", "", 0.0f);
-                        VCCommands.Instance.UpdateTask();                        
+                        VCCommands.Instance.UpdateTask();
                     }
                     if (GUILayout.Button(Terminology.revert, EditorStyles.toolbarButton, buttonLayout))
                     {
@@ -281,14 +281,14 @@ namespace UVC.UserInterface
                 }
                 GUILayout.Space(7);
                 GUILayout.Label(currentBranch, EditorStyles.toolbarTextField,GUILayout.MinWidth(80), GUILayout.ExpandWidth(true));
-                
+
                 if (GUILayout.Button(Terminology.branch, EditorStyles.toolbarButton, buttonLayout))
                 {
                     BranchWindow.Create();
                 }
                 GUILayout.FlexibleSpace();
 
-                
+
                 string newSearchString = searchField.OnToolbarGUI(searchString);
                 if (newSearchString != searchString)
                 {

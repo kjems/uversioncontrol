@@ -1,8 +1,11 @@
 // Copyright (c) <2017> <Playdead>
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
+
+using System.Runtime.Serialization;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 
 namespace UVC.UserInterface
 {
@@ -45,6 +48,21 @@ namespace UVC.UserInterface
                 {
                     VCUtility.RequestStatus(sceneAssetPath, VCSettings.HierarchyReflectionMode);
                     DrawIcon(selectionRect, IconUtils.rubyIcon, sceneAssetPath, null, -20f);
+                }
+            }
+            else
+            {
+                var currentPrefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+                if (currentPrefabStage != null)
+                {
+                    var go = obj as GameObject;
+                    if (go)
+                    {
+                        if (PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot == go)
+                        {
+                            DrawIcon(selectionRect, IconUtils.squareIcon, PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath, null, 0f);
+                        }
+                    }
                 }
             }
         }

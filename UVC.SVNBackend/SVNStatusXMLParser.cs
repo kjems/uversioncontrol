@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using Unity.Profiling;
 
 namespace UVC.Backend.SVN
 {
@@ -41,17 +42,21 @@ namespace UVC.Backend.SVN
         };
     }
     #endregion
-    
-    
+
+
     public static class SVNStatusXMLParser
     {
+        private static ProfilerMarker svnParseStatusXMLMarker = new ProfilerMarker("UVC.SVNParseStatusXML");
         private static readonly ComposedString dot = new ComposedString(".");
         private static readonly ComposedString slash = new ComposedString("/");
         public static StatusDatabase SVNParseStatusXML(string svnStatusXML)
         {
-            var xmlStatusDocument = new XmlDocument();
-            xmlStatusDocument.LoadXml(svnStatusXML);
-            return ParseStatusResult(xmlStatusDocument);
+            using (svnParseStatusXMLMarker.Auto())
+            {
+                var xmlStatusDocument = new XmlDocument();
+                xmlStatusDocument.LoadXml(svnStatusXML);
+                return ParseStatusResult(xmlStatusDocument);
+            }
         }
 
         private static StatusDatabase ParseStatusResult(XmlDocument xmlDoc)
@@ -82,6 +87,10 @@ namespace UVC.Backend.SVN
                         if (changelist == SVNCommands.localEditChangeList)
                         {
                             statusDatabase[assetPath].allowLocalEdit = true;
+                        }
+                        if (changelist == SVNCommands.localOnlyChangeList)
+                        {
+                            statusDatabase[assetPath].localOnly = true;
                         }
                     }
                 }
@@ -167,7 +176,7 @@ namespace UVC.Backend.SVN
                     if (lockStatus["token"] != null) versionControlStatus.lockToken = lockStatus["token"].InnerText;
                     versionControlStatus.lockStatus = VCLockStatus.LockedHere;
                 }
-            }            
+            }
             return versionControlStatus;
         }
 
@@ -193,7 +202,7 @@ namespace UVC.Backend.SVN
 
 /*
  * 'SVN status --xml' schema
- * 
+ *
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information

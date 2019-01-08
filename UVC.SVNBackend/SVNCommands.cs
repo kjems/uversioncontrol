@@ -19,6 +19,7 @@ namespace UVC.Backend.SVN
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands
     {
         internal const string localEditChangeList = "Open Local";
+        internal const string localOnlyChangeList = "Local Only";
         internal const string svnTargetsFile = ".targets.tmp";
         private string workingDirectory = ".";
         private string userName;
@@ -367,54 +368,51 @@ namespace UVC.Backend.SVN
             return commandLineOutput;
         }
 
-        private static ProfilerMarker executeOperationMarker = new ProfilerMarker("UVC.ExecuteOperation");
         private CommandLineOutput ExecuteOperation(CommandLine commandLine, bool useOperationLock = true)
         {
-            using (executeOperationMarker.Auto())
+            CommandLineOutput commandLineOutput;
+            if (useOperationLock)
             {
-                CommandLineOutput commandLineOutput;
-                if (useOperationLock)
-                {
-                    lock (operationActiveLockToken)
-                    {
-                        commandLineOutput = ExecuteCommandLine(commandLine);
-                    }
-                }
-                else
+                lock (operationActiveLockToken)
                 {
                     commandLineOutput = ExecuteCommandLine(commandLine);
                 }
-
-                if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
-                {
-                    var errStr = commandLineOutput.ErrorStr;
-                    if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
-                        throw new VCMissingCredentialsException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
-                        throw new VCNewerVersionException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("E195020") || errStr.Contains("mixed-revision"))
-                        throw new VCMixedRevisionException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
-                        throw new VCCriticalException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
-                        throw new VCCriticalException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
-                        throw new VCOutOfDate(errStr, commandLine.ToString());
-                    else if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
-                        throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
-                        throw new VCLockedByOther(errStr, commandLine.ToString());
-                    else if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") ||
-                             errStr.Contains("Can't connect to"))
-                        throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
-                    else if (errStr.Contains("W200017")) // Ignore warning relating to use of propget on non-existing property in SVN 1.9+
-                        commandLineOutput = new CommandLineOutput(commandLineOutput.Command, commandLineOutput.Arguments, commandLineOutput.OutputStr, "", 0);
-                    else
-                        throw new VCException(errStr, commandLine.ToString());
-                }
-
-                return commandLineOutput;
             }
+            else
+            {
+                commandLineOutput = ExecuteCommandLine(commandLine);
+            }
+
+            if (!string.IsNullOrEmpty(commandLineOutput.ErrorStr))
+            {
+                var errStr = commandLineOutput.ErrorStr;
+                if (errStr.Contains("E170001") || errStr.Contains("get username or password"))
+                    throw new VCMissingCredentialsException(errStr, commandLine.ToString());
+                else if (errStr.Contains("W160042") || errStr.Contains("Newer Version"))
+                    throw new VCNewerVersionException(errStr, commandLine.ToString());
+                else if (errStr.Contains("E195020") || errStr.Contains("mixed-revision"))
+                    throw new VCMixedRevisionException(errStr, commandLine.ToString());
+                else if (errStr.Contains("W155007") || errStr.Contains("'" + workingDirectory + "'" + " is not a working copy"))
+                    throw new VCCriticalException(errStr, commandLine.ToString());
+                else if (errStr.Contains("E720005") || errStr.Contains("Access is denied"))
+                    throw new VCCriticalException(errStr, commandLine.ToString());
+                else if (errStr.Contains("E160028") || errStr.Contains("is out of date"))
+                    throw new VCOutOfDate(errStr, commandLine.ToString());
+                else if (errStr.Contains("E155037") || errStr.Contains("E155004") || errStr.Contains("run 'svn cleanup'") || errStr.Contains("run 'cleanup'"))
+                    throw new VCLocalCopyLockedException(errStr, commandLine.ToString());
+                else if (errStr.Contains("W160035") || errStr.Contains("is already locked by user"))
+                    throw new VCLockedByOther(errStr, commandLine.ToString());
+                else if (errStr.Contains("E730060") || errStr.Contains("Unable to connect") || errStr.Contains("is unreachable") || errStr.Contains("Operation timed out") ||
+                         errStr.Contains("Can't connect to"))
+                    throw new VCConnectionTimeoutException(errStr, commandLine.ToString());
+                else if (errStr.Contains("W200017")) // Ignore warning relating to use of propget on non-existing property in SVN 1.9+
+                    commandLineOutput = new CommandLineOutput(commandLineOutput.Command, commandLineOutput.Arguments, commandLineOutput.OutputStr, "", 0);
+                else
+                    throw new VCException(errStr, commandLine.ToString());
+            }
+
+            return commandLineOutput;
+
         }
 
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
@@ -653,6 +651,11 @@ namespace UVC.Backend.SVN
             return ChangeListAdd(assets, localEditChangeList);
         }
 
+        public bool SetLocalOnly(IEnumerable<string> assets)
+        {
+            return ChangeListAdd(assets, localOnlyChangeList);
+        }
+
         public bool Resolve(IEnumerable<string> assets, ConflictResolution conflictResolution)
         {
             switch (conflictResolution)
@@ -749,10 +752,10 @@ namespace UVC.Backend.SVN
         {
             var path  = Path.GetDirectoryName(assetPath);
             var file  = Path.GetFileName(assetPath);
-            var files = Directory.GetFiles(path, $"{file}.*");
-            yours    = files[2];
-            basepath = files[3];
-            theirs   = files[4];
+            var files = Directory.GetFiles(path, $"{file}.*").Where(p => !p.EndsWith(".meta")).ToArray();
+            yours    = files[1];
+            basepath = files[2];
+            theirs   = files[3];
             return true;
         }
 

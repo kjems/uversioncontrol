@@ -112,7 +112,7 @@ namespace UVC.UserInterface
         public struct ValidActions
         {
             public bool showAdd, showOpen, showDiff, showCommit, showRevert, showDelete, showOpenLocal, showUnlock, showUpdate,
-                        showForceOpen, showUseTheirs, showUseMine, showMerge, showAddChangeList, showRemoveChangeList, showDisconnect;
+                        showUseTheirs, showUseMine, showMerge, showAddChangeList, showRemoveChangeList;
         }
         private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.GetValidActions");
         static readonly ValidActions noAction = new ValidActions();
@@ -135,6 +135,7 @@ namespace UVC.UserInterface
                 bool modifiedMeta = assetStatus.MetaStatus().fileStatus != VCFileStatus.Normal;
                 bool lockedMeta = assetStatus.MetaStatus().lockStatus == VCLockStatus.LockedHere;
                 bool modified = assetStatus.fileStatus == VCFileStatus.Modified;
+                bool localOnly = assetStatus.localOnly;
                 bool deleted = assetStatus.fileStatus == VCFileStatus.Deleted;
                 bool added = assetStatus.fileStatus == VCFileStatus.Added;
                 bool unversioned = assetStatus.fileStatus == VCFileStatus.Unversioned;
@@ -151,22 +152,20 @@ namespace UVC.UserInterface
                 bool hasChangeSet = !ComposedString.IsNullOrEmpty(assetStatus.changelist);
 
                 validActions.showAdd = !pending && !ignored && unversioned;
-                validActions.showOpen = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && ((!lockedByOther && !modified) || allowLocalEdit);
+                validActions.showOpen = !pending && !validActions.showAdd && !added && !haveLock && !deleted && !isFolder && !mergableAsset && ((!lockedByOther && !localOnly) || allowLocalEdit);
                 validActions.showDiff = !pending && !ignored && !deleted && modifiedDiffableAsset && managedByRep;
-                validActions.showCommit = !pending && !ignored && !allowLocalEdit && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
+                validActions.showCommit = !pending && !ignored && !allowLocalEdit && !localOnly && (haveLock || added || deleted || modifiedDiffableAsset || isFolder || modifiedMeta || mergeinfo);
                 validActions.showRevert = !pending && !ignored && !unversioned &&
                                           (haveControl || modified || added || deleted || replaced || modifiedDiffableAsset || modifiedMeta || lockedMeta || mergeinfo);
                 validActions.showDelete = !pending && !ignored && !deleted && !lockedByOther;
-                validActions.showOpenLocal = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset && !modified;
+                validActions.showOpenLocal = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && !haveLock && !mergableAsset && !localOnly;
                 validActions.showUnlock = !pending && !ignored && !allowLocalEdit && haveLock;
                 validActions.showUpdate = !pending && !ignored && !added && managedByRep && instance != null;
-                validActions.showForceOpen = !pending && !ignored && !deleted && !isFolder && !allowLocalEdit && !unversioned && !added && lockedByOther && Event.current.shift;
                 validActions.showUseTheirs = !pending && !ignored && conflicted;
                 validActions.showUseMine = !pending && !ignored && conflicted;
                 validActions.showMerge = !pending && !ignored && conflicted && mergableAsset;
                 validActions.showAddChangeList = !pending && !ignored && !unversioned;
                 validActions.showRemoveChangeList = !pending && !ignored && hasChangeSet;
-                validActions.showDisconnect = isPrefab && !isPrefabParent;
 
                 return validActions;
             }
@@ -186,10 +185,8 @@ namespace UVC.UserInterface
                     if (validActions.showAdd)        menu.AddItem(new GUIContent(Terminology.add),               false, () => VCCommands.Instance.Add(new[] { assetPath }));
                     if (validActions.showOpen)       menu.AddItem(new GUIContent(Terminology.getlock),           false, () => GetLock(assetPath, instance));
                     if (validActions.showOpenLocal)  menu.AddItem(new GUIContent(Terminology.allowLocalEdit),    false, () => AllowLocalEdit(assetPath, instance));
-                    if (validActions.showForceOpen)  menu.AddItem(new GUIContent("Force " + Terminology.getlock),false, () => GetLock(assetPath, instance, OperationMode.Force));
                     if (validActions.showCommit)     menu.AddItem(new GUIContent(Terminology.commit),            false, () => Commit(assetPath, instance));
                     if (validActions.showUnlock)     menu.AddItem(new GUIContent(Terminology.unlock),            false, () => VCCommands.Instance.ReleaseLock(new[] { assetPath }));
-                    if (validActions.showDisconnect) menu.AddItem(new GUIContent("Disconnect"),                  false, () => PrefabHelper.DisconnectPrefab(instance as GameObject));
                     if (validActions.showDelete)     menu.AddItem(new GUIContent(Terminology.delete),            false, () => VCCommands.Instance.Delete(new[] { assetPath }));
                     if (validActions.showRevert)     menu.AddItem(new GUIContent(Terminology.revert),            false, () => Revert(assetPath, instance));
                     if (validActions.showUseTheirs)  menu.AddItem(new GUIContent("Use Theirs"),                  false, () => VCCommands.Instance.Resolve(new []{assetPath}, ConflictResolution.Theirs));

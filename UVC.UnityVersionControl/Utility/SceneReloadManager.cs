@@ -19,7 +19,7 @@ namespace UVC
             //VCCommands.Instance.OperationCompleted += OnOperationCompleted;
         }
 
-        private static void OnOperationStarting(OperationType operationType, VersionControlStatus[] statuses)
+        private static bool OnOperationStarting(OperationType operationType, VersionControlStatus[] statuses)
         {
             if (operationType == OperationType.Revert)
             {
@@ -38,6 +38,7 @@ namespace UVC
                     }
                 }
             }
+            return true;
         }
 
         /*
@@ -82,6 +83,6 @@ namespace UVC
             }
         }
         */
-        
+
     }
 }

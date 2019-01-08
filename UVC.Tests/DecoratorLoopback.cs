@@ -72,7 +72,7 @@ namespace UVC.UnitTests
         {
             return statusDatabase[assetPath];
         }
-        
+
         public virtual InfoStatus GetInfo(string path)
         {
             return null;
@@ -107,7 +107,7 @@ namespace UVC.UnitTests
         {
             return true;
         }
-        
+
         public bool Update(IEnumerable<string> assets)
         {
             if (assets != null)
@@ -175,12 +175,12 @@ namespace UVC.UnitTests
         {
             return true;
         }
-        
+
         public bool CreateBranch(string from, string to)
         {
             return true;
         }
-        
+
         public bool MergeBranch(string url, string path = "")
         {
             return true;
@@ -190,17 +190,17 @@ namespace UVC.UnitTests
         {
             return true;
         }
-        
+
         public string GetCurrentBranch()
         {
             return null;
         }
-        
+
         public string GetBranchDefaultPath()
         {
             return null;
         }
-        
+
         public string GetTrunkPath()
         {
             return null;
@@ -212,6 +212,12 @@ namespace UVC.UnitTests
         }
 
         public bool AllowLocalEdit(IEnumerable<string> assets)
+        {
+            dataCarrier.assets = assets.ToList();
+            return true;
+        }
+
+        public bool SetLocalOnly(IEnumerable<string> assets)
         {
             dataCarrier.assets = assets.ToList();
             return true;

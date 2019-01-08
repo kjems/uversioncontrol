@@ -34,7 +34,7 @@ namespace UVC
 
     /// <summary>
     /// IVersionControlCommands is the centerpoint for the Version Control. This interface represents all actions that
-    /// can be performed on the underlying version control system. 
+    /// can be performed on the underlying version control system.
     /// * All version control backends implement this interface.
     /// * All VCCDecorator's decorates this interface
     /// </summary>
@@ -75,6 +75,7 @@ namespace UVC
         string GetTrunkPath();
         List<BranchStatus> RemoteList(string path);
         bool AllowLocalEdit(IEnumerable<string> assets);
+        bool SetLocalOnly(IEnumerable<string> assets);
         bool Move(string from, string to);
         bool SetIgnore(string path, IEnumerable<string> assets);
         IEnumerable<string> GetIgnore(string path);

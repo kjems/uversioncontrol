@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
+using UnityEditor.Experimental.SceneManagement;
 
 namespace UVC
 {
@@ -30,13 +31,22 @@ namespace UVC
         public static bool ChangesStoredInPrefab(Object obj)
         {
             obj = GetObjectIndirection(obj);
-            return PrefabHelper.IsPrefabParent(obj) || PrefabHelper.IsPrefab(obj, true, false);
+            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (prefabStage != null)
+            {
+                GameObject gameObject = null;
+                if (obj is Component component) gameObject = component.gameObject;
+                if (obj is GameObject go) gameObject = go;
+
+                return gameObject != null && prefabStage.IsPartOfPrefabContents(gameObject);
+            }
+            return false;
         }
 
         public static string ObjectToAssetPath(Object obj, bool includingPrefabs = true)
         {
             obj = GetObjectIndirection(obj);
-            //if (includingPrefabs && PrefabHelper.IsPrefab(obj) && !PrefabHelper.IsPrefabParent(obj)) return AssetDatabase.GetAssetPath(PrefabUtility.GetCorrespondingObjectFromSource(obj));
+            if (includingPrefabs && ChangesStoredInPrefab(obj)) return PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath;
             return AssetDatabase.GetAssetOrScenePath(obj);
         }
     }

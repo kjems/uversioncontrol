@@ -70,14 +70,20 @@ namespace UVC
             if (assetPath == "") return true;
             var assetStatus = gameObject.GetAssetStatus();
             if (!VCUtility.ManagedByRepository(assetStatus)) return true;
-
-            string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
-            if (scenePath == "") return true;
-            var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
-            bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
-            bool lockScene = LockScene(scenePath);
-            return haveSceneControl || !lockScene;
-
+            bool isPrefab = ObjectUtilities.ChangesStoredInPrefab(gameObject);
+            if (isPrefab)
+            {
+                return VCUtility.HaveAssetControl(assetStatus);
+            }
+            else // Treat as scene object
+            {
+                string scenePath = ObjectUtilities.ObjectToAssetPath(gameObject, false);
+                if (scenePath == "") return true;
+                var vcSceneStatus = VCCommands.Instance.GetAssetStatus(scenePath);
+                bool haveSceneControl = VCUtility.HaveAssetControl(vcSceneStatus);
+                bool lockScene = LockScene(scenePath);
+                return haveSceneControl || !lockScene;
+            }
         }
 
         private static void RefreshEditableComponent(GameObject gameObject, Component component)

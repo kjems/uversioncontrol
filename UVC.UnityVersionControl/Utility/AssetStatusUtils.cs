@@ -40,6 +40,7 @@ namespace UVC.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Conflicted) return conflictedColor;
             if (assetStatus.fileStatus == VCFileStatus.Missing) return missingColor;
             if (assetStatus.fileStatus == VCFileStatus.Ignored) return ignoreColor;
+            if (assetStatus.localOnly) return orange;
             if (assetStatus.LocalEditAllowed()) return localEditColor;
             if (assetStatus.ModifiedWithoutLock()) return modifiedNoLockColor;
             if (assetStatus.fileStatus == VCFileStatus.Deleted) return deletedColor;
@@ -67,8 +68,9 @@ namespace UVC.UserInterface
             if (assetStatus.fileStatus == VCFileStatus.Conflicted) return "Conflicted";
             if (assetStatus.fileStatus == VCFileStatus.Deleted) return "Deleted";
             if (assetStatus.lockStatus == VCLockStatus.LockedHere) return Terminology.getlock + (assetStatus.fileStatus == VCFileStatus.Modified?"*":"");
+            if (assetStatus.localOnly) return "Local Only!";
             if (assetStatus.LocalEditAllowed()) return Terminology.allowLocalEdit + (assetStatus.fileStatus == VCFileStatus.Modified ? "*" : "");
-            if (assetStatus.ModifiedWithoutLock()) return "Modified!";            
+            if (assetStatus.ModifiedWithoutLock()) return "Modified!";
             if (assetStatus.lockStatus == VCLockStatus.LockedOther) return Terminology.lockedBy + "'" + assetStatus.owner + "'";
             if (assetStatus.fileStatus == VCFileStatus.Modified) return "Modified";
             if (assetStatus.fileStatus == VCFileStatus.Unversioned) return Terminology.unversioned;

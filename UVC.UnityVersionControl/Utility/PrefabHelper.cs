@@ -34,28 +34,6 @@ namespace UVC
                 (includeModels && assetType == PrefabAssetType.Model);
         }
 
-        public static GameObject DisconnectPrefab(GameObject gameObject)
-        {
-            // instantiate prefab at prefab location, remove original prefab instance.
-            var prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
-            string prefabName = prefabRoot.name;
-
-            var replacedPrefab = Object.Instantiate(prefabRoot, prefabRoot.transform.position, prefabRoot.transform.rotation) as GameObject;
-            Undo.RegisterCreatedObjectUndo(replacedPrefab, "Disconnect Prefab");
-            replacedPrefab.name = prefabName;
-            replacedPrefab.transform.parent = prefabRoot.transform.parent;
-
-            Undo.DestroyObjectImmediate(prefabRoot);
-            return replacedPrefab;
-        }
-
-        public static void SelectPrefab(GameObject gameObject)
-        {
-            var prefabParent = PrefabUtility.GetCorrespondingObjectFromSource(PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject));
-            Selection.activeGameObject = prefabParent;
-            EditorGUIUtility.PingObject(Selection.activeGameObject);
-        }
-
         public static void ApplyPrefab(GameObject prefabInstance)
         {
             GameObject go = PrefabUtility.GetOutermostPrefabInstanceRoot(prefabInstance);

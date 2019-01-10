@@ -81,7 +81,7 @@ namespace UVC.Backend.P4
         private volatile bool refreshLoopActive = false;
         private volatile bool requestRefreshLoopStop = false;
         private DirectoryCrawler dirStatus = new DirectoryCrawler();
-        private List<P4QueueItem> p4OpQueue = new List<P4QueueItem>();	// not using a Queue<> because we need to insert high-priority items
+        private List<P4QueueItem> p4OpQueue = new List<P4QueueItem>();    // not using a Queue<> because we need to insert high-priority items
 
         public P4Commands()
         {

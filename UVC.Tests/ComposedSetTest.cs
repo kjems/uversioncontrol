@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using ComposedString = UVC.ComposedSet<string, UVC.FilesAndFoldersComposedStringDatabase>;
 #if UNITY_2018_3_OR_NEWER && PERFORMANCE_PACKAGE

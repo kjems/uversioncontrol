@@ -57,7 +57,7 @@ namespace UVC.Backend.P4
             var lines = p4Status.Split(new Char[] { '\r', '\n' });
             foreach (String line in lines)
             {
-                if (line.IndexOf(" - reconcile") == -1) continue;	// sometimes output may contain blank lines...
+                if (line.IndexOf(" - reconcile") == -1) continue;    // sometimes output may contain blank lines...
                 var status = ParseStatusLine(line, username);
                 string assetPath = line.Substring(0, line.IndexOf(" - reconcile")).Replace('\\', '/').Trim().Replace(P4Util.Instance.Vars.unixWorkingDirectory + "/", "");
                 status.assetPath = new ComposedString(assetPath);
@@ -77,7 +77,7 @@ namespace UVC.Backend.P4
 
             versionControlStatus.revision = versionControlStatus.lastModifiedRevision = Int32.Parse(line.Substring(line.LastIndexOf("#") + 1));
             versionControlStatus.repositoryStatus = VCRepositoryStatus.NotLocked;
-            //			versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
+            //            versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
             versionControlStatus.user = "";
             if (line.Contains("reconcile to add"))
             {
@@ -89,14 +89,14 @@ namespace UVC.Backend.P4
             else if (line.Contains("reconcile to edit"))
             {
                 // file is edited locally, but not checked out - bad user!
-                //				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
+                //                versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
                 versionControlStatus.fileStatus = VCFileStatus.Modified;
-                //				versionControlStatus.treeConflictStatus = VCTreeConflictStatus.TreeConflict;
+                //                versionControlStatus.treeConflictStatus = VCTreeConflictStatus.TreeConflict;
             }
             else if (line.Contains("reconcile to delete"))
             {
                 // file is versioned, but has been deleted locally
-                //				versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
+                //                versionControlStatus.remoteStatus = VCRemoteFileStatus.Modified;
                 versionControlStatus.fileStatus = VCFileStatus.Deleted;
             }
             /*
@@ -200,8 +200,8 @@ namespace UVC.Backend.P4
             versionControlStatus.remoteStatus = fileData.haveRev == fileData.headRev ? VCRemoteFileStatus.None : VCRemoteFileStatus.Modified;
             versionControlStatus.lastModifiedRevision = fileData.headRev == -1 ? 1 : fileData.headRev;
             versionControlStatus.revision = fileData.haveRev == -1 ? 1 : fileData.haveRev;
-            versionControlStatus.repositoryStatus = VCRepositoryStatus.NotLocked;	// this is only regarding the local copy
-            versionControlStatus.user = "";	// supposed to be the last person who checked the file in - don't have that info in p4 fstat
+            versionControlStatus.repositoryStatus = VCRepositoryStatus.NotLocked;    // this is only regarding the local copy
+            versionControlStatus.user = "";    // supposed to be the last person who checked the file in - don't have that info in p4 fstat
             // we could do another p4 call, but that would not be performant for most cases
             versionControlStatus.changelist = fileData.change;
 
@@ -254,7 +254,7 @@ namespace UVC.Backend.P4
 
             versionControlStatus.treeConflictStatus = VCTreeConflictStatus.Normal;
 
-            //			if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
+            //            if (wcStatus.Attributes["tree-conflicted"] != null) versionControlStatus.treeConflictStatus = (wcStatus.Attributes["tree-conflicted"].InnerText == "true") ? VCTreeConflictStatus.TreeConflict : VCTreeConflictStatus.Normal;
 
 
             return versionControlStatus;

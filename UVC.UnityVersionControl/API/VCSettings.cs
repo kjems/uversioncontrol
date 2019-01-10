@@ -308,8 +308,7 @@ namespace UVC
                 pathDiff  = "~/AppData/Local/semanticmerge/semanticmergetool.exe",
                 pathMerge = "~/AppData/Local/semanticmerge/semanticmergetool.exe",
                 argumentsDiff  = "-s=\"[theirs]\" -d=\"[yours]\"",
-                argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" " +
-                                 "--nolangwarn -emt=\"C:/Program Files/Perforce/p4merge.exe \"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\"\""
+                argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" --nolangwarn"
             }
             #endif
         };

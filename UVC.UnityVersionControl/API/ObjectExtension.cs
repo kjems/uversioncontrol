@@ -70,13 +70,10 @@ namespace UVC
                 return new[] { obj.GetAssetPath() };
             }
 
-            // The caching of AssetPaths caused too many problems with cache getting out of date.
-            // The code is kept in if the performance is a problem at some point, but be aware of sublet errors due to failed cache
             public static string GetAssetPath(this Object obj)
             {
                 if (obj == null) return "";
-                string assetPath;
-                if (!GameObjectToAssetPathCache.TryGetValue(obj, out assetPath))
+                if (!GameObjectToAssetPathCache.TryGetValue(obj, out var assetPath))
                 {
                     assetPath = ObjectUtilities.ObjectToAssetPath(obj);
                     GameObjectToAssetPathCache.Add(obj, assetPath);

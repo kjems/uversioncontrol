@@ -3,7 +3,6 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
 using System.Threading.Tasks;
-using UVC;
 
 namespace UVC
 {

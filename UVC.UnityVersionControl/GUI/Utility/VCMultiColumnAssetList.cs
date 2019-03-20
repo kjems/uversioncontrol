@@ -6,7 +6,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-using UVC.Logging;
 using MultiColumnState = MultiColumnState<UVC.VersionControlStatus, UnityEngine.GUIContent>;
 using MultiColumnViewOption = MultiColumnView.MultiColumnViewOption<UVC.VersionControlStatus>;
 

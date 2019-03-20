@@ -17,6 +17,7 @@ namespace UVC.UserInterface
 
         const float buttonHeight = 15f;
         const float buttonWidth = 80f;
+        const int fontsize = 9;
 
         private static GUIStyle buttonStyle;
         private static GUIStyle backgroundGuiStyle;
@@ -50,12 +51,19 @@ namespace UVC.UserInterface
             if (!initialized)
             {
                 initialized = true;
-                buttonStyle = new GUIStyle(EditorStyles.miniButton) {margin = new RectOffset(0, 0, 0, 0), fixedWidth = buttonWidth};
+                buttonStyle = new GUIStyle(EditorStyles.miniButton)
+                {
+                    margin = new RectOffset(0, 0, 0, 0),
+                    fixedWidth = buttonWidth,
+                    fontSize = fontsize
+                };
                 backgroundGuiStyle = VCGUIControls.GetVCBox(vcSceneStatus);
-                backgroundGuiStyle.padding = new RectOffset(4, 8, 1, 1);
+                backgroundGuiStyle.padding = new RectOffset(4, 4, 1, 1);
                 backgroundGuiStyle.margin = new RectOffset(1, 1, 1, 1);
                 backgroundGuiStyle.border = new RectOffset(1, 1, 1, 1);
                 backgroundGuiStyle.alignment = TextAnchor.MiddleCenter;
+                backgroundGuiStyle.fontSize = fontsize;
+
             }
         }
 

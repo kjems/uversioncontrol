@@ -3,7 +3,6 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using UnityEngine;
 using UnityEngine.Profiling;
-using UnityEditor;
 using System.Diagnostics;
 
 namespace UVC

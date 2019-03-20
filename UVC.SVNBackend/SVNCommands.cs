@@ -13,7 +13,6 @@ using Unity.Profiling;
 namespace UVC.Backend.SVN
 {
     using Logging;
-    using AssetPathFilters;
     using ComposedString = ComposedSet<string, FilesAndFoldersComposedStringDatabase>;
 
     public class SVNCommands : MarshalByRefObject, IVersionControlCommands

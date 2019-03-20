@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using UnityEditor.IMGUI.Controls;
 using UVC.Logging;
 
@@ -153,7 +152,7 @@ namespace UVC.UserInterface
         private static async void Switch(string url)
         {
             await VCCommands.Instance.SwitchBranchTask(url);
-            VCCommands.Instance.RequestAssetDatabaseRefresh();
+            AssetDatabaseRefreshManager.RequestAssetDatabaseRefresh();
             Refresh();
         }
 
@@ -183,29 +182,37 @@ namespace UVC.UserInterface
             {
                 await VCCommands.Instance.StatusTask(StatusLevel.Local, DetailLevel.Normal);
                 VCCommands.Instance.CommitDialog(GetChangedAssets().Select(status => status.assetPath.Compose()).ToList(), includeDependencies: false, showUserConfirmation: true, commitMessage: $"Merged {url} to {currentBranch}");
-                VCCommands.Instance.RequestAssetDatabaseRefresh();
+                AssetDatabaseRefreshManager.RequestAssetDatabaseRefresh();
             }
         }
-        
+
         private static async void Refresh()
         {
-            if (!branchpath.EndsWith("/")) branchpath += "/";
-            if (VCCommands.Active)
+            try
             {
-                branches = await VCCommands.Instance.RemoteListTask(BranchPath);
-                var trunkInfo = VCCommands.Instance.GetInfo(trunkpath);
-                var trunk = new BranchStatus()
+                if (!branchpath.EndsWith("/")) branchpath += "/";
+                if (VCCommands.Active)
                 {
-                    name = trunkpath,
-                    author = trunkInfo.author,
-                    date = trunkInfo.lastChangedDate,
-                    revision = trunkInfo.revision
-                };
-                branches.Insert(0, trunk);
-                RefreshBranchList();
-                currentBranch = await VCCommands.Instance.GetCurrentBranchTask();
-                await VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
-                instance.Repaint();
+                    branches = await VCCommands.Instance.RemoteListTask(BranchPath);
+                    var trunkInfo = VCCommands.Instance.GetInfo(trunkpath);
+                    var trunk = new BranchStatus()
+                    {
+                        name = trunkpath,
+                        author = trunkInfo.author,
+                        date = trunkInfo.lastChangedDate,
+                        revision = trunkInfo.revision
+                    };
+                    branches.Insert(0, trunk);
+                    RefreshBranchList();
+                    currentBranch = await VCCommands.Instance.GetCurrentBranchTask();
+                    await VCCommands.Instance.StatusTask(StatusLevel.Previous, DetailLevel.Normal);
+                    if(instance != null)
+                        instance.Repaint();
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
 

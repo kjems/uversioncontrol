@@ -11,9 +11,6 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using UVC.Logging;
-using System.Threading.Tasks;
 using Object = UnityEngine.Object;
 
 namespace UVC

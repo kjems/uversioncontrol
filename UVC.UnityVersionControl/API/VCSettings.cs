@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace UVC
 {
@@ -309,6 +308,16 @@ namespace UVC
                 pathMerge = "~/AppData/Local/semanticmerge/semanticmergetool.exe",
                 argumentsDiff  = "-s=\"[theirs]\" -d=\"[yours]\"",
                 argumentsMerge = "\"[yours]\" \"[theirs]\" \"[base]\" \"[merge]\" --nolangwarn"
+            }
+            #endif
+	    #if UNITY_EDITOR_LINUX
+	    new MergeTool
+            {
+                name = "Semantic Merge (P4 diff)",
+                pathDiff  = "/usr/local/bin/p4merge",
+                pathMerge = "/usr/local/bin/p4merge",
+                argumentsDiff  = "\"[theirs]\" \"[yours]\"",
+                argumentsMerge = "\"[base]\" \"[theirs]\" \"[yours]\" \"[merge]\""
             }
             #endif
         };

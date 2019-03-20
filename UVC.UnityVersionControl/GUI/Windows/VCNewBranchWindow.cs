@@ -1,9 +1,6 @@
-using System;
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
-using System.Linq;
-using UVC.Logging;
+
 #pragma warning disable CS4014
 
 namespace UVC.UserInterface

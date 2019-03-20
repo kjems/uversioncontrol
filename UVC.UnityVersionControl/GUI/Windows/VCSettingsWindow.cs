@@ -2,7 +2,6 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -107,7 +106,7 @@ namespace UVC.UserInterface
             {
                 using (GUILayoutHelper.Horizontal())
                 {
-                    VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierachy Icons", "Show Version Control controls in hierachy view\nDefault: On"));
+                    VCSettings.HierarchyIcons = GUILayout.Toggle(VCSettings.HierarchyIcons, new GUIContent("Hierarchy Icons", "Show Version Control controls in hierarchy view\nDefault: On"));
                     VCSettings.HierarchyReflectionMode = (VCSettings.EReflectionLevel)EditorGUILayout.EnumPopup(VCSettings.HierarchyReflectionMode, GUILayout.ExpandWidth(true), GUILayout.Width(180));
                 }
                 using (GUILayoutHelper.Horizontal())

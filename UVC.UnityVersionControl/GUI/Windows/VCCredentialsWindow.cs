@@ -7,7 +7,6 @@ using UnityEditor;
 
 namespace UVC.UserInterface
 {
-    using Logging;
     [Serializable]
     internal class VCCredentialsWindow : EditorWindow
     {        

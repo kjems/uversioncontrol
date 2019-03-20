@@ -227,7 +227,7 @@ namespace UVC.UserInterface
             else VCCommands.Instance.Revert(new[] { assetPath });
         }
 
-        public static void DiaplayVCContextMenu(string assetPath, Object instance = null, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
+        public static void DisplayVCContextMenu(string assetPath, Object instance = null, float xoffset = 0.0f, float yoffset = 0.0f, bool showAssetName = false)
         {
             var menu = new GenericMenu();
             if (showAssetName)

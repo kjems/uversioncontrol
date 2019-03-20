@@ -4,12 +4,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using UnityEditor;
 using UnityEngine;
 
 namespace UVC.UserInterface
 {
-    using Logging;
     public static class IconUtils
     {
         // Const

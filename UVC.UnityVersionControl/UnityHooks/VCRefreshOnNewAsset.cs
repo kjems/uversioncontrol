@@ -11,7 +11,7 @@ using System.IO;
 namespace UVC
 {
     using Logging;
-    using Extensions;
+
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
@@ -140,11 +140,11 @@ namespace UVC
                     {
                         MoveAssetBack(from, to);
                     }
-                    
+
                     VCCommands.Instance.Move(from, to);
                     AssetDatabase.Refresh();
                     GameObjectToAssetPathCache.ClearObjectToAssetPathCache();
-                    
+
                 }
             }
         }
@@ -172,12 +172,12 @@ namespace UVC
     [InitializeOnLoad]
     internal static class GameObjectToAssetPathCache
     {
-        private static readonly Dictionary<Object, string> gameObjectToAssetPath = new Dictionary<Object, string>();
+        private static readonly Dictionary<int, string> gameObjectToAssetPath = new Dictionary<int, string>();
 
         static GameObjectToAssetPathCache()
         {
-            VCCommands.Instance.StatusCompleted += () => ClearObjectToAssetPathCache();
-            EditorApplication.hierarchyChanged += () => ClearObjectToAssetPathCache();
+            VCCommands.Instance.StatusCompleted += ClearObjectToAssetPathCache;
+            EditorApplication.hierarchyChanged += ClearObjectToAssetPathCache;
         }
 
         public static void ClearObjectToAssetPathCache()
@@ -187,12 +187,12 @@ namespace UVC
 
         public static bool TryGetValue(Object obj, out string assetPath)
         {
-            return gameObjectToAssetPath.TryGetValue(obj, out assetPath);
+            return gameObjectToAssetPath.TryGetValue(obj.GetInstanceID(), out assetPath);
         }
 
         public static void Add(Object obj, string assetPath)
         {
-            if (!string.IsNullOrEmpty(assetPath)) gameObjectToAssetPath.Add(obj, assetPath);
+            if (!string.IsNullOrEmpty(assetPath)) gameObjectToAssetPath.Add(obj.GetInstanceID(), assetPath);
         }
     }
 }

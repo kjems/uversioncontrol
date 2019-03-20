@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace UVC
 {
-    using Logging;
     [InitializeOnLoad]
     internal sealed class VCRefreshEditable
     {

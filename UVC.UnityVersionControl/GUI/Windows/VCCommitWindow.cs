@@ -88,7 +88,7 @@ namespace UVC.UserInterface
 
         private void OnEnable()
         {
-            VCCommands.Instance.PauseAssetDatabaseRefresh();
+            AssetDatabaseRefreshManager.PauseAssetDatabaseRefresh();
             minSize  = new Vector2(1000, 400);
             position = new Rect {
                 xMin    = Screen.width * 0.5f - this.minSize.x,
@@ -106,7 +106,7 @@ namespace UVC.UserInterface
         {
             EditorPrefs.SetFloat("VCCommitWindow/commitMessageHeight", commitMessageHeight);
             vcMultiColumnAssetList.Dispose();
-            VCCommands.Instance.ResumeAssetDatabaseRefresh();
+            AssetDatabaseRefreshManager.ResumeAssetDatabaseRefresh();
         }
 
         private void OnGUI()
@@ -173,7 +173,7 @@ namespace UVC.UserInterface
                 {
                     var selection = VCSettings.SelectiveCommit ? vcMultiColumnAssetList.GetMasterSelection() : vcMultiColumnAssetList.GetSelection();
                     if (selection.Count() != 0)
-                    {                        
+                    {
                         var selectedAssets = selection.Select(status => status.assetPath).Select(cstr => cstr.Compose()).ToList();
                         VCCommands.Instance.ProgressInformation += s =>
                         {

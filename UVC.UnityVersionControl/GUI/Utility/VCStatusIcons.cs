@@ -2,7 +2,6 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
-using System.Runtime.Serialization;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Experimental.SceneManagement;
@@ -11,7 +10,7 @@ namespace UVC.UserInterface
 {
     using Extensions;
     [InitializeOnLoad]
-    internal static class VCStatusIcons
+    public static class VCStatusIcons
     {
         static VCStatusIcons()
         {
@@ -111,7 +110,7 @@ namespace UVC.UserInterface
             return false;
         }
 
-        private static void DrawIcon(Rect rect, IconUtils.Icon iconType, string assetPath, Object instance = null, float xOffset = 0f)
+        public static void DrawIcon(Rect rect, IconUtils.Icon iconType, string assetPath, Object instance = null, float xOffset = 0f)
         {
             if (VCSettings.VCEnabled)
             {
@@ -126,7 +125,7 @@ namespace UVC.UserInterface
                 if (texture) GUI.DrawTexture(placement, texture);
                 if (GUI.Button(clickRect, new GUIContent("", statusText), GUIStyle.none))
                 {
-                    VCGUIControls.DiaplayVCContextMenu(assetPath, instance, 10.0f, -40.0f, true);
+                    VCGUIControls.DisplayVCContextMenu(assetPath, instance, 10.0f, -40.0f, true);
                 }
             }
         }

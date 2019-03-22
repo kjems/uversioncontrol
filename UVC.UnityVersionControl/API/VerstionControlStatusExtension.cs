@@ -24,6 +24,10 @@ public static class VersionControlStatusExtension
     {
         return ModifiedWithoutLock(vcs) || LocalEditAllowed(vcs);
     }
+    public static bool HaveAssetControl(this VersionControlStatus vcs)
+    {
+        return VCUtility.HaveAssetControl(vcs);
+    }
     public static bool ModifiedWithoutRights(this VersionControlStatus vcs)
     {
         return ModifiedWithoutLock(vcs) && !LocalEditAllowed(vcs);

@@ -75,7 +75,7 @@ namespace UVC
         {
             var gameObject = obj as GameObject;
             if (ObjectUtilities.ChangesStoredInScene(obj)) SceneManagerUtilities.SaveActiveScene();
-            if (PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(obj)) PrefabHelper.ApplyPrefab(gameObject);
+            if (PrefabHelper.IsPartofPrefabStage(gameObject)) PrefabHelper.SaveOpenPrefabStage();
             if (onHierarchyCommit != null) onHierarchyCommit(obj);
             VCCommands.Instance.CommitDialog(obj.ToAssetPaths(), includeDependencies: true, showUserConfirmation: showCommitDialog, commitMessage: commitMessage);
         }

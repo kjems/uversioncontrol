@@ -3,6 +3,7 @@
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UVC.Extensions;
 
 namespace UVC
@@ -32,6 +33,22 @@ namespace UVC
             return
                 (includeRegular && assetType == PrefabAssetType.Regular || assetType == PrefabAssetType.Variant || assetType == PrefabAssetType.MissingAsset) ||
                 (includeModels && assetType == PrefabAssetType.Model);
+        }
+
+        public static bool IsPartofPrefabStage(GameObject gameObject)
+        {
+            if (PrefabStageUtility.GetCurrentPrefabStage() == null)
+                return false;
+            
+            return PrefabStageUtility.GetCurrentPrefabStage().IsPartOfPrefabContents(gameObject);
+        }
+
+        public static void SaveOpenPrefabStage()
+        {
+            if (PrefabStageUtility.GetCurrentPrefabStage() == null)
+                return;
+
+            typeof(PrefabStage).GetMethod("SavePrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(PrefabStageUtility.GetCurrentPrefabStage(), null);
         }
 
         public static void ApplyPrefab(GameObject prefabInstance)

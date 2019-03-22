@@ -59,7 +59,7 @@ namespace UVC.UserInterface
                     {
                         if (PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot == go)
                         {
-                            DrawIcon(selectionRect, IconUtils.squareIcon, PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath, null, 0f);
+                            DrawIcon(selectionRect, IconUtils.squareIcon, PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath, PrefabStageUtility.GetCurrentPrefabStage().prefabContentsRoot, 0f);
                         }
                     }
                 }

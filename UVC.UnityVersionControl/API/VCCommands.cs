@@ -231,7 +231,11 @@ namespace UVC
             }
             else
             {
-                if (!Application.isPlaying) Start();
+                if (!Application.isPlaying)
+                {
+                    AssetDatabase.SaveAssets();
+                    Start();
+                }
                 else Stop();
             }
         }

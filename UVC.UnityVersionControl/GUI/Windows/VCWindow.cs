@@ -225,6 +225,7 @@ namespace UVC.UserInterface
         private void RefreshStatus()
         {
             refreshInProgress = true;
+            AssetDatabase.SaveAssets();
             bool remoteProjectReflection = VCSettings.ProjectReflectionMode == VCSettings.EReflectionLevel.Remote;
             VCCommands.Instance.DeactivateRefreshLoop();
             VCCommands.Instance.ClearDatabase();

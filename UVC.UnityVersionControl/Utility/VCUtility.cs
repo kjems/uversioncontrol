@@ -33,9 +33,9 @@ namespace UVC
         public static Object Revert(Object obj)
         {
             var gameObject = obj as GameObject;
-            if (gameObject && PrefabHelper.IsPrefab(gameObject, true, false) && !PrefabHelper.IsPrefabParent(gameObject))
+            if (gameObject && PrefabHelper.IsPartofPrefabStage(gameObject))
             {
-                return RevertPrefab(gameObject);
+                PrefabHelper.SaveOpenPrefabStage();
             }
             return RevertObject(obj);
         }
@@ -46,19 +46,6 @@ namespace UVC
             bool success = VCCommands.Instance.Revert(obj.ToAssetPaths());
             if (success && onHierarchyReverted != null) onHierarchyReverted(obj);
             return obj;
-        }
-
-        private static GameObject RevertPrefab(GameObject gameObject)
-        {
-            PrefabUtility.RevertPrefabInstance(gameObject, InteractionMode.AutomatedAction);
-
-            if (ShouldVCRevert(gameObject))
-            {
-                bool success = VCCommands.Instance.Revert(gameObject.ToAssetPaths());
-                if (success && onHierarchyReverted != null) onHierarchyReverted(gameObject);
-            }
-
-            return gameObject;
         }
 
         public static bool ShouldVCRevert(Object obj)

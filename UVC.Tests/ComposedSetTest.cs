@@ -1,7 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using ComposedString = UVC.ComposedSet<string, UVC.FilesAndFoldersComposedStringDatabase>;
-using Unity.PerformanceTesting;
+//using Unity.PerformanceTesting;
 
 namespace UVC.UnitTests
 {
@@ -175,7 +175,7 @@ namespace UVC.UnitTests
         }
     }
 
-    public class ComposedSetPerformanceTest
+    /*public class ComposedSetPerformanceTest
     {
         private string testText;
 
@@ -198,5 +198,5 @@ namespace UVC.UnitTests
             var cs = new ComposedString(testText);
             Measure.Method(() => cs.Compose()).Run();
         }
-    }
+    }*/
 }

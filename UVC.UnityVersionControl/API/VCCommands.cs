@@ -634,6 +634,10 @@ namespace UVC
                 if (!OnOperationStarting(OperationType.Resolve, beforeStatus))
                     return false;
                 bool resolveSuccess = vcc.Resolve(assets, conflictResolution);
+                if (conflictResolution == ConflictResolution.Mine)
+                {
+                    vcc.SetLocalOnly(assets.Where(asset => !MergeHandler.IsMergableAsset(asset)));
+                }
                 var afterStatus = StoreCurrentStatus(assets);
                 AssetDatabaseRefreshManager.RequestAssetDatabaseRefresh();
                 OnOperationCompleted(OperationType.Resolve, beforeStatus, afterStatus, resolveSuccess);
@@ -774,6 +778,19 @@ namespace UVC
             if (assets.Contains(SceneManagerUtilities.GetCurrentScenePath()))
             {
                 SceneManagerUtilities.SaveCurrentModifiedScenesIfUserWantsTo();
+            }
+
+            var localOnly = allAssets.LocalOnly(vcc);
+            if (localOnly.Any())
+            {
+                return EditorUtility.DisplayDialog(
+                    title: "Commit Warning!",
+                    message: "You have chosen your own content above content from the server, which have made the asset 'Local Only'\n" +
+                             "To reduce the risk of removing someones work, you will have to verify you wish to 'commit anyway'\n\n" +
+                             $"{localOnly.Aggregate((a, b) => a + "\n" + b)}",
+                    ok: "Commit Anyway",
+                    cancel: "Cancel"
+                );
             }
 
             if (VCSettings.RequireLockBeforeCommit && localModified.Any())

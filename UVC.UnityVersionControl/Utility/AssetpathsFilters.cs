@@ -16,6 +16,13 @@ namespace UVC.AssetPathFilters
                 .ToArray();
         }
         
+        public static IEnumerable<string> LocalOnly(this IEnumerable<string> assets, IVersionControlCommands vcc)
+        {
+            return assets
+                .Where(d => vcc.GetAssetStatus(d).localOnly)
+                .ToArray();
+        }
+        
         public static void AddFilesInFolders(ref List<string> assets)
         {
             /*for (int i = assets.Count - 1; i >= 0; --i)

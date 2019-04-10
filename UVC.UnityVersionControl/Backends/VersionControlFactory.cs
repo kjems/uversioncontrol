@@ -96,7 +96,7 @@ namespace UVC
 
         private static IVersionControlCommands AddDecorators(IVersionControlCommands vcc)
         {
-            return new VCCFilteredAssets(new VCCAddMetaFiles(vcc));
+            return new VCCAddMetaFiles(new VCCFilteredAssets(vcc));
         }
     }
 }

@@ -527,7 +527,9 @@ namespace UVC.Backend.SVN
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
-            return CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
+            bool commitResult = CreateAssetOperation("commit -m \"" + UnifyLineEndingsChar(ReplaceCommentChar(commitMessage)) + "\"", assets);
+            vcc.ChangeListRemove(assets);
+            return commitResult;
         }
 
         public bool Commit(string commitMessage = "")

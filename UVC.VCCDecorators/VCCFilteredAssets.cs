@@ -60,8 +60,6 @@ namespace UVC
             var filesInFolders = ConsistentSlash(assets.AddFilesInFolders(vcc, true).AddedOrUnversionedParentFolders(vcc));
             var deletedInFolders = assets.AddDeletedInFolders(vcc);
 
-            DebugLog.Log("Deleted In Folders: " + deletedInFolders.AggregateString());
-
             bool result =
                 base.Add(filesInFolders.UnversionedInVersionedFolder(vcc)) &&
                 base.Delete(filesInFolders.Missing(vcc), OperationMode.Normal) &&

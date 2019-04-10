@@ -233,14 +233,14 @@ namespace UVC
             {
                 if (!Application.isPlaying)
                 {
-                    AssetDatabase.SaveAssets();
+                    FlushFiles();
                     Start();
                 }
                 else Stop();
             }
         }
 
-        private void FlushFiles()
+        public void FlushFiles()
         {
             if (ThreadUtility.IsMainThread())
             {

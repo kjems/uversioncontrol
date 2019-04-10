@@ -43,6 +43,14 @@ namespace UVC
             return PrefabStageUtility.GetCurrentPrefabStage().IsPartOfPrefabContents(gameObject);
         }
 
+        public static bool IsAssetPathOpenAsPrefabStage(string assetpath)
+        {
+            if (PrefabStageUtility.GetCurrentPrefabStage() == null)
+                return false;
+            
+            return PrefabStageUtility.GetCurrentPrefabStage().prefabAssetPath == assetpath;
+        }
+
         public static void SaveOpenPrefabStage()
         {
             if (PrefabStageUtility.GetCurrentPrefabStage() == null)

@@ -4,6 +4,7 @@
 
 using Unity.Profiling;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEngine;
 
 #pragma warning disable CS4014
@@ -13,7 +14,14 @@ namespace UVC.UserInterface
     [InitializeOnLoad]
     public static class VCSceneViewGUI
     {
-        public static System.Func<string> currentContext = SceneManagerUtilities.GetCurrentScenePath;
+        public static System.Func<string> currentContext = () =>
+        {
+            if (PrefabHelper.IsPartofPrefabStage(Selection.activeGameObject))
+            {
+                return PrefabStageUtility.GetPrefabStage(Selection.activeGameObject).prefabAssetPath;
+            }
+            return AssetDatabase.GetAssetOrScenePath(Selection.activeObject);
+        };
 
         const float buttonHeight = 15f;
         const float buttonWidth = 80f;

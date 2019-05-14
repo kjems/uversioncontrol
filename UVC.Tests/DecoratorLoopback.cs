@@ -117,6 +117,16 @@ namespace UVC.UnitTests
             }
             return true;
         }
+        
+        public bool Update(int revision, IEnumerable<string> assets)
+        {
+            if (assets != null)
+            {
+                List<string> list = assets.ToList();
+                dataCarrier.assets = list;
+            }
+            return true;
+        }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {

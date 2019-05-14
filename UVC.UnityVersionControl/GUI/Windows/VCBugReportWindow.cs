@@ -49,12 +49,12 @@ namespace UVC.UserInterface
                     if (string.IsNullOrEmpty(email)) email = "no@email";
                     if (sendBug && string.IsNullOrEmpty(bugTitle))
                     {
-                        EditorUtility.DisplayDialog("Need Title", "You need to give the bug a title", "OK");
+                        UserDialog.DisplayDialog("Need Title", "You need to give the bug a title", "OK");
                         sendBug = false;
                     }
                     if (sendBug && (string.IsNullOrEmpty(description) || description == defaultDescription))
                     {
-                        EditorUtility.DisplayDialog("Need Description", "You need to give the bug a description", "OK");
+                        UserDialog.DisplayDialog("Need Description", "You need to give the bug a description", "OK");
                         sendBug = false;
                     }
                     if (sendBug)

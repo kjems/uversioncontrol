@@ -233,8 +233,11 @@ namespace UVC.UserInterface
 
         private static string GetFileType(string assetPath)
         {
+            if (AssetDatabase.IsValidFolder(assetPath))
+                return "[folder]";
             int indexOfLastDot = assetPath.LastIndexOf(".", StringComparison.Ordinal);
-            return (indexOfLastDot > 0) ? assetPath.Substring(assetPath.LastIndexOf(".", StringComparison.Ordinal) + 1) : (System.IO.Directory.Exists(assetPath) ? "[folder]" : "[unknown]");
+            int indexOfLastSlah = assetPath.LastIndexOf("/", StringComparison.Ordinal);
+            return (indexOfLastDot > 0 && indexOfLastDot > indexOfLastSlah) ? assetPath.Substring(assetPath.LastIndexOf(".", StringComparison.Ordinal) + 1) : "[folder]";
         }
 
         public void RefreshGUIFilter()

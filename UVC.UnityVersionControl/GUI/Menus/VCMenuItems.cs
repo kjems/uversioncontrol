@@ -48,7 +48,7 @@ namespace UVC
             VersionControlStatus assetStatus = VCCommands.Instance.GetAssetStatus(assetPath);
             if (assetStatus.lockStatus == VCLockStatus.LockedOther)
             {
-                if (EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + assetStatus.owner + "]", "Yes", "Cancel"))
+                if (UserDialog.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + assetStatus.owner + "]", "Yes", "Cancel"))
                 {
                     VCCommands.Instance.GetLock(new[] {assetPath}, OperationMode.Force);
                 }

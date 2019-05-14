@@ -82,7 +82,7 @@ namespace UVC
         public static bool GetLock(string assetpath, OperationMode operationMode = OperationMode.Normal)
         {
             var status = VCCommands.Instance.GetAssetStatus(assetpath);
-            if (operationMode == OperationMode.Normal || EditorUtility.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
+            if (operationMode == OperationMode.Normal || UserDialog.DisplayDialog("Force " + Terminology.getlock, "Are you sure you will steal the file from: [" + status.owner + "]", "Yes", "Cancel"))
             {
                 return VCCommands.Instance.GetLock(new[] { assetpath }, operationMode);
             }
@@ -122,7 +122,7 @@ namespace UVC
         public static bool VCDialog(string command, IEnumerable<string> assetPaths)
         {
             if (!assetPaths.Any()) return false;
-            return EditorUtility.DisplayDialog(command + " following assest in Version Control?", "\n" + assetPaths.Aggregate((a, b) => a + "\n" + b), "Yes", "No");
+            return UserDialog.DisplayDialog(command + " following assest in Version Control?", "\n" + assetPaths.Aggregate((a, b) => a + "\n" + b), "Yes", "No");
         }
 
         public static void VCDeleteWithConfirmation(IEnumerable<string> assetPaths, bool showConfirmation = true)
@@ -137,13 +137,13 @@ namespace UVC
         {
             if (VCSettings.VersionControlBackend == VCSettings.EVersionControlBackend.None)
             {
-                bool response = EditorUtility.DisplayDialog("Version Control Selection", "Select which Version Control System you are using", "SVN", "None");
+                bool response = UserDialog.DisplayDialog("Version Control Selection", "Select which Version Control System you are using", "SVN", "None");
                 if (response) // SVN
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;
                 }
                 /*P4_DISABLED
-                int response = EditorUtility.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "P4 Beta", "None");
+                int response = UserDialog.DisplayDialogComplex("Version Control Selection", "Select which Version Control System you are using", "SVN", "P4 Beta", "None");
                 if (response == 0) // SVN
                 {
                     VCSettings.VersionControlBackend = VCSettings.EVersionControlBackend.Svn;

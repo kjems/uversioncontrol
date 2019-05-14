@@ -730,8 +730,14 @@ namespace UVC.Backend.P4
             SetPending(assets);
             return true;
         }
-
+       
         public bool Update(IEnumerable<string> assets = null)
+        {
+            if (assets == null || !assets.Any()) assets = new[] { P4Util.Instance.Vars.workingDirectory };
+            return CreateAssetOperation("update", assets);
+        }
+        
+        public bool Update(int revision, IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { P4Util.Instance.Vars.workingDirectory };
             return CreateAssetOperation("update", assets);

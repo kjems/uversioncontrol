@@ -53,6 +53,10 @@ namespace UVC.Backend.Noop
         {
             return true;
         }
+        public virtual bool Update(int revision, IEnumerable<string> assets = null)
+        {
+            return true;
+        }
         public virtual bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
             return true;

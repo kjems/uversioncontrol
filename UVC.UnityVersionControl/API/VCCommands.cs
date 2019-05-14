@@ -476,6 +476,24 @@ namespace UVC
                 return updateResult;
             }, () => OnOperationCompleted(OperationType.Update, null, null, false));
         }
+        
+        public bool Update(int revision, IEnumerable<string> assets = null)
+        {
+            return HandleExceptions(() =>
+            {
+                var beforeStatus = StoreCurrentStatus(assets);
+                if (!OnOperationStarting(OperationType.Update, beforeStatus))
+                    return false;
+                updating = true;
+                bool updateResult = vcc.Update(revision, assets);
+                updating = false;
+                if (updateResult) AssetDatabaseRefreshManager.RequestAssetDatabaseRefresh();
+                var afterStatus = StoreCurrentStatus(assets);
+                OnOperationCompleted(OperationType.Update, beforeStatus, afterStatus, updateResult);
+                if (updateResult) Status(StatusLevel.Local, DetailLevel.Normal);
+                return updateResult;
+            }, () => OnOperationCompleted(OperationType.Update, null, null, false));
+        }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {
@@ -783,7 +801,7 @@ namespace UVC
             var localOnly = allAssets.LocalOnly(vcc);
             if (localOnly.Any())
             {
-                return EditorUtility.DisplayDialog(
+                return UserDialog.DisplayDialog(
                     title: "Commit Warning!",
                     message: "You have chosen your own content above content from the server, which have made the asset 'Local Only'\n" +
                              "To reduce the risk of removing someones work, you will have to verify you wish to 'commit anyway'\n\n" +
@@ -797,7 +815,7 @@ namespace UVC
             {
                 string title = $"{Terminology.getlock} '{Terminology.localModified}' files?";
                 string message = $"You are trying to commit files which are '{Terminology.localModified}'.\nDo you want to '{Terminology.getlock}' these files first?";
-                if (EditorUtility.DisplayDialog(title, message, Terminology.getlock, "Abort"))
+                if (UserDialog.DisplayDialog(title, message, Terminology.getlock, "Abort"))
                 {
                     GetLock(localModified);
                 }

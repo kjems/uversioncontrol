@@ -414,10 +414,28 @@ namespace UVC.Backend.SVN
 
         }
 
+        private void ThrowIfAssetpathIsInvalid(IEnumerable<string> assets)
+        {
+            foreach (var assetpath in assets)
+            {
+                for (int i = 0, length = assetpath.Length; i < length; i++)
+                {
+                    if (assetpath[i] >= '\x007F')
+                    {
+                        throw new VCInvalidAssetPath(
+                            errorMessage : $"Assetpath contained non-ASCII characters '{assetpath[i]}' in assetpath: '{assetpath}'",
+                            errorDetails : $"Bad character: {assetpath[i]}, {(int)assetpath[i]}, 0x{Convert.ToString(assetpath[i], 16)} at position {i} in assetpath: '{assetpath}'");
+                    }
+                }
+            }
+        }
+        
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
-            var filecontent = assets.Select(PrepareAssetPath).ToArray();
+            ThrowIfAssetpathIsInvalid(assets);
+            
+            string[] filecontent = assets.Select(PrepareAssetPath).ToArray();
             File.WriteAllLines(svnTargetsFile, filecontent);
             bool result = CreateOperation(arguments + " --targets " + svnTargetsFile);
             File.Delete(svnTargetsFile);
@@ -522,7 +540,13 @@ namespace UVC.Backend.SVN
         public bool Update(IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
-            return CreateOperation("update --force" + ConcatAssetPaths(assets)) && RequestStatus(assets, StatusLevel.Previous);
+            return CreateOperation($"update --force{ConcatAssetPaths(assets)}") && RequestStatus(assets, StatusLevel.Previous);
+        }
+        
+        public bool Update(int revision, IEnumerable<string> assets = null)
+        {
+            if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
+            return CreateOperation($"update -r{revision} --force{ConcatAssetPaths(assets)}") && RequestStatus(assets, StatusLevel.Previous);
         }
 
         public bool Commit(IEnumerable<string> assets, string commitMessage = "")

@@ -104,6 +104,11 @@ namespace UVC
         {
             return vcc.Update(assets);
         }
+        
+        public virtual bool Update(int revision, IEnumerable<string> assets = null)
+        {
+            return vcc.Update(revision, assets);
+        }
 
         public virtual bool Commit(IEnumerable<string> assets, string commitMessage = "")
         {

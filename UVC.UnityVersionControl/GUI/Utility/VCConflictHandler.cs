@@ -24,7 +24,7 @@ namespace UVC
                     const string mergeExplanation = "\nMerge External :\nIgnore the conflict in UVC and handle the conflict in an external program";
                     const string ignoreExplanation = "\nIgnore :\nIgnore the conflict for now although the file will not be readable by Unity";
                     string message = $"There is a conflict in the file:\n '{conflictIt.Compose()}'\n\nUse 'Theirs' or 'Mine'?\n {explanation}\n{(mergable ? mergeExplanation : ignoreExplanation)}\n";
-                    int result = EditorUtility.DisplayDialogComplex("Conflict", message, "Theirs", "Mine", mergable ? "Merge External" : "Ignore");
+                    int result = UserDialog.DisplayDialogComplex("Conflict", message, "Theirs", "Mine", mergable ? "Merge External" : "Ignore");
                     if (result == 0 || result == 1)
                     {
                         VCCommands.Instance.Resolve(new[] { conflictIt.Compose() }, result == 0 ? ConflictResolution.Theirs : ConflictResolution.Mine);

@@ -91,7 +91,7 @@ namespace UVC
 
         private static bool PromptUserForBackend(VCSettings.EVersionControlBackend backend)
         {
-            return EditorUtility.DisplayDialog("Use " + backend + " ?", "The only valid version control found is '" + backend + "'. \nUse " + backend + " as version control?", "Yes", "No");
+            return UserDialog.DisplayDialog("Use " + backend + " ?", "The only valid version control found is '" + backend + "'. \nUse " + backend + " as version control?", "Yes", "No");
         }
 
         private static IVersionControlCommands AddDecorators(IVersionControlCommands vcc)

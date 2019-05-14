@@ -56,6 +56,7 @@ namespace UVC
         bool Status(StatusLevel statusLevel, DetailLevel detailLevel);
         bool Status(IEnumerable<string> assets, StatusLevel statusLevel);
         bool Update(IEnumerable<string> assets = null);
+        bool Update(int revision, IEnumerable<string> assets = null);
         bool Commit(IEnumerable<string> assets, string commitMessage = "");
         bool Commit(string commitMessage = "");
         bool Add(IEnumerable<string> assets);

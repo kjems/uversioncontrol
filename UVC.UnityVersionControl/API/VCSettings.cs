@@ -31,8 +31,8 @@ namespace UVC
             Logging = EditorPrefs.GetBool("VCSSettings/logging", false); // using Logging property instead of field by intention
             lockScenesFilter = EditorPrefs.GetString("VCSSettings/lockScenesFilter");
             lockPrefabsFilter = EditorPrefs.GetString("VCSSettings/lockPrefabsFilter");
-            autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", false);
-            includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", true);
+            autoCloseAfterSuccess = EditorPrefs.GetBool("VCSSettings/autoCloseAfterSuccess", true);
+            includeDepedenciesAsDefault = EditorPrefs.GetBool("VCSSettings/includeDepedenciesAsDefault", false);
             requireLockBeforeCommit = EditorPrefs.GetBool("VCSSettings/requireLockBeforeCommit", false);
             selectiveCommit = EditorPrefs.GetBool("VCSSettings/selectiveCommit", true);
             saveStrategy = (ESaveAssetsStrategy)EditorPrefs.GetInt("VCSSettings/saveStrategy", (int)ESaveAssetsStrategy.Unity);
@@ -83,7 +83,7 @@ namespace UVC
         public enum EReflectionLevel { Local, Remote }
         public enum EVersionControlBackend { None, Svn/*P4_DISABLED, P4_Beta*/ }
         public enum ESaveAssetsStrategy { Unity, VersionControl, User }
-        public enum EHandleFileMove { None, Simple, TeamLicense }
+        public enum EHandleFileMove { None, TeamLicense }
 
         public static event Action SettingChanged;
 

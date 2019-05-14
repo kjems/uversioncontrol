@@ -109,7 +109,7 @@ namespace UVC
                         VCCommands.Instance.Status(new[] {assetPath}, StatusLevel.Local);
                         if (VCCommands.Instance.GetAssetStatus(assetPath).fileStatus == VCFileStatus.Conflicted)
                         {
-                            if (EditorUtility.DisplayDialog("Merge Successful?", $"Did the merge complete successfully?\n'{assetPath}'", "Yes", "No"))
+                            if (UserDialog.DisplayDialog("Merge Successful?", $"Did the merge complete successfully?\n'{assetPath}'", "Yes", "No"))
                             {
                                 VCCommands.Instance.Resolve(new[] {assetPath}, ConflictResolution.Mine);
                                 VCCommands.Instance.Status(StatusLevel.Previous, DetailLevel.Normal);

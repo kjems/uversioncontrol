@@ -47,7 +47,7 @@ namespace UVC
                 {
                     const string title = "Fix ignores?";
                     const string message = "Do you want UVC to automatically fix file and folder ignores?";
-                    if (EditorUtility.DisplayDialog(title, message, "Fix it", "No"))
+                    if (UserDialog.DisplayDialog(title, message, "Fix it", "No"))
                     {
                         VCCommands.Instance.SetIgnore(workDirectory, defaultIgnores);
                     }

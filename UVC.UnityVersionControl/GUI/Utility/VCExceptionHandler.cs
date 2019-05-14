@@ -74,7 +74,7 @@ namespace UVC
 
         private static void HandleNewerVersion(VCNewerVersionException e)
         {
-            var answer = EditorUtility.DisplayDialog("Newer Version", "There is a newer version of the file on the server so you need to 'Update' first and then try again", "Update", "Cancel");
+            var answer = UserDialog.DisplayDialog("Newer Version", "There is a newer version of the file on the server so you need to 'Update' first and then try again", "Update", "Cancel");
             if (answer)
             {
                 VCCommands.Instance.UpdateTask();
@@ -83,7 +83,7 @@ namespace UVC
 
         private static void HandleMixedRevision(VCMixedRevisionException e)
         {
-            var answer = EditorUtility.DisplayDialog("Mixed Revision", "Cannot merge into mixed-revision working copy, try updating first", "Update", "Cancel");
+            var answer = UserDialog.DisplayDialog("Mixed Revision", "Cannot merge into mixed-revision working copy, try updating first", "Update", "Cancel");
             if (answer)
             {
                 VCCommands.Instance.UpdateTask();

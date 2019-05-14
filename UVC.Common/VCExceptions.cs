@@ -48,7 +48,7 @@ namespace UVC
         public VCNewerVersionException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
         public VCNewerVersionException(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
     }
-    
+
     public class VCMixedRevisionException : VCException
     {
         public VCMixedRevisionException(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
@@ -71,5 +71,11 @@ namespace UVC
     {
         public VCLockedByOther(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
         public VCLockedByOther(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
+    }
+    
+    public class VCInvalidAssetPath : VCException
+    {
+        public VCInvalidAssetPath(string errorMessage, string errorDetails) : base(errorMessage, errorDetails) { }
+        public VCInvalidAssetPath(string errorMessage, string errorDetails, Exception innerEx) : base(errorMessage, errorDetails, innerEx) { }
     }
 }

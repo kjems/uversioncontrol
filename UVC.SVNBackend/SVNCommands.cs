@@ -429,12 +429,12 @@ namespace UVC.Backend.SVN
                 }
             }
         }
-        
+
         private bool CreateAssetOperation(string arguments, IEnumerable<string> assets)
         {
             if (assets == null || !assets.Any()) return true;
             ThrowIfAssetpathIsInvalid(assets);
-            
+
             string[] filecontent = assets.Select(PrepareAssetPath).ToArray();
             File.WriteAllLines(svnTargetsFile, filecontent);
             bool result = CreateOperation(arguments + " --targets " + svnTargetsFile);
@@ -542,7 +542,7 @@ namespace UVC.Backend.SVN
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
             return CreateOperation($"update --force{ConcatAssetPaths(assets)}") && RequestStatus(assets, StatusLevel.Previous);
         }
-        
+
         public bool Update(int revision, IEnumerable<string> assets = null)
         {
             if (assets == null || !assets.Any()) assets = new[] { workingDirectory };
@@ -752,7 +752,7 @@ namespace UVC.Backend.SVN
             }
             else
             {
-                var svnInfo = CreateSVNCommandLine("info --xml " + assetPath).Execute();
+                var svnInfo = ExecuteOperation(CreateSVNCommandLine("info --xml \"" + assetPath + "\""));
                 if (!svnInfo.Failed)
                 {
                     var xmlDoc = new XmlDocument();

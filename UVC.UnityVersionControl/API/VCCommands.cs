@@ -427,7 +427,7 @@ namespace UVC
         }
         public InfoStatus GetInfo(string path)
         {
-            return vcc.GetInfo(path);
+            return HandleExceptions(() => vcc.GetInfo(path));
         }
         public IEnumerable<VersionControlStatus> GetFilteredAssets(Func<VersionControlStatus, bool> filter)
         {
@@ -443,11 +443,7 @@ namespace UVC
 
         public bool Status(IEnumerable<string> assets, StatusLevel statusLevel)
         {
-            return HandleExceptions(() =>
-            {
-                bool result = vcc.Status(assets, statusLevel);
-                return result;
-            });
+            return HandleExceptions(() => vcc.Status(assets, statusLevel));
         }
         public bool RequestStatus(string asset, StatusLevel statusLevel)
         {
@@ -476,7 +472,7 @@ namespace UVC
                 return updateResult;
             }, () => OnOperationCompleted(OperationType.Update, null, null, false));
         }
-        
+
         public bool Update(int revision, IEnumerable<string> assets = null)
         {
             return HandleExceptions(() =>
@@ -626,15 +622,15 @@ namespace UVC
         }
         public string GetCurrentBranch()
         {
-            return vcc.GetCurrentBranch();
+            return HandleExceptions(() => vcc.GetCurrentBranch());
         }
         public string GetBranchDefaultPath()
         {
-            return vcc.GetBranchDefaultPath();
+            return HandleExceptions(() => vcc.GetBranchDefaultPath());
         }
         public string GetTrunkPath()
         {
-            return customTrunkPath ?? vcc.GetTrunkPath();
+            return customTrunkPath ?? HandleExceptions(() => vcc.GetTrunkPath());
         }
         public void SetCustomTrunkPath(string path)
         {
@@ -689,17 +685,27 @@ namespace UVC
 
         public int GetRevision()
         {
-            return vcc.GetRevision();
+            return HandleExceptions(() => vcc.GetRevision());
         }
 
         public string GetBasePath(string assetPath)
         {
-            return vcc.GetBasePath(assetPath);
+            return HandleExceptions(() => vcc.GetBasePath(assetPath));
         }
 
         public bool GetConflict(string assetPath, out string basePath, out string yours, out string theirs)
         {
-            return vcc.GetConflict(assetPath, out basePath, out yours, out theirs);
+            string localBasePath = null;
+            string localYours = null;
+            string localTheirs= null;
+
+            bool result = HandleExceptions(() => vcc.GetConflict(assetPath, out localBasePath, out localYours, out localTheirs));
+
+            basePath = localBasePath;
+            yours = localYours;
+            theirs = localTheirs;
+
+            return result;
         }
         public bool CleanUp()
         {

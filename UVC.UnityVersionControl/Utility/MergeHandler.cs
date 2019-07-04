@@ -28,7 +28,7 @@ namespace UVC
             args.Replace("[merge]", merge);
             return (VCSettings.MergetoolPath, args.ToString());
         }
-        
+
         static string binary2TextPath = null;
         static string GetBinaryConverterPath()
         {
@@ -78,7 +78,7 @@ namespace UVC
             VCCommands.Instance.GetConflict(assetPath, out var basePath, out var yours, out var theirs);
             ResolveConflict(assetPath, basePath, theirs, yours);
         }
-        
+
         public static void ResolveConflict(string assetPath, string basepath, string theirs, string yours)
         {
             if (!string.IsNullOrEmpty(assetPath))
@@ -122,8 +122,8 @@ namespace UVC
         }
 
         static readonly ComposedString[] requiresTextConversionPostfix  = { ".unity", ".prefab", ".mat", ".asset" };
-        static readonly ComposedString[] mergablePostfix                = { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml", ".json", ".asmdef", ".manifest", ".compute", ".cpp", ".h" };
-        
+        static readonly ComposedString[] mergablePostfix                = { ".cs", ".js", ".boo", ".text", ".shader", ".txt", ".xml", ".json", ".asmdef", ".manifest", ".compute", ".cpp", ".h", ".wwu" };
+
         public static bool IsDiffableAsset(ComposedString assetPath)
         {
             return mergablePostfix.Any(assetPath.EndsWith) || requiresTextConversionPostfix.Any(assetPath.EndsWith);

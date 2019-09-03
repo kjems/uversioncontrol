@@ -317,6 +317,14 @@ namespace UVC
                 ? StartTask(() => GetLock(assets, mode))
                 : Task.Run(() => false);
         }
+        
+        public Task<bool> ReleaseLockTask(IEnumerable<string> assets)
+        {
+            assets = assets.ToArray();
+            return OnOperationStarting(OperationType.ReleaseLock, StoreCurrentStatus(assets))
+                ? StartTask(() => ReleaseLock(assets))
+                : Task.Run(() => false);
+        }
 
         public Task<bool> RevertTask(IEnumerable<string> assets)
         {
@@ -766,6 +774,8 @@ namespace UVC
                     //D.Log(operation + " : " + (success ? "success":"failed"));
                     try
                     {
+                        if(statusBefore == null) statusBefore = new VersionControlStatus[0];
+                        if(statusAfter == null) statusAfter = new VersionControlStatus[0];
                         OperationCompleted(operation, statusBefore, statusAfter, success);
                     }
                     catch(Exception e)

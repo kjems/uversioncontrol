@@ -10,12 +10,9 @@ using System.IO;
 
 namespace UVC
 {
-    using Logging;
-
     internal class RefreshOnNewAsset : AssetPostprocessor
     {
         private static List<string> changedAssets = new List<string>();
-        private static int callcount = 0;
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             if (VCCommands.Active)

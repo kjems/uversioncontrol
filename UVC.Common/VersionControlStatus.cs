@@ -11,14 +11,14 @@ namespace UVC
     public enum VCFileStatus
     {
         Normal,
+        Unversioned,
         Added,
-        Conflicted,
+        Modified,
         Deleted,
         Ignored,
-        Modified,
         Replaced,
-        Unversioned,
         Missing,
+        Conflicted,
         External,
         Incomplete,
         Merged,

@@ -71,9 +71,9 @@ namespace UVC.UserInterface
                 VCGUIControls.VersionControlStatusGUI(
                     style:                      buttonStyle, 
                     assetStatus:                assetStatus, obj: material, 
-                    showAddCommit:              !builtinMaterial && (validActions.showAdd || validActions.showCommit), 
-                    showLockAndAllowLocalEdit:  !builtinMaterial && (validActions.showOpenLocal || validActions.showOpen), 
-                    showRevert:                 !builtinMaterial && validActions.showRevert
+                    showAddCommit:              !builtinMaterial && (validActions & (ValidActions.Add | ValidActions.Commit)) != 0, 
+                    showLockAndAllowLocalEdit:  !builtinMaterial && (validActions & (ValidActions.OpenLocal | ValidActions.Open)) != 0, 
+                    showRevert:                 !builtinMaterial && (validActions & ValidActions.Revert) != 0
                 );
 
                 EditorGUILayout.EndHorizontal();

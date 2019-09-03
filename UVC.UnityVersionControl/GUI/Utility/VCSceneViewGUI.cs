@@ -33,7 +33,7 @@ namespace UVC.UserInterface
         private static string selectionPath = "";
         private static bool initialized = false;
 
-        private static VCGUIControls.ValidActions validActions;
+        private static ValidActions validActions;
         private static VersionControlStatus vcSceneStatus = new VersionControlStatus();
         private static ProfilerMarker sceneviewUpdateMarker = new ProfilerMarker("UVC.SceneViewUpdate");
 
@@ -127,7 +127,7 @@ namespace UVC.UserInterface
 
                 using (new PushState<bool>(GUI.enabled, VCCommands.Instance.Ready, v => GUI.enabled = v))
                 {
-                    if (validActions.showAdd)
+                    if ((validActions & ValidActions.Add) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;
@@ -138,7 +138,7 @@ namespace UVC.UserInterface
                         }
                     }
 
-                    if (validActions.showOpen)
+                    if ((validActions & ValidActions.Open) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;
@@ -148,7 +148,7 @@ namespace UVC.UserInterface
                         }
                     }
 
-                    if (validActions.showCommit)
+                    if ((validActions & ValidActions.Commit) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;
@@ -158,7 +158,7 @@ namespace UVC.UserInterface
                         }
                     }
 
-                    if (validActions.showRevert)
+                    if ((validActions & ValidActions.Revert) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;
@@ -172,7 +172,7 @@ namespace UVC.UserInterface
                         }
                     }
 
-                    if (validActions.showOpenLocal)
+                    if ((validActions & ValidActions.OpenLocal) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;
@@ -182,7 +182,7 @@ namespace UVC.UserInterface
                         }
                     }
 
-                    if (validActions.showUnlock)
+                    if ((validActions & ValidActions.Unlock) != 0)
                     {
                         buttonRect.y += buttonHeight;
                         numberOfButtons++;

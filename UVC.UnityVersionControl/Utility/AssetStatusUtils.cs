@@ -2,6 +2,7 @@
 // This file is subject to the MIT License as seen in the trunk of this repository
 // Maintained by: <Kristian Kjems> <kristian.kjems+UnityVC@gmail.com>
 
+using System.Collections.Generic;
 using UnityEngine;
 #pragma warning disable 414
 
@@ -105,6 +106,30 @@ namespace UVC.UserInterface
             }
             if (assetStatus.fileStatus == VCFileStatus.Modified) lockMessage += "*";
             return lockMessage;
+        }
+
+        public static VersionControlStatus GetDominantStatus(IReadOnlyList<VersionControlStatus> statuses)
+        {
+            VersionControlStatus dominantStatus = new VersionControlStatus();
+            foreach (var status in statuses)
+            {
+                if (status.lockStatus > dominantStatus.lockStatus)
+                {
+                    dominantStatus = status;
+                    continue;
+                }
+                if (status.fileStatus > dominantStatus.fileStatus)
+                {
+                    dominantStatus = status;
+                    continue;
+                }
+                if (status.allowLocalEdit && !dominantStatus.allowLocalEdit)
+                {
+                    dominantStatus = status;
+                    continue;
+                }
+            }
+            return dominantStatus;
         }
     }
 }

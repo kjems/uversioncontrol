@@ -638,12 +638,15 @@ namespace UVC.Backend.SVN
 
         public string GetCurrentBranch()
         {
-            var svnInfo = CreateSVNCommandLine("info --xml ").Execute();
-            if (!svnInfo.Failed)
+            using (var svnCommandLine = CreateSVNCommandLine("info --xml "))
             {
-                var xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(svnInfo.OutputStr);
-                return xmlDoc?.GetElementsByTagName("entry")?.Item(0)["relative-url"]?.InnerText;
+                var commandLineOutput = ExecuteOperation(svnCommandLine);
+                if (!commandLineOutput.Failed)
+                {
+                    var xmlDoc = new XmlDocument();
+                    xmlDoc.LoadXml(commandLineOutput.OutputStr);
+                    return xmlDoc.GetElementsByTagName("entry").Item(0)?["relative-url"]?.InnerText;
+                }
             }
             return null;
         }

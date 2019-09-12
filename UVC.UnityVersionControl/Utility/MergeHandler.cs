@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UVC.Logging;
 
 namespace UVC
 {
@@ -28,7 +29,7 @@ namespace UVC
             args.Replace("[merge]", merge);
             return (VCSettings.MergetoolPath, args.ToString());
         }
-        
+
         static string binary2TextPath = null;
         static string GetBinaryConverterPath()
         {
@@ -53,7 +54,17 @@ namespace UVC
                         string convertedBaseFile = tempDirectory + Path.GetFileName(assetPath) + ".base";
                         string convertedWorkingCopyFile = tempDirectory + Path.GetFileName(assetPath) + ".wc";
                         var baseConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), baseAssetPath + " "  + convertedBaseFile, ".").Execute();
+                        if (baseConvertCommand.Failed)
+                        {
+                            DebugLog.LogError("Command line Error: " + baseConvertCommand.ErrorStr + baseConvertCommand.OutputStr);
+                            return;
+                        }
                         var workingCopyConvertCommand = new CommandLineExecution.CommandLine(GetBinaryConverterPath(), assetPath + " " + convertedWorkingCopyFile, ".").Execute();
+                        if (workingCopyConvertCommand.Failed)
+                        {
+                            DebugLog.LogError("Command line Error: " + workingCopyConvertCommand.ErrorStr + workingCopyConvertCommand.OutputStr);
+                            return;
+                        }
                         var (toolpath, args) = GetDiffCommandLine(Path.GetFullPath(convertedBaseFile), Path.GetFullPath(convertedWorkingCopyFile));
                         var diffCommand = new CommandLineExecution.CommandLine(toolpath, args, workingDirectory);
                         Task.Run(() => diffCommand.Execute());
